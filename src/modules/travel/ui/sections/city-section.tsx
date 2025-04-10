@@ -125,6 +125,10 @@ const CitySectionSuspense = ({ city }: Props) => {
               location={photo.city + ", " + photo.country}
               camera={photo.make + " " + photo.model}
               blurData={photo.blurData}
+              focalLength={photo.focalLength35mm}
+              fNumber={photo.fNumber}
+              exposureTime={photo.exposureTime}
+              iso={photo.iso}
               rotate="y"
             />
           </AspectRatio>

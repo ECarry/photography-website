@@ -1,6 +1,6 @@
 "use client";
 
-import { cn } from "@/lib/utils";
+import { cn, formatExposureTime } from "@/lib/utils";
 import { FiCamera, FiMapPin } from "react-icons/fi";
 import { Separator } from "./ui/separator";
 import BlurImage from "./blur-image";
@@ -15,6 +15,10 @@ interface FlipCardProps extends React.HTMLAttributes<HTMLDivElement> {
   location: string;
   camera: string;
   blurData: string;
+  focalLength?: number | null;
+  fNumber?: number | null;
+  exposureTime?: number | null;
+  iso?: number | null;
   rotate?: "x" | "y";
 }
 
@@ -25,6 +29,10 @@ export default function FlipCard({
   location,
   camera,
   blurData,
+  focalLength,
+  fNumber,
+  exposureTime,
+  iso,
   rotate = "y",
   className,
   ...props
@@ -117,21 +125,35 @@ export default function FlipCard({
 
             <div className="absolute bottom-6 left-6">
               <div className="flex items-center gap-2">
-                <span className="text-white text-xs lg:text-sm font-light">
-                  ƒ/3.5
-                </span>
-                <Separator orientation="vertical" className="h-4 opacity-70" />
-                <span className="text-white text-xs lg:text-sm font-light">
-                  1/200
-                </span>
-                <Separator orientation="vertical" className="h-4 opacity-70" />
-                <span className="text-white text-xs lg:text-sm font-light">
-                  ISO100
-                </span>
-                <Separator orientation="vertical" className="h-4 opacity-70" />
-                <span className="text-white text-xs lg:text-sm font-light">
-                  45mm
-                </span>
+                {fNumber && (
+                  <>
+                    <span className="text-white text-xs lg:text-sm font-light">
+                      ƒ/{fNumber}
+                    </span>
+                    <Separator orientation="vertical" className="h-4 opacity-70" />
+                  </>
+                )}
+                {exposureTime && (
+                  <>
+                    <span className="text-white text-xs lg:text-sm font-light">
+                      {formatExposureTime(exposureTime)}
+                    </span>
+                    <Separator orientation="vertical" className="h-4 opacity-70" />
+                  </>
+                )}
+                {iso && (
+                  <>
+                    <span className="text-white text-xs lg:text-sm font-light">
+                      ISO{iso}
+                    </span>
+                    <Separator orientation="vertical" className="h-4 opacity-70" />
+                  </>
+                )}
+                {focalLength && (
+                  <span className="text-white text-xs lg:text-sm font-light">
+                    {focalLength}mm
+                  </span>
+                )}
               </div>
             </div>
           </div>
