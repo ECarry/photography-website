@@ -1,160 +1,36 @@
-# Photography Blog 📸
+This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ECarry/photography-website)
+## Getting Started
 
-A modern, open-source photography blog platform built with the latest web technologies. Share your photography journey with style and efficiency.
-
-## ✨ Features
-
-- 📱 Responsive design for all devices
-- 🖼️ Automatic EXIF data extraction from photos
-- 🔐 Secure authentication with Better Auth
-- ☁️ Cloud storage with Cloudflare R2
-- 🎨 Beautiful UI with Shadcn/ui components
-- 🚀 Lightning-fast performance
-- 📍 Location-based photo organization
-- 🌐 SEO optimized
-- 🎯 API powered by tRPC
-
-## 📸 Screenshots
-
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/home.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/travel.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/discover.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/about.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/photograph.png?raw=true" alt="page">
-
-## 🌈 Support Theme
-
-- 🌈 Dark
-- 🌈 Light
-
-<img src="https://github.com/ECarry/photography-website/blob/main/screen/theme.png?raw=true" alt="page">
-
-## 🛠️ Tech Stack
-
-- **Framework:** [Next.js 15](https://nextjs.org/)
-- **Database:** [Neon](https://neon.tech/) (Serverless Postgres)
-- **ORM:** [Drizzle](https://orm.drizzle.team/)
-- **Authentication:** [Better Auth](https://better-auth.com/)
-- **UI Components:** [Shadcn/ui](https://ui.shadcn.com/)
-- **API Layer:** [tRPC](https://trpc.io/)
-- **Storage:** [Cloudflare R2](https://www.cloudflare.com/products/r2/)
-- **Deployment:** [Vercel](https://vercel.com)
-
-## 🚀 Getting Started
-
-### Prerequisites
-
-- Node.js 20+
-- bun (recommended) or npm
-- [Neon Database](https://neon.tech/)
-- [Cloudflare R2 Account](https://www.cloudflare.com/products/r2/)
-- [Mapbox Account](https://console.mapbox.com/)
-
-### Environment Variables
-
-Create a `.env.local` file in the root directory:
+First, run the development server:
 
 ```bash
-# Database
-DATABASE_URL=your_database_url
-
-# Auth
-# You can generate a random secret using `openssl rand -base64 32`
-BETTER_AUTH_SECRET=
-BETTER_AUTH_URL=http://localhost:3000 #Base URL of your app
-
-NEXT_PUBLIC_APP_URL='http://localhost:3000'
-
-# Cloudflare R2
-CLOUDFLARE_R2_ENDPOINT=
-CLOUDFLARE_R2_ACCESS_KEY_ID=
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=
-CLOUDFLARE_R2_BUCKET_NAME=
-CLOUDFLARE_R2_PUBLIC_URL=
-
-# Mapbox
-NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=
+npm run dev
+# or
+yarn dev
+# or
+pnpm dev
+# or
+bun dev
 ```
 
-Replace `your-domain.com` with your actual domain name. This is required for Cloudflare Image Optimization to work correctly.
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-### Installation
+You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
 
-1. Clone the repository:
+This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-```bash
-git clone https://github.com/your-username/photography-website.git
-cd photography-website
-```
+## Learn More
 
-2. Install dependencies:
+To learn more about Next.js, take a look at the following resources:
 
-```bash
-bun install
-```
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
 
-3. Set up the database:
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-```bash
-bun db:push
-```
+## Deploy on Vercel
 
-4. Start the development server:
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-```bash
-bun run dev
-```
-
-### Initial User Registration
-
-When you first deploy the application, you'll need to create an admin user. You can do this by visiting:
-
-```
-http://localhost:3000/sign-up
-```
-
-Note: After the first admin user is created, the `/sign-up` route will be disabled for security purposes. Any subsequent attempts to access the sign-up page will automatically redirect to the sign-in page (`/sign-in`).
-
-### Custom Domain Configuration
-
-Before deploying, you need to update the custom domain in `image-loader.ts`:
-
-```typescript
-// image-loader.ts
-return `https://your-domain.com/cdn-cgi/image/${paramsString}/${normalizeSrc(
-  src
-)}`;
-```
-
-Visit `http://localhost:3000` to see your application.
-
-## 📝 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🤝 Contributing
-
-Contributions are welcome! Feel free to open issues and pull requests.
-
-## 💖 Support
-
-If you find this project helpful, please give it a ⭐️ on GitHub!
-
-## ⭐️ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ECarry/photography-website&type=Date)](https://star-history.com/#ECarry/photography-website&Date)
-
-## 📝 Changelog
-
-- 2025-02-13: tRPC instead of Hono.js
-- 2025-01-12: Better Auth instead of Next Auth
-
-## 🏃‍♂️ Todo
-
-- [x] Home page with tRPC
-- [x] Discover page with tRPC
-- [x] Dashboard photos & photo id page with tRPC
-- [x] Blog page with tRPC
-- [x] Travel page with tRPC
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.

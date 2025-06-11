@@ -1,1 +1,0 @@
-ALTER TABLE "photos" ALTER COLUMN "visibility" SET DEFAULT 'private';

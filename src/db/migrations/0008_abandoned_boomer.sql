@@ -1,1 +1,0 @@
-ALTER TABLE "city_sets" ALTER COLUMN "cover_photo_id" SET NOT NULL;
