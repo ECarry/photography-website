@@ -1,8 +1,8 @@
 # TODO
 
 - [x] Setup
-- [ ] Database (Neon, Drizzle ORM)
-- [ ] Authentication (Better Auth)
+- [x] Database (Neon, Drizzle ORM)
+- [x] Authentication (Better Auth)
 - [ ] Auth UI
 - [ ] Dashboard
 - [ ] tRPC Setup
