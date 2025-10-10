@@ -59,8 +59,8 @@ const AboutPage = () => {
         <PageTransitionItem>
           <CardContainer>
             <div className="flex items-center justify-between p-6">
-              <h1 className="text-lg">SONY</h1>
-              <p className="text-sm">Alpha 7RⅡ</p>
+              <h1 className="text-lg">Apple</h1>
+              <p className="text-sm">iPhone 15 Pro</p>
             </div>
           </CardContainer>
         </PageTransitionItem>
@@ -68,8 +68,8 @@ const AboutPage = () => {
         <PageTransitionItem>
           <CardContainer>
             <div className="flex items-center justify-between p-6">
-              <h1 className="text-lg">DJI</h1>
-              <p className="text-sm">Air 2S</p>
+              <h1 className="text-lg">MOMENT</h1>
+              <p className="text-sm">67mm Snap-On Filter Mount with Camera Case</p>
             </div>
           </CardContainer>
         </PageTransitionItem>
@@ -77,8 +77,8 @@ const AboutPage = () => {
         <PageTransitionItem>
           <CardContainer>
             <div className="flex items-center justify-between p-6">
-              <h1 className="text-lg">Tamron</h1>
-              <p className="text-sm">50-400mm F/4.5-6.3 Di III VC VXD</p>
+              <h1 className="text-lg">K&F Concept</h1>
+              <p className="text-sm">Variable ND3-ND1000 Filter</p>
             </div>
           </CardContainer>
         </PageTransitionItem>
@@ -86,17 +86,8 @@ const AboutPage = () => {
         <PageTransitionItem>
           <CardContainer>
             <div className="flex items-center justify-between p-6">
-              <h1 className="text-lg">Sigma</h1>
-              <p className="text-sm">35mm F/1.4 DG HSM</p>
-            </div>
-          </CardContainer>
-        </PageTransitionItem>
-
-        <PageTransitionItem>
-          <CardContainer>
-            <div className="flex items-center justify-between p-6">
-              <h1 className="text-lg">Viltrox</h1>
-              <p className="text-sm">AF 40mm F/2.5 FE</p>
+              <h1 className="text-lg">Hoya</h1>
+              <p className="text-sm">HRT Circular Polarizer UV Filter</p>
             </div>
           </CardContainer>
         </PageTransitionItem>

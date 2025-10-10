@@ -1,21 +1,19 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { MdEmail } from "react-icons/md";
 import {
   PiArrowUpRight,
-  PiInstagramLogo,
-  PiGithubLogo,
-  PiXLogo,
+  PiGithubLogoDuotone,
+  PiLinkedinLogoDuotone,
+  PiPenNibDuotone,
+  PiPaperPlaneTiltDuotone,
 } from "react-icons/pi";
-import { SiXiaohongshu } from "react-icons/si";
 
 // icon map
 const iconMap = {
-  Instagram: <PiInstagramLogo size={18} />,
-  GitHub: <PiGithubLogo size={18} />,
-  X: <PiXLogo size={18} />,
-  Xiaohongshu: <SiXiaohongshu size={18} />,
-  "Contact me": <MdEmail size={18} />,
+  LinkedIn: <PiLinkedinLogoDuotone size={18} />,
+  GitHub: <PiGithubLogoDuotone size={18} />,
+  Website: <PiPenNibDuotone size={18} />,
+  "Contact me": <PiPaperPlaneTiltDuotone size={18} />,
 };
 
 interface Props {

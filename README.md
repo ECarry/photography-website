@@ -18,18 +18,18 @@ A modern, open-source photography blog platform built with the latest web techno
 
 ## 📸 Screenshots
 
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/home.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/travel.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/discover.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/about.png?raw=true" alt="page">
-<img src="https://github.com/ECarry/photography-website/blob/main/docs/screen/photograph.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/docs/screen/home.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/docs/screen/travel.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/docs/screen/discover.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/docs/screen/about.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/docs/screen/photograph.png?raw=true" alt="page">
 
 ## 🌈 Support Theme
 
 - 🌈 Dark
 - 🌈 Light
 
-<img src="https://github.com/ECarry/photography-website/blob/main/screen/theme.png?raw=true" alt="page">
+<img src="https://github.com/tahmidul612/gallery/blob/main/screen/theme.png?raw=true" alt="page">
 
 ## 🛠️ Tech Stack
 
@@ -141,20 +141,3 @@ Contributions are welcome! Feel free to open issues and pull requests.
 ## 💖 Support
 
 If you find this project helpful, please give it a ⭐️ on GitHub!
-
-## ⭐️ Star History
-
-[![Star History Chart](https://api.star-history.com/svg?repos=ECarry/photography-website&type=Date)](https://star-history.com/#ECarry/photography-website&Date)
-
-## 📝 Changelog
-
-- 2025-02-13: tRPC instead of Hono.js
-- 2025-01-12: Better Auth instead of Next Auth
-
-## 🏃‍♂️ Todo
-
-- [x] Home page with tRPC
-- [x] Discover page with tRPC
-- [x] Dashboard photos & photo id page with tRPC
-- [x] Blog page with tRPC
-- [x] Travel page with tRPC

@@ -12,9 +12,10 @@ const CameraCard = () => {
 
         <div className="font-light">
           <p>
-            I have a passion for photography and camera lenses. I use a variety
-            of lenses to capture the beauty of nature and people in their
-            different moments.
+            I am a very forgetful individual, and remembering to take a camera with me on trips is often a challenge. But my phone is always with me, and smartphone cameras have improved significantly over the years. They are still not good enough to capture the beauty of the world as I see it, but they are good enough to capture some moments.
+          </p>
+          <p>
+            I use an iPhone 15 Pro, and some lenses and filters from Moment (when I don&apos;t forget to take them).
           </p>
         </div>
       </div>

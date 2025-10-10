@@ -1,3 +1,6 @@
+# ===================================================================
+# Original .gitignore file (Source 1)
+# ===================================================================
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
 # dependencies
@@ -41,3 +44,87 @@ next-env.d.ts
 
 # vscode
 .vscode
+
+
+# ===================================================================
+# Added entries from the comprehensive template (Source 2)
+# ===================================================================
+
+# More Logs & Debugging
+# -------------------------------------------------------------------
+logs
+*.log
+lerna-debug.log* 
+.pnpm-debug.log* 
+# Diagnostic reports (https://nodejs.org/api/report.html)
+report.
+
+*.
+*.
+*.pid.
+
+# More Environment Variables
+# -------------------------------------------------------------------
+.env*.
+.env.development.
+.env.test.
+.env.production.
+
+# More Testing & Coverage
+# -------------------------------------------------------------------
+lib-
+*.
+.
+
+# Caches and Temporary Files
+# -------------------------------------------------------------------
+.
+.parcel-
+.
+.
+.
+.
+.rpt2_cache/ 
+.rts2_cache_cjs/ 
+.rts2_cache_es/ 
+.rts2_cache_umd/ 
+
+# More Dependencies & Packages
+# -------------------------------------------------------------------
+
+jspm_packages/ 
+web_modules/ 
+# Output of 'npm pack'
+*.
+# Yarn Integrity file
+.yarn-
+
+
+# Other Frameworks & Tools
+# -------------------------------------------------------------------
+
+.
+.svelte-
+.vuepress/
+.
+.
+.serverless/ 
+.webpack/ 
+.fusebox/ 
+.dynamodb/ 
+.tern-
+
+
+# Linux System Files
+# -------------------------------------------------------------------
+*~ 
+.fuse_hidden* 
+.
+.Trash-* 
+.nfs* 
+
+# More VS Code
+# -------------------------------------------------------------------
+.history/ 
+*.
+.ionide 
