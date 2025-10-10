@@ -1,6 +1,6 @@
 # Photography Blog 📸
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/ECarry/photography-website)
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/tahmidul612/gallery)
 
 A modern, open-source photography blog platform built with the latest web technologies. Share your photography journey with style and efficiency.
 
@@ -84,34 +84,34 @@ Replace `your-domain.com` with your actual domain name. This is required for Clo
 
 1. Clone the repository:
 
-```bash
-git clone https://github.com/your-username/photography-website.git
-cd photography-website
-```
+    ```bash
+    git clone https://github.com/your-username/photography-website.git
+    cd photography-website
+    ```
 
-2. Install dependencies:
+1. Install dependencies:
 
-```bash
-bun install
-```
+    ```bash
+    bun install
+    ```
 
-3. Set up the database:
+1. Set up the database:
 
-```bash
-bun db:push
-```
+    ```bash
+    bun db:push
+    ```
 
-4. Start the development server:
+1. Start the development server:
 
-```bash
-bun run dev
-```
+    ```bash
+    bun run dev
+    ```
 
 ### Initial User Registration
 
 When you first deploy the application, you'll need to create an admin user. You can do this by visiting:
 
-```
+```url
 http://localhost:3000/sign-up
 ```
 

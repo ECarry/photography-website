@@ -23,7 +23,7 @@ export default function cloudflareLoader({
   }
   const paramsString = params.join(",");
 
-  return `https://photograph.ecarry.uk/cdn-cgi/image/${paramsString}/${normalizeSrc(
+  return `https://gallery.tahmidul612.com/cdn-cgi/image/${paramsString}/${normalizeSrc(
     src
   )}`;
 }
