@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
         hostname: "gallery.tahmidul612.com",
         port: "",
       },
+      {
+        protocol: "https",
+        hostname: "gallery-r2.tahmidul612.com",
+        port: "",
+      },
     ],
   },
 };
