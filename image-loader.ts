@@ -19,9 +19,14 @@ export default function cloudflareLoader({
   }
   const paramsString = params.join(",");
 
+  // Aggressive correction for malformed src
   let imageSrc = src;
-  if (imageSrc.startsWith("gallery-r2")) {
-    imageSrc = `https://${imageSrc}`;
+  if (src.includes(':/')) {
+    // Handles `https:/` and `http:/`
+    imageSrc = 'https://' + src.split(':/')[1];
+  } else if (!src.startsWith('https://')) {
+    // Handles cases where protocol is missing entirely
+    imageSrc = 'https://' + src;
   }
 
   return `/img/${paramsString}/${imageSrc}`;
