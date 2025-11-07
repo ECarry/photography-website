@@ -134,6 +134,8 @@ export const SignInView = () => {
             <Image
               src="/bg.jpg"
               alt="Better nextjs"
+              width={1920}
+              height={1080}
               className="size-full object-cover"
             />
           </div>
