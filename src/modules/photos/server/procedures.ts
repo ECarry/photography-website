@@ -174,9 +174,9 @@ export const photosRouter = createTRPCRouter({
           // photo.url is stored as S3 key directly in database
           const key = photo.url;
           console.log("🔑 S3 Key:", key);
-          
+
           const command = new DeleteObjectCommand({
-            Bucket: process.env.CLOUDFLARE_R2_BUCKET_NAME,
+            Bucket: process.env.S3_BUCKET_NAME,
             Key: key,
           });
           await s3Client.send(command);

@@ -13,7 +13,7 @@ A modern photography portfolio website built with Next.js 16, featuring interact
 - **Modern UI** built with Tailwind CSS and shadcn/ui components
 - **Authentication** powered by Better Auth
 - **Database** using Drizzle ORM with PostgreSQL
-- **File Storage** via Cloudflare R2
+- **File Storage** via S3-compatible storage
 
 ## 📋 Prerequisites
 
@@ -21,7 +21,7 @@ Before deploying, ensure you have:
 
 - **Node.js 18+** or **Bun** runtime
 - **PostgreSQL database** (recommended: Neon, Supabase, or Vercel Postgres)
-- **Cloudflare R2** bucket for image storage
+- **S3-compatible storage** for image storage (AWS S3, Cloudflare R2, DigitalOcean Spaces, etc.)
 - **Mapbox** account for map features
 - **Vercel** account for deployment (or any Node.js hosting provider)
 
@@ -80,24 +80,61 @@ BETTER_AUTH_URL=https://your-domain.com
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
-#### Cloudflare R2 Configuration
+#### S3-Compatible Storage Configuration
 
 ```env
-# Cloudflare R2 settings
-CLOUDFLARE_R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
-CLOUDFLARE_R2_BUCKET_NAME=your-bucket-name
-CLOUDFLARE_R2_PUBLIC_URL=https://your-custom-domain.com
-CLOUDFLARE_R2_ACCESS_KEY_ID=your-access-key
-CLOUDFLARE_R2_SECRET_ACCESS_KEY=your-secret-key
-NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=https://your-custom-domain.com
+# S3-compatible storage settings
+S3_ENDPOINT=https://your-s3-endpoint.com
+S3_BUCKET_NAME=your-bucket-name
+S3_PUBLIC_URL=https://your-custom-domain.com
+S3_ACCESS_KEY_ID=your-access-key
+S3_SECRET_ACCESS_KEY=your-secret-key
+NEXT_PUBLIC_S3_PUBLIC_URL=https://your-custom-domain.com
 ```
 
-**Setup Cloudflare R2:**
+**Supported Storage Providers:**
 
-1. Create Cloudflare account
-2. Go to R2 Object Storage
-3. Create a new bucket
-4. Generate API tokens with R2 permissions
+**Cloudflare R2:**
+```env
+S3_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
+S3_BUCKET_NAME=your-bucket-name
+NEXT_PUBLIC_S3_PUBLIC_URL=https://your-custom-domain.com
+```
+
+**AWS S3:**
+```env
+S3_ENDPOINT=https://s3.amazonaws.com
+S3_BUCKET_NAME=your-aws-bucket
+NEXT_PUBLIC_S3_PUBLIC_URL=https://your-bucket.s3.amazonaws.com
+```
+
+**DigitalOcean Spaces:**
+```env
+S3_ENDPOINT=https://nyc3.digitaloceanspaces.com
+S3_BUCKET_NAME=your-space-name
+NEXT_PUBLIC_S3_PUBLIC_URL=https://your-space.nyc3.digitaloceanspaces.com
+```
+
+**MinIO (Self-hosted):**
+```env
+S3_ENDPOINT=http://localhost:9000
+S3_BUCKET_NAME=your-minio-bucket
+NEXT_PUBLIC_S3_PUBLIC_URL=http://localhost:9000/your-bucket
+```
+
+**Wasabi:**
+```env
+S3_ENDPOINT=https://s3.wasabisys.com
+S3_BUCKET_NAME=your-wasabi-bucket
+NEXT_PUBLIC_S3_PUBLIC_URL=https://your-bucket.s3.wasabisys.com
+```
+
+**Setup Instructions:**
+
+1. Choose your preferred S3-compatible storage provider
+2. Create an account and set up a bucket
+3. Generate API credentials (Access Key ID and Secret Access Key)
+4. Configure the endpoint URL for your provider
 5. (Optional) Setup custom domain for public access
 
 #### Mapbox Configuration
@@ -224,9 +261,9 @@ bun run clean:photo-urls
    ```
 
 2. **Configure Image Optimization:**
-   - Ensure Cloudflare R2 is properly configured
-   - Set up custom domain for R2 bucket
-   - Configure CDN settings
+   - Ensure S3-compatible storage is properly configured
+   - Set up custom domain for your storage bucket
+   - Configure CDN settings (CloudFlare, AWS CloudFront, etc.)
 
 ### Security Considerations
 
@@ -279,9 +316,10 @@ bun install
 
 #### Image Upload Issues
 
-- Verify Cloudflare R2 credentials
-- Check CORS settings on R2 bucket
+- Verify S3 storage credentials
+- Check CORS settings on your storage bucket
 - Ensure bucket permissions are correct
+- Verify endpoint URL is correct for your provider
 
 #### Map Not Loading
 
@@ -295,7 +333,9 @@ bun install
 - [Vercel Deployment Guide](https://vercel.com/docs)
 - [Drizzle ORM Documentation](https://orm.drizzle.team)
 - [Better Auth Documentation](https://better-auth.com)
+- [AWS S3 Documentation](https://docs.aws.amazon.com/s3/)
 - [Cloudflare R2 Documentation](https://developers.cloudflare.com/r2/)
+- [DigitalOcean Spaces Documentation](https://docs.digitalocean.com/products/spaces/)
 - [Mapbox Documentation](https://docs.mapbox.com)
 
 ## 🤝 Contributing

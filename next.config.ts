@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const r2PublicUrl = process.env.NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL || "";
+const r2PublicUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "";
 const r2Hostname = r2PublicUrl ? new URL(r2PublicUrl).hostname : "";
 
 const nextConfig: NextConfig = {
