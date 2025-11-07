@@ -8,7 +8,9 @@
     "start": "next start",
     "db:push": "bunx drizzle-kit push",
     "db:studio": "bunx drizzle-kit studio",
-    "seed:user": "bun tsx seed-user.ts",
+    "seed:user": "bun tsx scripts/seed-user.ts",
+    "clean:photo-urls": "bun tsx scripts/clean-photo-urls-safe.ts",
+    "rollback:photo-urls": "bun tsx scripts/rollback-photo-urls.ts",
     "lint": "eslint"
   },
   "dependencies": {
