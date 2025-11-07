@@ -1,11 +1,14 @@
 {
-  "name": "photography-next-gen",
+  "name": "photography-website",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "db:push": "bunx drizzle-kit push",
+    "db:studio": "bunx drizzle-kit studio",
+    "seed:user": "bun tsx seed-user.ts",
     "lint": "eslint"
   },
   "dependencies": {
