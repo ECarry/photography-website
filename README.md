@@ -31,7 +31,7 @@ Before deploying, ensure you have:
 
 ```bash
 # Clone the repository
-git clone <your-repo-url>
+git clone https://github.com/ECarry/photography-website.git
 cd photography-website
 
 # Install dependencies
@@ -51,22 +51,26 @@ cp .env.example .env
 Configure the following environment variables:
 
 #### Database Configuration
+
 ```env
 # PostgreSQL connection string
 DATABASE_URL=postgresql://username:password@host:port/database_name?sslmode=require
 ```
 
 **For Neon Database:**
+
 1. Create account at [neon.tech](https://neon.tech)
 2. Create a new project
 3. Copy the connection string from dashboard
 
 **For Supabase:**
+
 1. Create project at [supabase.com](https://supabase.com)
 2. Go to Settings > Database
 3. Copy the connection string
 
 #### Authentication Configuration
+
 ```env
 # Generate a random secret key (32+ characters)
 BETTER_AUTH_SECRET=your-super-secret-key-here
@@ -77,6 +81,7 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 
 #### Cloudflare R2 Configuration
+
 ```env
 # Cloudflare R2 settings
 CLOUDFLARE_R2_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
@@ -88,6 +93,7 @@ NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=https://your-custom-domain.com
 ```
 
 **Setup Cloudflare R2:**
+
 1. Create Cloudflare account
 2. Go to R2 Object Storage
 3. Create a new bucket
@@ -95,17 +101,20 @@ NEXT_PUBLIC_CLOUDFLARE_R2_PUBLIC_URL=https://your-custom-domain.com
 5. (Optional) Setup custom domain for public access
 
 #### Mapbox Configuration
+
 ```env
 # Mapbox access token
 NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your-mapbox-token
 ```
 
 **Get Mapbox Token:**
+
 1. Create account at [mapbox.com](https://mapbox.com)
 2. Go to Account > Access Tokens
 3. Create a new token with appropriate scopes
 
 #### Admin User Configuration
+
 ```env
 # Default admin user for seeding
 SEED_USER_EMAIL=admin@yourdomain.com
@@ -168,6 +177,7 @@ In your Vercel dashboard, add all environment variables from your `.env` file:
 ### Step 6: Post-Deployment Setup
 
 #### Database Migration (if needed)
+
 ```bash
 # If you need to run migrations on production
 vercel env pull .env.local
@@ -175,6 +185,7 @@ bun run db:push
 ```
 
 #### Create Admin User (Production)
+
 ```bash
 # Seed admin user in production
 vercel env pull .env.local
@@ -182,6 +193,7 @@ bun run seed:user
 ```
 
 #### Photo URL Cleanup (if migrating)
+
 ```bash
 # If migrating from another system, clean photo URLs
 bun run clean:photo-urls
@@ -192,6 +204,7 @@ bun run clean:photo-urls
 ### Custom Domain Setup
 
 1. **Vercel Custom Domain:**
+
    - Go to Project Settings > Domains
    - Add your custom domain
    - Configure DNS records as instructed
@@ -205,6 +218,7 @@ bun run clean:photo-urls
 ### Performance Optimization
 
 1. **Enable Vercel Analytics:**
+
    ```bash
    npm install @vercel/analytics
    ```
@@ -217,11 +231,13 @@ bun run clean:photo-urls
 ### Security Considerations
 
 1. **Environment Variables:**
+
    - Never commit `.env` files
    - Use strong, unique secrets
    - Rotate keys regularly
 
 2. **Database Security:**
+
    - Use connection pooling
    - Enable SSL connections
    - Restrict database access by IP
@@ -245,6 +261,7 @@ The application is fully responsive and optimized for mobile devices:
 ### Common Issues
 
 #### Build Errors
+
 ```bash
 # Clear Next.js cache
 rm -rf .next
@@ -255,16 +272,19 @@ bun install
 ```
 
 #### Database Connection Issues
+
 - Verify `DATABASE_URL` is correct
 - Check database server status
 - Ensure SSL settings match requirements
 
 #### Image Upload Issues
+
 - Verify Cloudflare R2 credentials
 - Check CORS settings on R2 bucket
 - Ensure bucket permissions are correct
 
 #### Map Not Loading
+
 - Verify Mapbox token is valid
 - Check token permissions and scopes
 - Ensure domain is authorized in Mapbox settings
