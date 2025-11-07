@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useTRPC } from "@/trpc/client";
 import { usePostsFilters } from "../../hooks/use-posts-filters";
 import { useSuspenseQuery } from "@tanstack/react-query";
@@ -18,7 +17,6 @@ import {
 import { IconNotebookOff } from "@tabler/icons-react";
 
 export const DashboardPostsView = () => {
-  const router = useRouter();
   const trpc = useTRPC();
   const [filters, setFilters] = usePostsFilters();
 
@@ -33,13 +31,7 @@ export const DashboardPostsView = () => {
           <EmptyStatus />
         ) : (
           <>
-            <DataTable
-              columns={columns}
-              data={data.items}
-              onRowClick={(row) => {
-                router.push(`/dashboard/posts/${row.slug}`);
-              }}
-            />
+            <DataTable columns={columns} data={data.items} />
             <DataPagination
               page={filters.page}
               totalPages={data.totalPages}
