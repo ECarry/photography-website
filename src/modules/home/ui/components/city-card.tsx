@@ -28,7 +28,8 @@ const CityCard = ({ title, coverPhoto }: Props) => {
           src={keyToImage(coverPhoto.url)}
           alt={coverPhoto.title}
           fill
-          sizes="75vw"
+          sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"
+          quality={65}
           className="object-cover lg:group-hover:blur-xs lg:transition-[filter] lg:duration-300 lg:ease-out"
           blurhash={coverPhoto.blurData}
         />
