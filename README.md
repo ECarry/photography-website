@@ -95,6 +95,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=https://your-custom-domain.com
 **Supported Storage Providers:**
 
 **Cloudflare R2:**
+
 ```env
 S3_ENDPOINT=https://your-account-id.r2.cloudflarestorage.com
 S3_BUCKET_NAME=your-bucket-name
@@ -102,6 +103,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=https://your-custom-domain.com
 ```
 
 **AWS S3:**
+
 ```env
 S3_ENDPOINT=https://s3.amazonaws.com
 S3_BUCKET_NAME=your-aws-bucket
@@ -109,6 +111,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=https://your-bucket.s3.amazonaws.com
 ```
 
 **DigitalOcean Spaces:**
+
 ```env
 S3_ENDPOINT=https://nyc3.digitaloceanspaces.com
 S3_BUCKET_NAME=your-space-name
@@ -116,6 +119,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=https://your-space.nyc3.digitaloceanspaces.com
 ```
 
 **MinIO (Self-hosted):**
+
 ```env
 S3_ENDPOINT=http://localhost:9000
 S3_BUCKET_NAME=your-minio-bucket
@@ -123,6 +127,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=http://localhost:9000/your-bucket
 ```
 
 **Wasabi:**
+
 ```env
 S3_ENDPOINT=https://s3.wasabisys.com
 S3_BUCKET_NAME=your-wasabi-bucket
@@ -345,6 +350,14 @@ bun install
 3. Make your changes
 4. Test thoroughly
 5. Submit a pull request
+
+## 💖 Support
+
+If you find this project helpful, please give it a ⭐️ on GitHub!
+
+## ⭐️ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=ECarry/photography-website&type=Date)](https://star-history.com/#ECarry/photography-website&Date)
 
 ## 📄 License
 
