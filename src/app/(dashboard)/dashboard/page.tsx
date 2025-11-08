@@ -10,6 +10,9 @@ const page = async () => {
   void queryClient.prefetchQuery(
     trpc.dashboard.getPhotosCountByMonth.queryOptions({ years: 3 })
   );
+  void queryClient.prefetchQuery(
+    trpc.dashboard.getVisitedCountries.queryOptions()
+  );
 
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-y-8">

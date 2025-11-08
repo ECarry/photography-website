@@ -47,4 +47,36 @@ export const dashboardRouter = createTRPCRouter({
 
       return monthlyData;
     }),
+
+  getVisitedCountries: protectedProcedure.query(async () => {
+    // First, let's check what data we have
+    const samplePhotos = await db
+      .select({
+        country: photos.country,
+        countryCode: photos.countryCode,
+        latitude: photos.latitude,
+        longitude: photos.longitude,
+      })
+      .from(photos)
+      .limit(10);
+
+    console.log('Sample photos data:', samplePhotos);
+
+    const result = await db
+      .select({
+        country: photos.country,
+        countryCode: photos.countryCode,
+        photoCount: sql<number>`COUNT(*)::int`,
+        firstVisit: sql<Date>`MIN(${photos.dateTimeOriginal})`,
+        lastVisit: sql<Date>`MAX(${photos.dateTimeOriginal})`,
+      })
+      .from(photos)
+      .where(sql`${photos.country} IS NOT NULL AND ${photos.countryCode} IS NOT NULL`)
+      .groupBy(photos.country, photos.countryCode)
+      .orderBy(sql`COUNT(*) DESC`);
+
+    console.log('Visited countries result:', result);
+
+    return result;
+  }),
 });

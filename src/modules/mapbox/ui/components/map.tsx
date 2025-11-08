@@ -73,13 +73,39 @@ const Mapbox = ({
     content: React.ReactNode;
   } | null>(null);
 
-  // GeoJSON layer style
+  // GeoJSON layer style for visited countries
   const layerStyle: LayerProps = {
     id: "data",
     type: "fill",
     paint: {
-      "fill-color": "#0080ff",
-      "fill-opacity": 0.5,
+      "fill-color": [
+        "case",
+        ["get", "visited"],
+        theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+        "#0080ff" // Default color for non-visited
+      ],
+      "fill-opacity": [
+        "case",
+        ["get", "visited"],
+        0.6, // Higher opacity for visited countries
+        0.2  // Lower opacity for non-visited
+      ],
+    },
+  };
+
+  // Add stroke layer for visited countries
+  const strokeLayerStyle: LayerProps = {
+    id: "data-stroke",
+    type: "line",
+    paint: {
+      "line-color": [
+        "case",
+        ["get", "visited"],
+        theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+        "transparent"
+      ],
+      "line-width": 2,
+      "line-opacity": 0.8,
     },
   };
 
@@ -225,6 +251,7 @@ const Mapbox = ({
       {geoJsonData && (
         <Source type="geojson" data={geoJsonData}>
           <Layer {...layerStyle} />
+          <Layer {...strokeLayerStyle} />
         </Source>
       )}
     </Map>
