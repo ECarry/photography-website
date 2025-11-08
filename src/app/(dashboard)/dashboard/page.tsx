@@ -1,3 +1,5 @@
+import { DashboardView } from "@/modules/dashboard/ui/views/dashboard-view";
+
 const page = async () => {
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col gap-y-8">
@@ -7,6 +9,7 @@ const page = async () => {
           See your photos, travel history, and more.
         </p>
       </div>
+      <DashboardView />
     </div>
   );
 };
