@@ -39,9 +39,17 @@ export interface MapboxProps {
   geoJsonData?: GeoJSON.FeatureCollection;
   onMarkerDragEnd?: (lngLat: { lng: number; lat: number }) => void;
   onGeoJsonClick?: (feature: GeoJSON.Feature) => void;
-  onMove?: (viewState: { zoom: number; latitude: number; longitude: number }) => void;
+  onMove?: (viewState: {
+    zoom: number;
+    latitude: number;
+    longitude: number;
+  }) => void;
   draggableMarker?: boolean;
   showGeocoder?: boolean;
+  showControls?: boolean;
+  scrollZoom?: boolean;
+  doubleClickZoom?: boolean;
+  boxZoom?: boolean;
 }
 
 const MAP_STYLES = {
@@ -63,6 +71,10 @@ const Mapbox = ({
   onMove,
   draggableMarker = false,
   showGeocoder = false,
+  showControls = true,
+  scrollZoom = true,
+  doubleClickZoom = true,
+  boxZoom = true,
 }: MapboxProps) => {
   const mapRef = useRef<MapRef>(null);
   const { theme } = useTheme();
@@ -82,13 +94,13 @@ const Mapbox = ({
         "case",
         ["get", "visited"],
         theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
-        "#0080ff" // Default color for non-visited
+        "#0080ff", // Default color for non-visited
       ],
       "fill-opacity": [
         "case",
         ["get", "visited"],
         0.6, // Higher opacity for visited countries
-        0.2  // Lower opacity for non-visited
+        0.2, // Lower opacity for non-visited
       ],
     },
   };
@@ -102,7 +114,7 @@ const Mapbox = ({
         "case",
         ["get", "visited"],
         theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
-        "transparent"
+        "transparent",
       ],
       "line-width": 2,
       "line-opacity": 0.8,
@@ -159,6 +171,9 @@ const Mapbox = ({
     <Map
       id={id}
       ref={mapRef}
+      scrollZoom={scrollZoom}
+      doubleClickZoom={doubleClickZoom}
+      boxZoom={boxZoom}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
       initialViewState={initialViewState}
       style={{ width: "100%", height: "100%" }}
@@ -176,15 +191,17 @@ const Mapbox = ({
       }}
     >
       {/* Navigation Controls */}
-      <NavigationControl position="bottom-left" />
-      <GeolocateControl
-        position="bottom-left"
-        trackUserLocation
-        onGeolocate={(e) => {
-          flyToLocation(e.coords.longitude, e.coords.latitude);
-        }}
-      />
-
+      {showControls && <NavigationControl position="bottom-left" />}
+      {/* Show location button */}
+      {showControls && (
+        <GeolocateControl
+          position="bottom-left"
+          trackUserLocation
+          onGeolocate={(e) => {
+            flyToLocation(e.coords.longitude, e.coords.latitude);
+          }}
+        />
+      )}
       {/* Markers */}
       {markers.map((marker) => (
         <Marker

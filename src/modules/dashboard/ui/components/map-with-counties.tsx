@@ -62,6 +62,10 @@ export const MapWithCounties = () => {
         )}
         <Mapbox
           id="dashboardMap"
+          showControls={false}
+          scrollZoom={false}
+          doubleClickZoom={false}
+          boxZoom={false}
           initialViewState={{
             longitude: 0,
             latitude: 20,
