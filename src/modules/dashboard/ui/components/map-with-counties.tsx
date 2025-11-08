@@ -51,8 +51,8 @@ export const MapWithCounties = () => {
     }));
 
   return (
-    <div className="w-full grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 h-[500px] rounded-xl overflow-hidden relative">
+    <div className="w-full h-[600px] grid grid-cols-1 lg:grid-cols-3 gap-4">
+      <div className="lg:col-span-2 h-full rounded-xl overflow-hidden relative">
         {false && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
             <div className="text-sm text-muted-foreground">
@@ -71,23 +71,25 @@ export const MapWithCounties = () => {
       </div>
 
       {/* Country Statistics Chart */}
-      <div className="lg:col-span-1">
+      <div className="lg:col-span-1 h-full">
         {countriesData && countriesData.length > 0 && (
-          <Card>
-            <CardHeader>
-              <CardTitle>Countries by Photos</CardTitle>
-              <CardDescription>
+          <Card className="h-full flex flex-col p-4">
+            <CardHeader className="shrink-0 p-0 pb-3">
+              <CardTitle className="text-lg">Countries by Photos</CardTitle>
+              <CardDescription className="text-sm">
                 Top {chartData.length} countries with most photos
               </CardDescription>
             </CardHeader>
-            <CardContent>
-              <ChartContainer config={chartConfig}>
+            <CardContent className="flex-1 flex flex-col p-0 min-h-0">
+              <ChartContainer config={chartConfig} className="flex-1 min-h-0">
                 <BarChart
                   accessibilityLayer
                   data={chartData}
                   layout="vertical"
                   margin={{
                     left: -15,
+                    top: 5,
+                    bottom: 5,
                   }}
                 >
                   <XAxis type="number" dataKey="photoCount" hide />
@@ -119,7 +121,7 @@ export const MapWithCounties = () => {
                 </BarChart>
               </ChartContainer>
             </CardContent>
-            <CardFooter className="flex-col items-start gap-2 text-sm">
+            <CardFooter className="shrink-0 flex-col items-start gap-1 text-sm p-0 pt-3">
               <div className="flex gap-2 leading-none font-medium">
                 {countriesData.length} countries visited{" "}
                 <TrendingUp className="h-4 w-4" />
