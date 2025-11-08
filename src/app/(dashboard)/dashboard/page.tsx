@@ -8,7 +8,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 const page = async () => {
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(
-    trpc.dashboard.getPhotosCountByMonth.queryOptions()
+    trpc.dashboard.getPhotosCountByMonth.queryOptions({ years: 3 })
   );
 
   return (
