@@ -20,17 +20,15 @@ const ProfilePage = async () => {
   });
 
   return (
-    <div className="flex flex-col gap-y-6 pt-2.5">
-      <div className="px-4">
-        <h1 className="text-2xl font-bold">Access & Security</h1>
-        <p className="text-xs text-muted-foreground">
-          Manage the devices logged in your account & Profile information
-        </p>
-        <SecurityAccessCard
-          session={JSON.parse(JSON.stringify(session))}
-          activeSessions={JSON.parse(JSON.stringify(activeSessions))}
-        />
-      </div>
+    <div className="py-4 px-4 md:px-8 flex flex-col">
+      <h1 className="text-2xl font-bold">Access & Security</h1>
+      <p className="text-xs text-muted-foreground">
+        Manage the devices logged in your account & Profile information
+      </p>
+      <SecurityAccessCard
+        session={JSON.parse(JSON.stringify(session))}
+        activeSessions={JSON.parse(JSON.stringify(activeSessions))}
+      />
     </div>
   );
 };
