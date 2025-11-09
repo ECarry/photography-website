@@ -52,7 +52,7 @@ export const MapWithCounties = () => {
 
   return (
     <div className="w-full h-[600px] grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 h-full rounded-xl overflow-hidden relative">
+      <div className="lg:col-span-2 rounded-xl overflow-hidden relative h-[400px] lg:h-full">
         {false && (
           <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
             <div className="text-sm text-muted-foreground">
