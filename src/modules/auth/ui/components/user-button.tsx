@@ -1,6 +1,5 @@
 "use client";
 
-import { signOut, useSession } from "@/modules/auth/lib/auth-client";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -11,11 +10,12 @@ import {
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { LogOut, Loader2 } from "lucide-react";
+import { authClient } from "@/modules/auth/lib/auth-client";
 
 const UserButton = () => {
   const router = useRouter();
   const [isSignOut, setIsSignOut] = useState<boolean>(false);
-  const { data: session } = useSession();
+  const { data: session } = authClient.useSession();
 
   return (
     <DropdownMenu modal={false}>
@@ -35,7 +35,7 @@ const UserButton = () => {
             className="w-full"
             onClick={async () => {
               setIsSignOut(true);
-              await signOut({
+              await authClient.signOut({
                 fetchOptions: {
                   onSuccess() {
                     router.push("/");

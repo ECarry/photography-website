@@ -1,4 +1,3 @@
-import { NavDocuments } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-documents";
 import { NavMain } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-main";
 import { NavSecondary } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-secondary";
 import { NavUser } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-user";
@@ -44,51 +43,6 @@ const data = {
       icon: "user",
     },
   ],
-  navClouds: [
-    {
-      title: "Capture",
-      isActive: true,
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Proposal",
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Prompts",
-      url: "#",
-      items: [
-        {
-          title: "Active Proposals",
-          url: "#",
-        },
-        {
-          title: "Archived",
-          url: "#",
-        },
-      ],
-    },
-  ],
   navSecondary: [
     {
       title: "Settings",
@@ -100,20 +54,6 @@ const data = {
     },
     {
       title: "Search",
-      url: "#",
-    },
-  ],
-  documents: [
-    {
-      name: "Data Library",
-      url: "#",
-    },
-    {
-      name: "Reports",
-      url: "#",
-    },
-    {
-      name: "Word Assistant",
       url: "#",
     },
   ],
@@ -143,7 +83,6 @@ export const DashboardSidebar = async ({
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        <NavDocuments items={data.documents} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
