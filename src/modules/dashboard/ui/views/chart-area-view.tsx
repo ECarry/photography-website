@@ -28,6 +28,7 @@ import {
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export const description = "Monthly photo count chart";
 
@@ -38,7 +39,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
-export function ChartAreaInteractive() {
+export function ChartAreaView() {
   const trpc = useTRPC();
   const isMobile = useIsMobile();
   const [timeRange, setTimeRange] = React.useState("3y");
@@ -52,10 +53,14 @@ export function ChartAreaInteractive() {
   // Get years from timeRange
   const years = React.useMemo(() => {
     switch (timeRange) {
-      case "1y": return 1;
-      case "3y": return 3;
-      case "5y": return 5;
-      default: return 3;
+      case "1y":
+        return 1;
+      case "3y":
+        return 3;
+      case "5y":
+        return 5;
+      default:
+        return 3;
     }
   }, [timeRange]);
 
@@ -78,15 +83,15 @@ export function ChartAreaInteractive() {
 
   const peakMonth = React.useMemo(() => {
     if (photosCountByMonth.length === 0) return null;
-    const peak = photosCountByMonth.reduce((max, item) => 
+    const peak = photosCountByMonth.reduce((max, item) =>
       item.count > max.count ? item : max
     );
     return {
       month: new Date(peak.month + "-01").toLocaleDateString("en-US", {
         month: "long",
-        year: "numeric"
+        year: "numeric",
       }),
-      count: peak.count
+      count: peak.count,
     };
   }, [photosCountByMonth]);
 
@@ -96,7 +101,8 @@ export function ChartAreaInteractive() {
         <CardTitle>Photo Activity</CardTitle>
         <CardDescription>
           <span className="hidden @[540px]/card:block">
-            {totalPhotos.toLocaleString()} photos taken in the last {years} year{years > 1 ? 's' : ''}
+            {totalPhotos.toLocaleString()} photos taken in the last {years} year
+            {years > 1 ? "s" : ""}
             {peakMonth && (
               <span className="ml-2 text-muted-foreground">
                 • Peak: {peakMonth.month} ({peakMonth.count} photos)
@@ -188,8 +194,8 @@ export function ChartAreaInteractive() {
                     });
                   }}
                   formatter={(value) => [
-                    `${value} photo${value !== 1 ? 's' : ''}`,
-                    "Photos"
+                    `${value} photo${value !== 1 ? "s" : ""}`,
+                    "Photos",
                   ]}
                   indicator="dot"
                 />
@@ -207,3 +213,112 @@ export function ChartAreaInteractive() {
     </Card>
   );
 }
+
+export const ChartAreaLoading = () => {
+  return (
+    <Card className="@container/card">
+      <CardHeader>
+        <CardTitle>Photo Activity</CardTitle>
+        <CardDescription>
+          <Skeleton className="h-4 w-24" />
+        </CardDescription>
+        <CardAction>
+          <ToggleGroup
+            type="single"
+            value={"3y"}
+            onValueChange={() => {}}
+            variant="outline"
+            className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
+          >
+            <ToggleGroupItem value="1y">1 Year</ToggleGroupItem>
+            <ToggleGroupItem value="3y">3 Years</ToggleGroupItem>
+            <ToggleGroupItem value="5y">5 Years</ToggleGroupItem>
+          </ToggleGroup>
+          <Select value={"3y"} onValueChange={() => {}}>
+            <SelectTrigger
+              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+              size="sm"
+              aria-label="Select a value"
+            >
+              <SelectValue placeholder="3 Years" />
+            </SelectTrigger>
+            <SelectContent className="rounded-xl">
+              <SelectItem value="1y" className="rounded-lg">
+                1 Year
+              </SelectItem>
+              <SelectItem value="3y" className="rounded-lg">
+                3 Years
+              </SelectItem>
+              <SelectItem value="5y" className="rounded-lg">
+                5 Years
+              </SelectItem>
+            </SelectContent>
+          </Select>
+        </CardAction>
+      </CardHeader>
+      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+        <ChartContainer
+          config={chartConfig}
+          className="aspect-auto h-[250px] w-full"
+        >
+          <AreaChart data={[]}>
+            <defs>
+              <linearGradient id="fillPhotos" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-photos)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-photos)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} />
+            <XAxis
+              dataKey="date"
+              tickLine={false}
+              axisLine={false}
+              tickMargin={8}
+              minTickGap={32}
+              tickFormatter={(value) => {
+                const date = new Date(value);
+                return date.toLocaleDateString("en-US", {
+                  month: "short",
+                  year: "2-digit",
+                });
+              }}
+            />
+            <ChartTooltip
+              cursor={false}
+              defaultIndex={-1}
+              content={
+                <ChartTooltipContent
+                  labelFormatter={(value) => {
+                    return new Date(value).toLocaleDateString("en-US", {
+                      month: "long",
+                      year: "numeric",
+                    });
+                  }}
+                  formatter={(value) => [
+                    `${value} photo${value !== 1 ? "s" : ""}`,
+                    "Photos",
+                  ]}
+                  indicator="dot"
+                />
+              }
+            />
+            <Area
+              dataKey="photos"
+              type="natural"
+              fill="url(#fillPhotos)"
+              stroke="var(--color-photos)"
+            />
+          </AreaChart>
+        </ChartContainer>
+      </CardContent>
+    </Card>
+  );
+};

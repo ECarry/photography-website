@@ -22,7 +22,7 @@ import {
   ChartTooltipContent,
 } from "@/components/ui/chart";
 
-export const MapWithCounties = () => {
+export const MapView = () => {
   const trpc = useTRPC();
   const { data: visitedCountries } = useSuspenseQuery(
     trpc.dashboard.getVisitedCountries.queryOptions()

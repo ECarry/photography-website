@@ -1,9 +1,14 @@
-import { DashboardView } from "@/modules/dashboard/ui/views/dashboard-view";
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
+import { MapView } from "@/modules/dashboard/ui/views/map-view";
+import {
+  ChartAreaView,
+  ChartAreaLoading,
+} from "@/modules/dashboard/ui/views/chart-area-view";
+import { SectionCardsView } from "@/modules/dashboard/ui/views/section-cards-view";
 
 const page = async () => {
   const queryClient = getQueryClient();
@@ -22,13 +27,21 @@ const page = async () => {
           See your photos, travel history, and more.
         </p>
       </div>
-      <HydrationBoundary state={dehydrate(queryClient)}>
-        <Suspense fallback={<p>Loading...</p>}>
-          <ErrorBoundary fallback={<p>Error</p>}>
-            <DashboardView />
-          </ErrorBoundary>
-        </Suspense>
-      </HydrationBoundary>
+      <div className="@container/main flex flex-1 flex-col">
+        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+          <HydrationBoundary state={dehydrate(queryClient)}>
+            <SectionCardsView />
+
+            <Suspense fallback={<ChartAreaLoading />}>
+              <ErrorBoundary fallback={<p>Error</p>}>
+                <ChartAreaView />
+              </ErrorBoundary>
+            </Suspense>
+
+            <MapView />
+          </HydrationBoundary>
+        </div>
+      </div>
     </div>
   );
 };
