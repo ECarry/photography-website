@@ -3,7 +3,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMemo, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, ArrowLeft, Search, MapPin } from "lucide-react";
+import { ArrowRight, ArrowLeft, X, MapPin } from "lucide-react";
 import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
 import { thirdStepSchema, StepProps } from "../types";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -12,6 +12,7 @@ import { useGetAddress } from "@/modules/mapbox/hooks/use-get-address";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { ButtonGroup } from "@/components/ui/button-group";
 
 const MapboxComponent = dynamic(
   () => import("@/modules/mapbox/ui/components/map"),
@@ -112,7 +113,7 @@ export function ThirdStep({
       const response = await fetch(
         `https://api.mapbox.com/search/geocode/v6/forward?q=${encodeURIComponent(
           searchQuery
-        )}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&limit=5`
+        )}&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}&limit=10`
       );
 
       if (!response.ok) {
@@ -133,8 +134,11 @@ export function ThirdStep({
   const handleSelectLocation = (result: SearchResult) => {
     const [lng, lat] = result.geometry.coordinates;
     setCurrentLocation({ lat, lng });
-    setSearchResults([]);
+  };
+
+  const handleClearSearch = () => {
     setSearchQuery("");
+    setSearchResults([]);
   };
 
   // Memoize map values to reduce re-renders
@@ -183,42 +187,46 @@ export function ThirdStep({
           <FormLabel>Search for a place</FormLabel>
           {/* Search Input */}
           <div className="relative mb-2">
-            <Input
-              placeholder="Search for a place..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pr-10"
-            />
-            <div className="absolute right-3 top-1/2 -translate-y-1/2">
-              {isSearching ? (
-                <div className="h-4 w-4 animate-spin rounded-full border-2 border-gray-300 border-t-gray-600" />
-              ) : (
-                <Search className="h-4 w-4 text-muted-foreground" />
-              )}
-            </div>
+            <ButtonGroup>
+              <Input
+                placeholder="Search..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              <Button
+                variant="outline"
+                aria-label="Search"
+                onClick={handleClearSearch}
+                disabled={!searchQuery || isSearching}
+              >
+                <X />
+              </Button>
+            </ButtonGroup>
 
             {/* Search Results */}
             {searchResults.length > 0 && (
-              <Card className="absolute z-10 w-full mt-1 p-0 max-h-[200px] overflow-hidden">
-                <ScrollArea className="h-full">
-                  {searchResults.map((result, index) => (
-                    <button
-                      key={index}
-                      type="button"
-                      className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-start gap-2 border-b last:border-b-0"
-                      onClick={() => handleSelectLocation(result)}
-                    >
-                      <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">
-                          {result.properties.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {result.properties.place_formatted}
-                        </p>
-                      </div>
-                    </button>
-                  ))}
+              <Card className="absolute z-10 w-full mt-1 p-0 shadow-lg">
+                <ScrollArea className="h-[200px]">
+                  <div className="p-0">
+                    {searchResults.map((result, index) => (
+                      <button
+                        key={index}
+                        type="button"
+                        className="w-full text-left px-4 py-2 hover:bg-accent transition-colors flex items-start gap-2 border-b last:border-b-0"
+                        onClick={() => handleSelectLocation(result)}
+                      >
+                        <MapPin className="h-4 w-4 mt-0.5 shrink-0 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">
+                            {result.properties.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {result.properties.place_formatted}
+                          </p>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
                 </ScrollArea>
               </Card>
             )}
