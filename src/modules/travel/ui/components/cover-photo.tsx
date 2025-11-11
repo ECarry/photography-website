@@ -34,7 +34,7 @@ export const CoverPhoto = ({ citySet, citySets }: CoverPhotoProps) => {
         </div>
 
         <div className="absolute right-0 bottom-0 z-10">
-          <VectorCombined title={citySet.city || ""} position="bottom-right" />
+          <VectorCombined title={citySet?.city || ""} position="bottom-right" />
         </div>
       </div>
     </div>
