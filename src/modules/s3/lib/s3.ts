@@ -1,6 +1,6 @@
 import { IMAGE_SIZE_LIMIT } from "@/constants";
 
-interface UploadToR2Options {
+interface UploadToS3Options {
   file: File;
   folder: string;
   onProgress?: (progress: number) => void;
@@ -11,7 +11,7 @@ interface UploadToR2Options {
   }) => Promise<{ uploadUrl: string; publicUrl: string }>;
 }
 
-interface UploadToR2Result {
+interface UploadToS3Result {
   publicUrl: string;
 }
 
@@ -22,7 +22,7 @@ class UploadError extends Error {
   }
 }
 
-export class CloudflareR2Client {
+export class S3Client {
   /**
    * generate a unique filename
    * @param originalFilename the original filename
@@ -120,7 +120,7 @@ export class CloudflareR2Client {
     folder,
     onProgress,
     getUploadUrl,
-  }: UploadToR2Options): Promise<UploadToR2Result> {
+  }: UploadToS3Options): Promise<UploadToS3Result> {
     try {
       this.validateFile(file);
 
@@ -147,4 +147,4 @@ export class CloudflareR2Client {
   }
 }
 
-export const cloudflareR2 = new CloudflareR2Client();
+export const s3Client = new S3Client();

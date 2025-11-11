@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { cloudflareR2 } from "@/modules/cloudflare/lib/cloudflare-r2";
+import { s3Client } from "@/modules/s3/lib/s3";
 import {
   type TExifData,
   type TImageInfo,
@@ -32,7 +32,7 @@ export function usePhotoUpload({
 
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
-    trpc.cloudflare.createPresignedUrl.mutationOptions()
+    trpc.s3.createPresignedUrl.mutationOptions()
   );
 
   const handleUpload = async (file: File) => {
@@ -45,7 +45,7 @@ export function usePhotoUpload({
       setExif(exifData);
       setImageInfo(imageInfo);
 
-      const { publicUrl } = await cloudflareR2.upload({
+      const { publicUrl } = await s3Client.upload({
         file,
         folder,
         onProgress: (progress) => {

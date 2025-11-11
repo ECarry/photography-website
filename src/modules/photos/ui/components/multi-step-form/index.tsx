@@ -37,6 +37,7 @@ export default function MultiStepForm({
   const queryClient = useQueryClient();
 
   const createPhoto = useMutation(trpc.photos.create.mutationOptions());
+  const removeS3Object = useMutation(trpc.s3.deleteFile.mutationOptions());
   // ========================================
   // State Management
   // ========================================
@@ -75,7 +76,8 @@ export default function MultiStepForm({
   };
 
   // Handle re-upload
-  const handleReupload = () => {
+  const handleReupload = (url: string) => {
+    removeS3Object.mutate({ key: url });
     setUrl(null);
     setExif(null);
     setImageInfo(undefined);

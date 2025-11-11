@@ -2,7 +2,7 @@ import { createTRPCRouter } from "../init";
 import { postsRouter } from "@/modules/posts/server/procedures";
 import { photosRouter } from "@/modules/photos/server/procedures";
 import { cityRouter } from "@/modules/cities/server/procedures";
-import { cloudflareRouter } from "@/modules/cloudflare/server/procedures";
+import { s3Router } from "@/modules/s3/server/procedures";
 import { homeRouter } from "@/modules/home/server/procedures";
 import { discoverRouter } from "@/modules/discover/server/procedures";
 import { travelRouter } from "@/modules/travel/server/procedures";
@@ -13,7 +13,7 @@ export const appRouter = createTRPCRouter({
   posts: postsRouter,
   photos: photosRouter,
   city: cityRouter,
-  cloudflare: cloudflareRouter,
+  s3: s3Router,
   home: homeRouter,
   discover: discoverRouter,
   travel: travelRouter,

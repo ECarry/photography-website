@@ -80,7 +80,7 @@ export interface UploadStepProps extends StepProps {
     exif: TExifData | null,
     imageInfo: TImageInfo
   ) => void;
-  onReupload: () => void;
+  onReupload: (url: string) => void;
 }
 
 export interface MetadataStepProps extends StepProps {

@@ -7,7 +7,7 @@ import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
-import { cloudflareR2 } from "@/modules/cloudflare/lib/cloudflare-r2";
+import { s3Client } from "@/modules/s3/lib/s3";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
@@ -26,13 +26,13 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
       objectUrl?: string;
     }>
   >([]);
-  
+
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
-    trpc.cloudflare.createPresignedUrl.mutationOptions()
+    trpc.s3.createPresignedUrl.mutationOptions()
   );
 
-  const deleteFile = useMutation(trpc.cloudflare.deleteFile.mutationOptions());
+  const deleteFile = useMutation(trpc.s3.deleteFile.mutationOptions());
 
   const uploadFile = useCallback(
     async (file: File, fileId: string) => {
@@ -41,7 +41,7 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
       );
 
       try {
-        const { publicUrl } = await cloudflareR2.upload({
+        const { publicUrl } = await s3Client.upload({
           file,
           folder: "uploads",
           onProgress: (progress) => {
@@ -93,10 +93,11 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
           )
         );
 
-      toast.error(
-        `Failed to upload ${file.name}: ${
-          error instanceof Error ? error.message : 'Unknown error'
-        }`);
+        toast.error(
+          `Failed to upload ${file.name}: ${
+            error instanceof Error ? error.message : "Unknown error"
+          }`
+        );
       }
     },
     [createPresignedUrl, onUploadSuccess]
@@ -128,14 +129,14 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
   );
 
   useEffect(() => {
-  return () => {
-    files.forEach(f => {
-      if (f.objectUrl) {
-        URL.revokeObjectURL(f.objectUrl);
-      }
-    });
-  };
-}, [files]);
+    return () => {
+      files.forEach((f) => {
+        if (f.objectUrl) {
+          URL.revokeObjectURL(f.objectUrl);
+        }
+      });
+    };
+  }, [files]);
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
     if (fileRejections.length > 0) {
@@ -166,17 +167,20 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
     },
   });
 
-  const handleDeleteFile = useCallback(async (key: string | undefined) => {
-  if (!key) return;
-  
-  const fileToDelete = files.find(f => f.key === key);
-  
-  if (fileToDelete?.uploading) {
-    toast.error("Cannot delete file while uploading");
-    return;
-  }
+  const handleDeleteFile = useCallback(
+    async (key: string | undefined) => {
+      if (!key) return;
 
-}, [deleteFile, files]);
+      const fileToDelete = files.find((f) => f.key === key);
+
+      if (fileToDelete?.uploading) {
+        toast.error("Cannot delete file while uploading");
+        return;
+      }
+    },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [deleteFile, files]
+  );
 
   return (
     <>

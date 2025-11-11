@@ -84,7 +84,7 @@ export function FirstStep({
                   type="button"
                   variant="outline"
                   size="sm"
-                  onClick={onReupload}
+                  onClick={() => onReupload(url)}
                 >
                   Re-upload
                 </Button>

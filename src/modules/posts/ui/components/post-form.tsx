@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { postInsertSchema } from "../../schemas";
-import FileUploader from "@/modules/cloudflare/ui/components/file-uploader";
+import FileUploader from "@/modules/s3/ui/components/file-uploader";
 
 interface PostFormProps {
   onSuccess?: () => void;

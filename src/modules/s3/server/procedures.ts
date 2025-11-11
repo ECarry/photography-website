@@ -13,7 +13,7 @@ import { z } from "zod";
  * @returns The complete public URL for accessing the file
  * @throws Error if S3_PUBLIC_URL is not configured
  */
-export const cloudflareRouter = createTRPCRouter({
+export const s3Router = createTRPCRouter({
   createPresignedUrl: protectedProcedure
     .input(
       z.object({
