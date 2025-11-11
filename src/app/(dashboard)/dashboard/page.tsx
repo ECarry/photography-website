@@ -8,7 +8,10 @@ import {
   ChartAreaView,
   ChartAreaLoading,
 } from "@/modules/dashboard/ui/views/chart-area-view";
-import { SectionCardsView } from "@/modules/dashboard/ui/views/section-cards-view";
+import {
+  SectionCardsView,
+  SectionCardsLoading,
+} from "@/modules/dashboard/ui/views/section-cards-view";
 
 const page = async () => {
   const queryClient = getQueryClient();
@@ -17,6 +20,9 @@ const page = async () => {
   );
   void queryClient.prefetchQuery(
     trpc.dashboard.getVisitedCountries.queryOptions()
+  );
+  void queryClient.prefetchQuery(
+    trpc.dashboard.getDashboardStats.queryOptions()
   );
 
   return (
@@ -30,8 +36,9 @@ const page = async () => {
       <div className="@container/main flex flex-1 flex-col">
         <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
           <HydrationBoundary state={dehydrate(queryClient)}>
-            <SectionCardsView />
-
+            <Suspense fallback={<SectionCardsLoading />}>
+              <SectionCardsView />
+            </Suspense>
             <Suspense fallback={<ChartAreaLoading />}>
               <ErrorBoundary fallback={<p>Error</p>}>
                 <ChartAreaView />
