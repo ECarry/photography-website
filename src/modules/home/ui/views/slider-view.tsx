@@ -1,12 +1,16 @@
 "use client";
 
 // UI Components
+import Link from "next/link";
 import Carousel from "@/components/Carousel";
 import BlurImage from "@/components/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/empty-state";
 import { keyToImage } from "@/lib/keyToImage";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { Button } from "@/components/ui/button";
+import { ImageOff } from "lucide-react";
 
 export const SliderView = () => {
   const trpc = useTRPC();
@@ -16,9 +20,17 @@ export const SliderView = () => {
 
   if (photos.length === 0) {
     return (
-      <div className="w-full h-full flex items-center justify-center">
-        no photos, please upload some photos & like your photos
-      </div>
+      <EmptyState
+        icon={<ImageOff className="h-12 w-12" />}
+        title="No photos yet"
+        description="Upload some photos and like your favorites to get started"
+        action={
+          <Button asChild>
+            <Link href="/dashboard/photos">Go to Dashboard</Link>
+          </Button>
+        }
+        height="h-full"
+      />
     );
   }
 
