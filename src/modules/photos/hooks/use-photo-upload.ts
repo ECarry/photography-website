@@ -7,7 +7,7 @@ import {
   getPhotoExif,
   getImageInfo,
 } from "@/modules/photos/lib/utils";
-import { DEFAULT_FOLDER } from "@/constants";
+import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 
@@ -21,7 +21,7 @@ interface UsePhotoUploadProps {
 }
 
 export function usePhotoUpload({
-  folder = DEFAULT_FOLDER,
+  folder = DEFAULT_PHOTOS_UPLOAD_FOLDER,
   onUploadSuccess,
 }: UsePhotoUploadProps) {
   const [uploadProgress, setUploadProgress] = useState(0);
