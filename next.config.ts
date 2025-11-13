@@ -7,6 +7,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   reactCompiler: true,
   images: {
+    qualities: [65, 75],
     remotePatterns: r2Hostname
       ? [
           {
