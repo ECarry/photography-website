@@ -14,6 +14,7 @@ import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { PhotoUploader } from "../../photo-uploader";
 import { keyToImage } from "@/lib/keyToImage";
 import { firstStepSchema, FirstStepData, UploadStepProps } from "../types";
+import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
 
 export function FirstStep({
   url,
@@ -59,7 +60,7 @@ export function FirstStep({
           {!url || !imageInfo ? (
             <>
               <PhotoUploader
-                folder="my-photos"
+                folder={DEFAULT_PHOTOS_UPLOAD_FOLDER}
                 onUploadSuccess={(url, exif, imageInfo) => {
                   onUploadSuccess(url, exif, imageInfo);
                   form.setValue("url", url, { shouldValidate: true });

@@ -7,4 +7,4 @@ export const MAX_PAGE_SIZE = 100;
 export const IMAGE_SIZE_LIMIT = 50 * 1024 * 1024;
 
 // Upload default folder
-export const DEFAULT_FOLDER = "photos";
+export const DEFAULT_PHOTOS_UPLOAD_FOLDER = "photos";
