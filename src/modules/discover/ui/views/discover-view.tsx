@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import Mapbox from "@/modules/mapbox/ui/components/map";
-import VectorCombined from "@/modules/home/ui/components/vector-combined";
+import VectorCombined from "@/components/vector-combined";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { usePhotoClustering } from "@/modules/discover/hooks/use-photo-clustering";

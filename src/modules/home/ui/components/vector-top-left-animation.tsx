@@ -1,4 +1,4 @@
-import Graphic from "../../../../components/graphic";
+import Graphic from "@/components/graphic";
 import { PiArrowRight } from "react-icons/pi";
 
 interface Props {
