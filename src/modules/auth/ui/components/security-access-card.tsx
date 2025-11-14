@@ -9,24 +9,19 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-  Dot,
-  Laptop,
-  Loader2,
-  Smartphone,
-  Monitor,
-  Tablet,
-  Globe,
-  Clock,
-} from "lucide-react";
+import { Globe, Clock, Dot, Monitor, Loader2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { ProfileForm } from "@/modules/auth/ui/components/profile-form";
 
 // Types
 import { Session } from "../../lib/auth-types";
-
-import ChangePassword from "./dialogs/change-password";
-import EditUserDialog from "./dialogs/edit-user";
 import { authClient } from "../../lib/auth-client";
+
+import {
+  formatLastActive,
+  getDeviceDescription,
+  getDeviceIcon,
+} from "../../lib/utils";
 
 const SecurityAccessCard = (props: {
   session: Session | null;
@@ -35,56 +30,13 @@ const SecurityAccessCard = (props: {
   const router = useRouter();
   const [isTerminating, setIsTerminating] = useState<string>();
 
-  const formatLastActive = (createdAt: string) => {
-    const date = new Date(createdAt);
-    const now = new Date();
-    const diffInMinutes = Math.floor(
-      (now.getTime() - date.getTime()) / (1000 * 60)
-    );
-
-    if (diffInMinutes < 1) return "Active now";
-    if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
-    if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
-    return `${Math.floor(diffInMinutes / 1440)}d ago`;
-  };
-
-  const getDeviceIcon = (
-    userAgent: UAParser.IResult,
-    deviceType: string | undefined
-  ) => {
-    const os = userAgent.getOS().name?.toLowerCase();
-
-    if (deviceType === "mobile" || deviceType === "tablet") {
-      return deviceType === "tablet" ? Tablet : Smartphone;
-    }
-
-    if (os?.includes("mac")) return Laptop;
-    if (os?.includes("windows")) return Monitor;
-
-    return Laptop;
-  };
-
-  const getDeviceDescription = (
-    userAgent: UAParser.IResult,
-    deviceType: string | undefined
-  ) => {
-    const browser = userAgent.getBrowser();
-    const os = userAgent.getOS();
-    const device = userAgent.getDevice();
-
-    if (deviceType === "mobile") {
-      return `${device.vendor || "Mobile"} ${device.model || "Device"}`;
-    }
-
-    if (deviceType === "tablet") {
-      return `${device.vendor || "Tablet"} ${device.model || "Device"}`;
-    }
-
-    return `${browser.name || "Browser"} on ${os.name || "Desktop"}`;
-  };
-
   return (
     <div className="space-y-8">
+      {/* Account Management */}
+      <div className="max-w-lg">
+        <ProfileForm />
+      </div>
+
       {/* Active Sessions Section */}
       <div className="space-y-4">
         <div>
@@ -96,25 +48,25 @@ const SecurityAccessCard = (props: {
           </p>
         </div>
 
-        <div className="space-y-2">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {props.activeSessions
             .filter((session) => session.userAgent)
             .map((session) => {
-              const userAgent = new UAParser(session.userAgent || "");
+              const parser = new UAParser(session.userAgent || "");
               const isCurrentSession = session.id === props.session?.session.id;
-              const deviceType = userAgent.getDevice().type;
-              const DeviceIcon = getDeviceIcon(userAgent, deviceType);
+              const deviceType = parser.getDevice().type;
+              const DeviceIcon = getDeviceIcon(parser, deviceType);
               const deviceDescription = getDeviceDescription(
-                userAgent,
+                parser,
                 deviceType
               );
-              const browser = userAgent.getBrowser();
-              const os = userAgent.getOS();
+              const browser = parser.getBrowser();
+              const os = parser.getOS();
 
               return (
                 <Card
                   key={session.id}
-                  className={`overflow-hidden transition-all duration-200 hover:shadow-sm ${
+                  className={`overflow-hidden transition-all duration-200 hover:shadow-sm min-w-[400px] ${
                     isCurrentSession
                       ? "ring-1 ring-primary/30 border-primary/40 bg-primary/5"
                       : "border hover:border-primary/20"
@@ -212,27 +164,6 @@ const SecurityAccessCard = (props: {
               );
             })}
         </div>
-      </div>
-
-      {/* Account Management */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight mb-1">
-            Account Management
-          </h2>
-          <p className="text-sm text-muted-foreground">
-            Update your account settings and security preferences
-          </p>
-        </div>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center gap-3">
-              <ChangePassword />
-              <EditUserDialog />
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
