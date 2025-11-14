@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect } from "react";
+import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { ArrowLeft, MapPin, Image as ImageIcon, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,7 +15,24 @@ import {
   useMutation,
   useQueryClient,
 } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { zodResolver } from "@hookform/resolvers/zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+
+const cityDescriptionSchema = z.object({
+  description: z.string().optional(),
+});
+
+type CityDescriptionForm = z.infer<typeof cityDescriptionSchema>;
 
 interface CityDetailViewProps {
   city: string;
@@ -26,9 +45,37 @@ export function CityDetailView({ city }: CityDetailViewProps) {
     trpc.city.getOne.queryOptions({ city })
   );
 
+  const form = useForm<CityDescriptionForm>({
+    resolver: zodResolver(cityDescriptionSchema),
+    defaultValues: {
+      description: "",
+    },
+  });
+
   const updateCoverPhoto = useMutation(
     trpc.city.updateCoverPhoto.mutationOptions()
   );
+
+  const updateDescription = useMutation(
+    trpc.city.updateDescription.mutationOptions({
+      onSuccess: async () => {
+        await queryClient.invalidateQueries(
+          trpc.city.getOne.queryOptions({ city })
+        );
+        await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
+        toast.success("Description updated successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to update description");
+      },
+    })
+  );
+
+  useEffect(() => {
+    if (cityData?.description !== undefined) {
+      form.setValue("description", cityData.description || "");
+    }
+  }, [cityData?.description, form]);
 
   const handleSetCover = async (photoId: string) => {
     if (!cityData) return;
@@ -70,19 +117,46 @@ export function CityDetailView({ city }: CityDetailViewProps) {
   }
 
   return (
-    <div className="space-y-6 px-4 md:px-8">
+    <div className="space-y-6 px-4 md:px-8 py-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">{cityData.city}</h1>
-          <div className="flex items-center gap-2 text-muted-foreground mt-2">
-            <ImageIcon className="h-4 w-4" />
-            <span>{cityData.photoCount} photos</span>
-          </div>
-          {cityData.description && (
-            <p className="text-muted-foreground mt-2">{cityData.description}</p>
-          )}
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">{cityData.city}</h1>
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <ImageIcon className="h-4 w-4" />
+          <span>{cityData.photoCount} photos</span>
         </div>
+        <Form {...form}>
+          <form
+            onSubmit={form.handleSubmit((values) => {
+              updateDescription.mutate({
+                cityId: cityData.id,
+                description: values.description || "",
+              });
+            })}
+            className="space-y-4"
+          >
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      {...field}
+                      placeholder="Enter city description"
+                      className="w-full"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button type="submit" disabled={updateDescription.isPending}>
+              {updateDescription.isPending ? "Saving..." : "Save"}
+            </Button>
+          </form>
+        </Form>
       </div>
 
       {/* Photos Grid */}

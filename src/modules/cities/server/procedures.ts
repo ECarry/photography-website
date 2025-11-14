@@ -1,6 +1,10 @@
 import z from "zod";
 import { db } from "@/db";
-import { createTRPCRouter, baseProcedure, protectedProcedure } from "@/trpc/init";
+import {
+  createTRPCRouter,
+  baseProcedure,
+  protectedProcedure,
+} from "@/trpc/init";
 import { citySets, photos } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -114,6 +118,43 @@ export const cityRouter = createTRPCRouter({
         .update(citySets)
         .set({
           coverPhotoId: photoId,
+          updatedAt: new Date(),
+        })
+        .where(eq(citySets.id, cityId))
+        .returning();
+
+      return updatedCitySet;
+    }),
+
+  // Update city description
+  updateDescription: protectedProcedure
+    .input(
+      z.object({
+        cityId: z.string().uuid(),
+        description: z.string(),
+      })
+    )
+    .mutation(async ({ input }) => {
+      const { cityId, description } = input;
+
+      // Verify the city set exists
+      const [citySet] = await db
+        .select()
+        .from(citySets)
+        .where(eq(citySets.id, cityId));
+
+      if (!citySet) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "City not found",
+        });
+      }
+
+      // Update the description
+      const [updatedCitySet] = await db
+        .update(citySets)
+        .set({
+          description,
           updatedAt: new Date(),
         })
         .where(eq(citySets.id, cityId))
