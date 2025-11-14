@@ -2,7 +2,7 @@
 import { type Metadata } from "next";
 
 // Internal dependencies - UI Components
-import Footer from "../../../modules/home/ui/components/footer";
+import Footer from "@/components/footer";
 import AboutCard from "../../../modules/home/ui/components/about-card";
 import TechMarquee from "@/components/tech-marquee";
 import CameraCard from "../../../modules/home/ui/components/camera-card";

@@ -2,7 +2,7 @@
 import Link from "next/link";
 
 // Internal dependencies - UI Components
-import ContactCard from "./contact-card";
+import ContactCard from "../../../../components/contact-card";
 import { PiArrowUpRight } from "react-icons/pi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 

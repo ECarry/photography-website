@@ -6,7 +6,7 @@ import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 import ProfileCard from "@/modules/home/ui/components/profile-card";
 import LatestTravelCard from "@/modules/home/ui/components/latest-travel-card";
-import Footer from "@/modules/home/ui/components/footer";
+import Footer from "@/components/footer";
 
 import {
   CitiesView,

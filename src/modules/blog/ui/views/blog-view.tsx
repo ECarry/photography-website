@@ -3,8 +3,8 @@
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import CardContainer from "@/components/card-container";
-import Footer from "@/modules/home/ui/components/footer";
-import ContactCard from "@/modules/home/ui/components/contact-card";
+import Footer from "@/components/footer";
+import ContactCard from "@/components/contact-card";
 import { PostsSection } from "../components/posts-section";
 import { LatestPostSection } from "../components/latest-post-section";
 import { Skeleton } from "@/components/ui/skeleton";

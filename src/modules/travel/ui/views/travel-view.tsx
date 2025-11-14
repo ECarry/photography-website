@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Footer from "@/modules/home/ui/components/footer";
+import Footer from "@/components/footer";
 import { CoverPhoto } from "../components/cover-photo";
 import { Introduction } from "../components/introduction";
 import { CityItem } from "../components/city-item";

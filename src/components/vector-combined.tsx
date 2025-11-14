@@ -1,4 +1,4 @@
-import Graphic from "./graphic";
+import Graphic from "@/components/graphic";
 import Link from "next/link";
 import { PiArrowLeft } from "react-icons/pi";
 

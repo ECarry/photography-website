@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import Graphic from "../graphic";
+import Graphic from "../../../../../components/graphic";
 import { useState } from "react";
 import MobileMenu from "./mobile-menu";
 
