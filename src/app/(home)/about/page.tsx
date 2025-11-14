@@ -8,7 +8,7 @@ import TechMarquee from "@/components/tech-marquee";
 import CameraCard from "../../../modules/home/ui/components/camera-card";
 import ProfileCard from "../../../modules/home/ui/components/profile-card";
 import CardContainer from "@/components/card-container";
-import VectorCombined from "@/modules/home/ui/components/vector-combined";
+import VectorCombined from "@/components/vector-combined";
 
 export const metadata: Metadata = {
   title: "About",
