@@ -234,12 +234,29 @@ vercel env pull .env.local
 bun run seed:user
 ```
 
-#### Photo URL Cleanup (if migrating)
+#### Upgrade: Photo URL storage change (S3 Key)
 
-```bash
-# If migrating from another system, clean photo URLs
-bun run clean:photo-urls
-```
+- **Change Summary**
+
+  - The database `url` field now stores the S3 object key (e.g., `photos/IMG_0001.jpg`) instead of a full public URL.
+  - **Benefit**: You can switch domains or CDNs freely by updating environment variables for the public base URL, without mass-updating the database.
+
+- **Migration Steps (run before production, recommended)**
+
+  1. **Backup your database** (strongly recommended).
+  2. Run the cleanup script to convert existing full URLs to S3 keys:
+     ```bash
+     bun run clean:photo-urls
+     ```
+  3. **Verify the result**: spot-check several records; `url` should look like a key such as `path/to/object.jpg`.
+  4. If you need to rollback, run:
+     ```bash
+     bun run rollback:photo-urls
+     ```
+
+- **Notes**
+  - Ensure your public access domain is configured via `S3_PUBLIC_URL` or `NEXT_PUBLIC_S3_PUBLIC_URL`. At runtime, the app combines this base URL with the key to form a full public URL.
+  - If you have custom prefixes or multiple buckets, validate the script behavior in a staging environment first.
 
 ## 🔧 Configuration Options
 
