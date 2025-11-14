@@ -1,11 +1,9 @@
 "use client";
 
 import {
-  IconCreditCard,
   IconDotsVertical,
   IconHomeShare,
   IconLogout,
-  IconNotification,
   IconUserCircle,
 } from "@tabler/icons-react";
 
@@ -35,12 +33,12 @@ interface Props {
 }
 
 export function NavUser({ user }: Props) {
-  const router = useRouter()
+  const router = useRouter();
   const { isMobile } = useSidebar();
 
   const handleLogout = () => {
     authClient.signOut();
-    router.push('/')
+    router.push("/");
   };
 
   return (
@@ -89,18 +87,12 @@ export function NavUser({ user }: Props) {
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <IconUserCircle />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconCreditCard />
-                Billing
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <IconNotification />
-                Notifications
-              </DropdownMenuItem>
+              <Link href="/dashboard/profile">
+                <DropdownMenuItem>
+                  <IconUserCircle />
+                  Profile
+                </DropdownMenuItem>
+              </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuItem asChild>
