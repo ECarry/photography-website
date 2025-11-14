@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const city = (await params).city;
 
   return {
-    title: city,
+    title: decodeURIComponent(city),
   };
 }
 
