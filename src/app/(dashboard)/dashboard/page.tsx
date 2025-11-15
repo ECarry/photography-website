@@ -24,6 +24,9 @@ const page = async () => {
   void queryClient.prefetchQuery(
     trpc.dashboard.getDashboardStats.queryOptions()
   );
+  void queryClient.prefetchQuery(
+    trpc.dashboard.getVisitedCountriesGeoJson.queryOptions()
+  );
 
   return (
     <div className="py-4 px-4 md:px-8 flex flex-col">
