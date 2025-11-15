@@ -3,7 +3,7 @@
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import Mapbox from "@/modules/mapbox/ui/components/map";
-import { useMemo } from "react";
+import { useMemo, useEffect, useState } from "react";
 
 import { TrendingUp } from "lucide-react";
 import { Bar, BarChart, XAxis, YAxis } from "recharts";
@@ -24,6 +24,9 @@ import {
 
 export const MapView = () => {
   const trpc = useTRPC();
+  const [geoJsonData, setGeoJsonData] =
+    useState<GeoJSON.FeatureCollection | null>(null);
+
   const { data: visitedCountries } = useSuspenseQuery(
     trpc.dashboard.getVisitedCountries.queryOptions()
   );
@@ -34,6 +37,20 @@ export const MapView = () => {
       color: "hsl(var(--chart-1))",
     },
   } satisfies ChartConfig;
+
+  // Load GeoJSON data
+  useEffect(() => {
+    const loadGeoJson = async () => {
+      try {
+        const response = await fetch("/us-income.geojson");
+        const data = await response.json();
+        setGeoJsonData(data);
+      } catch (error) {
+        console.error("Failed to load GeoJSON data:", error);
+      }
+    };
+    loadGeoJson();
+  }, []);
 
   // Use real data from database
   const countriesData = useMemo(
@@ -71,6 +88,7 @@ export const MapView = () => {
             latitude: 20,
             zoom: 0,
           }}
+          geoJsonData={geoJsonData || undefined}
         />
       </div>
 
