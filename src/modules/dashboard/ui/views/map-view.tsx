@@ -24,12 +24,8 @@ import {
 
 export const MapView = () => {
   const trpc = useTRPC();
-  const { data: visitedCountries } = useSuspenseQuery(
-    trpc.dashboard.getVisitedCountries.queryOptions()
-  );
-
-  const { data: visitedCountriesGeoJson } = useSuspenseQuery(
-    trpc.dashboard.getVisitedCountriesGeoJson.queryOptions()
+  const { data } = useSuspenseQuery(
+    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions()
   );
 
   const chartConfig = {
@@ -40,10 +36,7 @@ export const MapView = () => {
   } satisfies ChartConfig;
 
   // Use real data from database
-  const countriesData = useMemo(
-    () => visitedCountries || [],
-    [visitedCountries]
-  );
+  const countriesData = useMemo(() => data?.countries || [], [data]);
 
   // Prepare chart data for the bar chart using countryCode from database
   const chartData = countriesData
@@ -75,7 +68,7 @@ export const MapView = () => {
             latitude: 20,
             zoom: 0,
           }}
-          geoJsonData={visitedCountriesGeoJson || undefined}
+          geoJsonData={data?.geoJson || undefined}
         />
       </div>
 

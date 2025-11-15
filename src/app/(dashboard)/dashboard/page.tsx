@@ -19,13 +19,10 @@ const page = async () => {
     trpc.dashboard.getPhotosCountByMonth.queryOptions({ years: 3 })
   );
   void queryClient.prefetchQuery(
-    trpc.dashboard.getVisitedCountries.queryOptions()
+    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions()
   );
   void queryClient.prefetchQuery(
     trpc.dashboard.getDashboardStats.queryOptions()
-  );
-  void queryClient.prefetchQuery(
-    trpc.dashboard.getVisitedCountriesGeoJson.queryOptions()
   );
 
   return (
