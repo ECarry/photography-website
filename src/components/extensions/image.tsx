@@ -17,7 +17,7 @@ import {
   MoreVertical,
   Trash,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -30,6 +30,9 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { cn, duplicateContent } from "@/lib/utils";
 import { keyToImage } from "@/lib/keyToImage";
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
 
 export const ImageExtension = Image.extend({
   addAttributes() {
@@ -62,6 +65,8 @@ export const ImageExtension = Image.extend({
 
 function TiptapImage(props: NodeViewProps) {
   const { node, editor, selected, deleteNode, updateAttributes } = props;
+  const trpc = useTRPC();
+  const deleteFile = useMutation(trpc.s3.deleteFile.mutationOptions());
   const imageRef = useRef<HTMLImageElement | null>(null);
   const nodeRef = useRef<HTMLDivElement | null>(null);
   const [resizing, setResizing] = useState(false);
@@ -81,6 +86,28 @@ function TiptapImage(props: NodeViewProps) {
     !rawSrc.startsWith("data:")
       ? keyToImage(rawSrc)
       : rawSrc ?? "";
+
+  const handleDeleteImage = useCallback(async () => {
+    // 如果是 S3 key（不是完整 URL / data URL），尝试删除远端文件
+    if (
+      typeof rawSrc === "string" &&
+      !rawSrc.startsWith("http://") &&
+      !rawSrc.startsWith("https://") &&
+      !rawSrc.startsWith("data:")
+    ) {
+      try {
+        await deleteFile.mutateAsync({ key: rawSrc });
+        toast.success("Image deleted successfully");
+      } catch (error) {
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete image"
+        );
+      }
+    }
+
+    // 无论远端是否删除成功，始终从编辑器中移除节点，避免卡住
+    deleteNode();
+  }, [deleteFile, rawSrc, deleteNode]);
 
   function handleResizingPosition({
     e,
@@ -333,9 +360,7 @@ function TiptapImage(props: NodeViewProps) {
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     className="text-destructive focus:text-destructive"
-                    onClick={() => {
-                      deleteNode();
-                    }}
+                    onClick={handleDeleteImage}
                   >
                     <Trash className="mr-2 size-4" /> Delete Image
                   </DropdownMenuItem>
