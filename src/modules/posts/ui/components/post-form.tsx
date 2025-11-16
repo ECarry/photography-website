@@ -68,9 +68,9 @@ export const PostForm = ({ post }: PostFormProps) => {
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
-          className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-6"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start"
         >
-          <div className="space-y-6">
+          <div className="space-y-6 md:col-span-2">
             <FormField
               control={form.control}
               name="title"
@@ -158,7 +158,7 @@ export const PostForm = ({ post }: PostFormProps) => {
             </div>
           </div>
           {/* Right Form Section */}
-          <div className="space-y-6">
+          <div className="space-y-6 md:col-span-1 md:sticky md:top-24 self-start">
             <FormField
               control={form.control}
               name="visibility"
