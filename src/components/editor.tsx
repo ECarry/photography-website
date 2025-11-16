@@ -66,13 +66,17 @@ const extensions = [
 
 interface TiptapEditorProps {
   content?: string;
+  onChange?: (value: string) => void;
 }
 
-const TiptapEditor = ({ content }: TiptapEditorProps) => {
+const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
   const editor = useEditor({
     extensions: extensions as Extension[],
     content,
     immediatelyRender: false,
+    onUpdate({ editor }) {
+      onChange?.(editor.getHTML());
+    },
   });
 
   if (!editor) {

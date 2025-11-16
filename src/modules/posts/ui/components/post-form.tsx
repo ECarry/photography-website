@@ -125,7 +125,10 @@ export const PostForm = ({ post }: PostFormProps) => {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <TiptapEditor content={field.value || ""} />
+                    <TiptapEditor
+                      content={field.value || ""}
+                      onChange={field.onChange}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
