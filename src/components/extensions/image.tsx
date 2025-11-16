@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { cn, duplicateContent } from "@/lib/utils";
+import { keyToImage } from "@/lib/keyToImage";
 
 export const ImageExtension = Image.extend({
   addAttributes() {
@@ -71,6 +72,15 @@ function TiptapImage(props: NodeViewProps) {
   const [resizeInitialMouseX, setResizeInitialMouseX] = useState(0);
 
   const [openedMore, setOpenedMore] = useState(false);
+
+  const rawSrc = node.attrs.src as string | null | undefined;
+  const imageSrc =
+    typeof rawSrc === "string" &&
+    !rawSrc.startsWith("http://") &&
+    !rawSrc.startsWith("https://") &&
+    !rawSrc.startsWith("data:")
+      ? keyToImage(rawSrc)
+      : rawSrc ?? "";
 
   function handleResizingPosition({
     e,
@@ -203,7 +213,7 @@ function TiptapImage(props: NodeViewProps) {
       >
         <img
           ref={imageRef}
-          src={node.attrs.src}
+          src={imageSrc}
           alt={node.attrs.alt}
           title={node.attrs.title}
         />

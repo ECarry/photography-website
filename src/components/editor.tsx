@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
@@ -27,42 +28,10 @@ import { LinkToolbar } from "./toolbars/link";
 import { HardBreakToolbar } from "./toolbars/hard-break";
 import { AlignmentTooolbar } from "./toolbars/alignment";
 import TextAlign from "@tiptap/extension-text-align";
-
-const extensions = [
-  StarterKit.configure({
-    orderedList: {
-      HTMLAttributes: {
-        class: "list-decimal",
-      },
-    },
-    bulletList: {
-      HTMLAttributes: {
-        class: "list-disc",
-      },
-    },
-    heading: {
-      levels: [1, 2, 3, 4],
-      HTMLAttributes: {
-        class: "tiptap-heading",
-      },
-    },
-  }),
-  TextAlign.configure({
-    types: ["heading", "paragraph"],
-  }),
-  TextStyle,
-  Subscript,
-  Superscript,
-  Underline,
-  Link,
-  Color,
-  Highlight.configure({
-    multicolor: true,
-  }),
-  ImageExtension,
-  ImagePlaceholder,
-  SearchAndReplace,
-];
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+import { s3Client } from "@/modules/s3/lib/s3";
+import { toast } from "sonner";
 
 interface TiptapEditorProps {
   content?: string;
@@ -70,8 +39,91 @@ interface TiptapEditorProps {
 }
 
 const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
+  const trpc = useTRPC();
+  const createPresignedUrl = useMutation(
+    trpc.s3.createPresignedUrl.mutationOptions()
+  );
+
+  const extensions = useMemo(
+    () =>
+      [
+        StarterKit.configure({
+          orderedList: {
+            HTMLAttributes: {
+              class: "list-decimal",
+            },
+          },
+          bulletList: {
+            HTMLAttributes: {
+              class: "list-disc",
+            },
+          },
+          heading: {
+            levels: [1, 2, 3, 4],
+            HTMLAttributes: {
+              class: "tiptap-heading",
+            },
+          },
+        }),
+        TextAlign.configure({
+          types: ["heading", "paragraph"],
+        }),
+        TextStyle,
+        Subscript,
+        Superscript,
+        Underline,
+        Link,
+        Color,
+        Highlight.configure({
+          multicolor: true,
+        }),
+        ImageExtension,
+        ImagePlaceholder.configure({
+          allowedMimeTypes: {
+            "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+          },
+          maxFiles: 1,
+          onDrop: async (files, editor) => {
+            const file = files[0];
+            if (!file) return;
+
+            try {
+              const { publicUrl } = await s3Client.upload({
+                file,
+                folder: "posts",
+                getUploadUrl: async ({ filename, contentType, folder }) => {
+                  const data = await createPresignedUrl.mutateAsync({
+                    filename,
+                    contentType,
+                    size: file.size,
+                    folder,
+                  });
+
+                  return {
+                    uploadUrl: data.presignedUrl,
+                    publicUrl: data.key,
+                  };
+                },
+              });
+
+              editor.chain().focus().setImage({ src: publicUrl }).run();
+
+              toast.success("Image uploaded successfully");
+            } catch (error) {
+              toast.error(
+                error instanceof Error
+                  ? error.message
+                  : "Failed to upload image"
+              );
+            }
+          },
+        }),
+        SearchAndReplace,
+      ] as Extension[],
+    [createPresignedUrl]
+  );
   const editor = useEditor({
-    extensions: extensions as Extension[],
+    extensions,
     content,
     immediatelyRender: false,
     onUpdate({ editor }) {
