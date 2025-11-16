@@ -47,7 +47,7 @@ export const PostForm = ({ post }: PostFormProps) => {
       onSuccess: (data) => {
         toast.success("Post created successfully");
         form.reset();
-        router.push(`/dashboard/posts/${data.id}`);
+        router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
         console.log(e);

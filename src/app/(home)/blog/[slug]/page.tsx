@@ -13,9 +13,11 @@ type Props = {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const slug = (await params).slug;
+  // Decode URL-encoded params
+  const decodedSlug = decodeURIComponent(slug);
   const queryClient = getQueryClient();
   const data = await queryClient.fetchQuery(
-    trpc.blog.getOne.queryOptions({ slug })
+    trpc.blog.getOne.queryOptions({ slug: decodedSlug })
   );
 
   return {
@@ -26,14 +28,18 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function page({ params }: Props) {
   const slug = (await params).slug;
+  // Decode URL-encoded params
+  const decodedSlug = decodeURIComponent(slug);
   const queryClient = getQueryClient();
-  await queryClient.fetchQuery(trpc.blog.getOne.queryOptions({ slug }));
+  await queryClient.fetchQuery(
+    trpc.blog.getOne.queryOptions({ slug: decodedSlug })
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Suspense fallback={<p>Loading...</p>}>
         <ErrorBoundary fallback={<p>Error</p>}>
-          <BlogSlugView slug={slug} />
+          <BlogSlugView slug={decodedSlug} />
         </ErrorBoundary>
       </Suspense>
     </HydrationBoundary>

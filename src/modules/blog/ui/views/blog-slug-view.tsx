@@ -8,6 +8,7 @@ import Image from "next/image";
 import { PostPreview } from "../components/post-preview";
 import ContactCard from "@/components/contact-card";
 import Footer from "@/components/footer";
+import { keyToImage } from "@/lib/keyToImage";
 
 export const BlogSlugView = ({ slug }: { slug: string }) => {
   const trpc = useTRPC();
@@ -19,7 +20,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
       <div className="w-full h-[50vh] lg:w-1/2 lg:fixed lg:top-0 lg:left-0 md:h-[80vh] lg:h-screen p-0 lg:p-3 group">
         <div className="block w-full h-full relative rounded-xl overflow-hidden">
           <Image
-            src={data.coverImage || "/placeholder.svg"}
+            src={keyToImage(data.coverImage) || "/placeholder.svg"}
             alt="Image"
             fill
             quality={75}

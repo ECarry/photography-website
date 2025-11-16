@@ -4,6 +4,7 @@ import { ColumnDef } from "@tanstack/react-table";
 import { PostGetMany } from "../../types";
 import { VisibilityToggle } from "./visibility-toggle";
 import { DeletePostButton } from "./delete-post-button";
+import Link from "next/link";
 
 export const columns: ColumnDef<PostGetMany[number]>[] = [
   {
@@ -27,10 +28,13 @@ export const columns: ColumnDef<PostGetMany[number]>[] = [
     header: "Actions",
     cell: ({ row }) => {
       return (
-        <DeletePostButton
-          postId={row.original.id}
-          postTitle={row.original.title}
-        />
+        <>
+          <DeletePostButton
+            postId={row.original.id}
+            postTitle={row.original.title}
+          />
+          <Link href={`/dashboard/posts/${row.original.slug}`}>View</Link>
+        </>
       );
     },
   },
