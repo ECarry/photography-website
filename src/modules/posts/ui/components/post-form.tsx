@@ -42,6 +42,7 @@ interface PostFormProps {
 export const PostForm = ({ post }: PostFormProps) => {
   const trpc = useTRPC();
   const router = useRouter();
+
   const createPost = useMutation(
     trpc.posts.create.mutationOptions({
       onSuccess: (data) => {
@@ -52,6 +53,22 @@ export const PostForm = ({ post }: PostFormProps) => {
       onError: (e) => {
         console.log(e);
         toast.error("Failed to create post", {
+          description: e.message,
+        });
+      },
+    })
+  );
+
+  const updatePost = useMutation(
+    trpc.posts.update.mutationOptions({
+      onSuccess: (data) => {
+        toast.success("Post updated successfully");
+        form.reset();
+        router.push(`/dashboard/posts/${data.slug}`);
+      },
+      onError: (e) => {
+        console.log(e);
+        toast.error("Failed to update post", {
           description: e.message,
         });
       },
@@ -80,10 +97,14 @@ export const PostForm = ({ post }: PostFormProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  const isPending = createPost.isPending;
+  const isPending = createPost.isPending || updatePost.isPending;
 
   function onSubmit(values: z.infer<typeof formSchema>) {
-    createPost.mutate(values);
+    if (post) {
+      updatePost.mutate({ ...values, id: post.id });
+    } else {
+      createPost.mutate(values);
+    }
   }
 
   return (
@@ -134,6 +155,7 @@ export const PostForm = ({ post }: PostFormProps) => {
                         field.onChange(key);
                       }}
                       folder="posts"
+                      value={field.value}
                     />
                   </FormControl>
                   <FormMessage />
@@ -177,7 +199,7 @@ export const PostForm = ({ post }: PostFormProps) => {
 
             <div className="pt-2">
               <Button type="submit" disabled={isPending}>
-                {isPending ? "Submitting..." : "Submit"}
+                {post ? "Update" : "Create"}
               </Button>
             </div>
           </div>

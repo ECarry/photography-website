@@ -11,7 +11,6 @@ import { ImageExtension } from "./extensions/image";
 import { ImagePlaceholder } from "./extensions/image-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Subscript, Superscript } from "lucide-react";
-import { ToolbarProvider } from "./toolbars/toolbar-provider";
 import { RedoToolbar } from "./toolbars/redo";
 import { BoldToolbar } from "./toolbars/bold";
 import { ItalicToolbar } from "./toolbars/italic";
@@ -28,6 +27,7 @@ import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { s3Client } from "@/modules/s3/lib/s3";
 import { toast } from "sonner";
+import { ToolbarProvider } from "./toolbars/toolbar-provider";
 
 interface TiptapEditorProps {
   content?: string;
@@ -116,6 +116,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
       ] as Extension[],
     [createPresignedUrl]
   );
+
   const editor = useEditor({
     extensions,
     content,
@@ -148,6 +149,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
           </div>
         </ToolbarProvider>
       </div>
+
       <div
         onClick={() => {
           editor?.chain().focus().run();

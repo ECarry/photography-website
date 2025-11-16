@@ -1,3 +1,5 @@
+import RichTextViewer from "@/components/editor/rich-text-viewer";
+
 export const PostPreview = ({ content }: { content: string | null }) => {
-  return <div>{content}</div>;
+  return <RichTextViewer content={content || ""} />;
 };

@@ -8,15 +8,18 @@ import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { s3Client } from "@/modules/s3/lib/s3";
+import { keyToImage } from "@/lib/keyToImage";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
   folder?: string;
+  value?: string;
 }
 
 const FileUploader = ({
   onUploadSuccess,
   folder = "uploads",
+  value,
 }: FileUploaderProps) => {
   const [files, setFiles] = useState<
     Array<{
@@ -184,14 +187,12 @@ const FileUploader = ({
       }
 
       try {
-        // 标记为正在删除
         setFiles((prev) =>
           prev.map((f) => (f.key === key ? { ...f, isDeleting: true } : f))
         );
 
         await deleteFile.mutateAsync({ key });
 
-        // 删除本地状态中的文件，并释放预览 URL
         setFiles((prev) => {
           const remaining = prev.filter((f) => f.key !== key);
           const removed = prev.find((f) => f.key === key);
@@ -217,6 +218,29 @@ const FileUploader = ({
 
   return (
     <>
+      {value && (
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center">
+            <img
+              src={keyToImage(value) || "/placeholder.svg"}
+              alt="Preview"
+              className="w-16 h-16 object-cover mr-2"
+            />
+            <div>
+              <p className="font-semibold">{value}</p>
+            </div>
+          </div>
+          <div className="flex items-center">
+            <button
+              onClick={() => handleDeleteFile(value)}
+              type="button"
+              className="text-red-500 hover:text-red-600"
+            >
+              Delete
+            </button>
+          </div>
+        </div>
+      )}
       <div
         {...getRootProps()}
         className={cn(
