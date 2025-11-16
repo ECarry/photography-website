@@ -182,8 +182,36 @@ const FileUploader = ({
         toast.error("Cannot delete file while uploading");
         return;
       }
+
+      try {
+        // 标记为正在删除
+        setFiles((prev) =>
+          prev.map((f) => (f.key === key ? { ...f, isDeleting: true } : f))
+        );
+
+        await deleteFile.mutateAsync({ key });
+
+        // 删除本地状态中的文件，并释放预览 URL
+        setFiles((prev) => {
+          const remaining = prev.filter((f) => f.key !== key);
+          const removed = prev.find((f) => f.key === key);
+          if (removed?.objectUrl) {
+            URL.revokeObjectURL(removed.objectUrl);
+          }
+          return remaining;
+        });
+
+        toast.success("File deleted successfully");
+      } catch (error) {
+        setFiles((prev) =>
+          prev.map((f) => (f.key === key ? { ...f, isDeleting: false } : f))
+        );
+
+        toast.error(
+          error instanceof Error ? error.message : "Failed to delete file"
+        );
+      }
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [deleteFile, files]
   );
 
