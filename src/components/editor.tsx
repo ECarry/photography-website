@@ -10,7 +10,6 @@ import { EditorContent, type Extension, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import { ImageExtension } from "./extensions/image";
 import { ImagePlaceholder } from "./extensions/image-placeholder";
-import SearchAndReplace from "./extensions/search-and-replace";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { Subscript, Superscript } from "lucide-react";
 import { ToolbarProvider } from "./toolbars/toolbar-provider";
@@ -21,7 +20,6 @@ import { BulletListToolbar } from "./toolbars/bullet-list";
 import { OrderedListToolbar } from "./toolbars/ordered-list";
 import { ImagePlaceholderToolbar } from "./toolbars/image-placeholder-toolbar";
 import { ColorHighlightToolbar } from "./toolbars/color-and-highlight";
-import { SearchAndReplaceToolbar } from "./toolbars/search-and-replace-toolbar";
 import { UndoToolbar } from "./toolbars/undo";
 import { HorizontalRuleToolbar } from "./toolbars/horizontal-rule";
 import { LinkToolbar } from "./toolbars/link";
@@ -118,7 +116,6 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             }
           },
         }),
-        SearchAndReplace,
       ] as Extension[],
     [createPresignedUrl]
   );
@@ -142,7 +139,6 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <UndoToolbar />
             <RedoToolbar />
             <Separator orientation="vertical" className="h-7" />
-
             <BoldToolbar />
             <ItalicToolbar />
             <BulletListToolbar />
@@ -154,7 +150,6 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <LinkToolbar />
             <ColorHighlightToolbar />
           </div>
-          <SearchAndReplaceToolbar />
         </ToolbarProvider>
       </div>
       <div
