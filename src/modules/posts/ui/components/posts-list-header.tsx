@@ -7,7 +7,7 @@ import { usePostsFilters } from "../../hooks/use-posts-filters";
 import { DEFAULT_PAGE } from "@/constants";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { PostsSearchFilter } from "./posts-search-filter";
-import { PostForm } from "./post-form";
+import { PostForm } from "./post-form-bak";
 import { ResponsiveModal } from "@/components/responsive-modal";
 
 export const PostsListHeader = () => {

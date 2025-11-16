@@ -1,9 +1,6 @@
-import { useEffect } from "react";
-import { useTRPC } from "@/trpc/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
+"use client";
+
+import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
@@ -13,66 +10,45 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { postInsertSchema } from "../../schemas";
+import { postsInsertSchema } from "@/db/schema";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { PostGetOne } from "../../types";
+import { generateSlug } from "../../lib/utils";
+import { useEffect } from "react";
 import FileUploader from "@/modules/s3/ui/components/file-uploader";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { TagsInput } from "./tags-input";
+
+const formSchema = postsInsertSchema;
 
 interface PostFormProps {
-  onSuccess?: () => void;
-  onCancel?: () => void;
+  post?: PostGetOne;
 }
 
-export const PostForm = ({ onSuccess, onCancel }: PostFormProps) => {
-  const trpc = useTRPC();
-  const queryClient = useQueryClient();
-
-  const createPost = useMutation(
-    trpc.posts.create.mutationOptions({
-      onSuccess: async () => {
-        await queryClient.invalidateQueries(
-          trpc.posts.getMany.queryOptions({})
-        );
-        toast.success("Post created successfully!");
-        onSuccess?.();
-      },
-      onError: (error) => {
-        toast.error(error.message);
-      },
-    })
-  );
-
-  const form = useForm<z.infer<typeof postInsertSchema>>({
-    resolver: zodResolver(postInsertSchema),
+export const PostForm = ({ post }: PostFormProps) => {
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
-      title: "",
-      slug: "",
-      description: "",
-      coverImage: undefined,
+      title: post?.title || "",
+      slug: post?.slug || "",
+      content: post?.content || "",
+      visibility: post?.visibility || "public",
+      coverImage: post?.coverImage || "",
+      tags: post?.tags || [],
     },
   });
 
-  const isPending = createPost.isPending;
-
-  // Watch the title and content fields to update slug and reading time
   const title = form.watch("title");
 
-  // Generate slug from title (supports Unicode)
-  const generateSlug = (text: string) => {
-    return text
-      .toString()
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-") // Replace spaces with -
-      .replace(/&/g, "-and-") // Replace & with 'and'
-      .replace(/[^\p{L}\p{N}\-]+/gu, "") // Keep Unicode letters, numbers, hyphens
-      .replace(/\-\-+/g, "-") // Replace multiple - with single -
-      .replace(/^-+/, "") // Trim - from start of text
-      .replace(/-+$/, ""); // Trim - from end of text
-  };
-
-  // Update slug when title changes
   useEffect(() => {
     if (title) {
       const slug = generateSlug(title);
@@ -81,89 +57,137 @@ export const PostForm = ({ onSuccess, onCancel }: PostFormProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
-  const onSubmit = (values: z.infer<typeof postInsertSchema>) => {
-    createPost.mutate(values);
-  };
+  function onSubmit(values: z.infer<typeof formSchema>) {
+    // Do something with the form values.
+    // ✅ This will be type-safe and validated.
+    console.log(values);
+  }
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="title"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Title</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="Enter post title" />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+    <div>
+      <Form {...form}>
+        <form
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="grid grid-cols-1 md:grid-cols-[2fr,1fr] gap-6"
+        >
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="title"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Title</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Title" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="slug"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Slug</FormLabel>
-              <FormControl>
-                <Input {...field} placeholder="post-url-slug" disabled />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="slug"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Slug</FormLabel>
+                  <FormControl>
+                    <Input placeholder="post-url-slug" {...field} disabled />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="description"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Description</FormLabel>
-              <FormControl>
-                <Textarea {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="coverImage"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cover Image</FormLabel>
+                  <FormControl>
+                    <FileUploader
+                      onUploadSuccess={(key) => {
+                        field.onChange(key);
+                      }}
+                      folder="posts"
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <FormField
-          control={form.control}
-          name="coverImage"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Cover Image</FormLabel>
-              <FormControl>
-                <FileUploader
-                  onUploadSuccess={(key) => {
-                    field.onChange(key);
-                  }}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+            <FormField
+              control={form.control}
+              name="content"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Content"
+                      {...field}
+                      value={field.value || ""}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
 
-        <div className="flex justify-end gap-2">
-          {onCancel && (
-            <Button
-              variant="ghost"
-              disabled={isPending}
-              type="button"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-          )}
-          <Button type="submit" disabled={isPending}>
-            {isPending ? "Creating..." : "Create"}
-          </Button>
-        </div>
-      </form>
-    </Form>
+            <FormField
+              control={form.control}
+              name="tags"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tags</FormLabel>
+                  <FormControl>
+                    <TagsInput
+                      value={Array.isArray(field.value) ? field.value : []}
+                      onChange={(tags) => field.onChange(tags)}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <div className="pt-2">
+              <Button type="submit">Submit</Button>
+            </div>
+          </div>
+          {/* Right Form Section */}
+          <div className="space-y-6">
+            <FormField
+              control={form.control}
+              name="visibility"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Visibility</FormLabel>
+                  <FormControl>
+                    <Select
+                      {...field}
+                      onValueChange={(value) => {
+                        field.onChange(value);
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select visibility" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="public">Public</SelectItem>
+                        <SelectItem value="private">Private</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </form>
+      </Form>
+    </div>
   );
 };

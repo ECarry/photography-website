@@ -11,9 +11,13 @@ import { s3Client } from "@/modules/s3/lib/s3";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
+  folder?: string;
 }
 
-const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
+const FileUploader = ({
+  onUploadSuccess,
+  folder = "uploads",
+}: FileUploaderProps) => {
   const [files, setFiles] = useState<
     Array<{
       id: string;
@@ -43,7 +47,7 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
       try {
         const { publicUrl } = await s3Client.upload({
           file,
-          folder: "uploads",
+          folder,
           onProgress: (progress) => {
             setFiles((prev) =>
               prev.map((f) => (f.id === fileId ? { ...f, progress } : f))
@@ -100,7 +104,7 @@ const FileUploader = ({ onUploadSuccess }: FileUploaderProps) => {
         );
       }
     },
-    [createPresignedUrl, onUploadSuccess]
+    [createPresignedUrl, onUploadSuccess, folder]
   );
 
   const onDrop = useCallback(
