@@ -53,11 +53,12 @@ const FileUploader = ({
               prev.map((f) => (f.id === fileId ? { ...f, progress } : f))
             );
           },
-          getUploadUrl: async ({ filename, contentType }) => {
+          getUploadUrl: async ({ filename, contentType, folder }) => {
             const data = await createPresignedUrl.mutateAsync({
               filename,
               contentType,
               size: file.size,
+              folder,
             });
 
             return {
