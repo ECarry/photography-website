@@ -10,7 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { postsInsertSchema } from "@/db/schema";
+import { postFormSchema } from "../../schemas";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,7 +28,7 @@ import {
 import { TagsInput } from "./tags-input";
 import TiptapEditor from "@/components/editor";
 
-const formSchema = postsInsertSchema;
+const formSchema = postFormSchema;
 
 interface PostFormProps {
   post?: PostGetOne;
