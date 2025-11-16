@@ -26,6 +26,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "./tags-input";
+
+import { useTRPC } from "@/trpc/client";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor";
 
 const formSchema = postFormSchema;
@@ -35,6 +40,24 @@ interface PostFormProps {
 }
 
 export const PostForm = ({ post }: PostFormProps) => {
+  const trpc = useTRPC();
+  const router = useRouter();
+  const createPost = useMutation(
+    trpc.posts.create.mutationOptions({
+      onSuccess: (data) => {
+        toast.success("Post created successfully");
+        form.reset();
+        router.push(`/dashboard/posts/${data.id}`);
+      },
+      onError: (e) => {
+        console.log(e);
+        toast.error("Failed to create post", {
+          description: e.message,
+        });
+      },
+    })
+  );
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -57,10 +80,10 @@ export const PostForm = ({ post }: PostFormProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [title]);
 
+  const isPending = createPost.isPending;
+
   function onSubmit(values: z.infer<typeof formSchema>) {
-    // Do something with the form values.
-    // ✅ This will be type-safe and validated.
-    console.log(values);
+    createPost.mutate(values);
   }
 
   return (
@@ -153,7 +176,9 @@ export const PostForm = ({ post }: PostFormProps) => {
             />
 
             <div className="pt-2">
-              <Button type="submit">Submit</Button>
+              <Button type="submit" disabled={isPending}>
+                {isPending ? "Submitting..." : "Submit"}
+              </Button>
             </div>
           </div>
           {/* Right Form Section */}

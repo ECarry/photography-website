@@ -22,9 +22,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useToolbar } from "@/components/toolbars/toolbar-provider";
+import { useToolbar } from "./toolbar-provider";
 
-export const AlignmentTooolbar = () => {
+export const AlignmentToolbar = () => {
   const { editor } = useToolbar();
   const handleAlign = (value: string) => {
     editor?.chain().focus().setTextAlign(value).run();
@@ -83,7 +83,12 @@ export const AlignmentTooolbar = () => {
       <Tooltip>
         <TooltipTrigger asChild>
           <DropdownMenuTrigger disabled={isDisabled} asChild>
-            <Button variant="ghost" size="sm" className="h-8 w-max font-normal">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 w-max font-normal"
+              type="button"
+            >
               <span className="mr-2">
                 {alignmentOptions[findIndex(currentTextAlign())].icon}
               </span>

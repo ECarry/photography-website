@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
-import Link from "@tiptap/extension-link";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, type Extension, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -22,9 +21,8 @@ import { ImagePlaceholderToolbar } from "./toolbars/image-placeholder-toolbar";
 import { ColorHighlightToolbar } from "./toolbars/color-and-highlight";
 import { UndoToolbar } from "./toolbars/undo";
 import { HorizontalRuleToolbar } from "./toolbars/horizontal-rule";
-import { LinkToolbar } from "./toolbars/link";
 import { HardBreakToolbar } from "./toolbars/hard-break";
-import { AlignmentTooolbar } from "./toolbars/alignment";
+import { AlignmentToolbar } from "./toolbars/alignment";
 import TextAlign from "@tiptap/extension-text-align";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
@@ -70,7 +68,6 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         Subscript,
         Superscript,
         Underline,
-        Link,
         Color,
         Highlight.configure({
           multicolor: true,
@@ -143,11 +140,10 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <ItalicToolbar />
             <BulletListToolbar />
             <OrderedListToolbar />
-            <AlignmentTooolbar />
+            <AlignmentToolbar />
             <HardBreakToolbar />
             <HorizontalRuleToolbar />
             <ImagePlaceholderToolbar />
-            <LinkToolbar />
             <ColorHighlightToolbar />
           </div>
         </ToolbarProvider>
