@@ -104,6 +104,7 @@ function TiptapImage(props: NodeViewProps) {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function resize(event: MouseEvent) {
     if (!resizing) {
       return;
@@ -145,6 +146,7 @@ function TiptapImage(props: NodeViewProps) {
     }
   }
 
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   function handleTouchMove(event: TouchEvent) {
     if (!resizing) {
       return;
@@ -217,9 +219,9 @@ function TiptapImage(props: NodeViewProps) {
           alt={node.attrs.alt}
           title={node.attrs.title}
         />
-        <NodeViewContent as="figcaption" className="text-center">
-          {node.attrs.title}
-        </NodeViewContent>
+        <figcaption className="text-center">
+          <NodeViewContent />
+        </figcaption>
 
         {editor?.isEditable && (
           <>
