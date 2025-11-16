@@ -18,7 +18,6 @@ import { PostGetOne } from "../../types";
 import { generateSlug } from "../../lib/utils";
 import { useEffect } from "react";
 import FileUploader from "@/modules/s3/ui/components/file-uploader";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -27,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "./tags-input";
+import TiptapEditor from "@/components/editor";
 
 const formSchema = postsInsertSchema;
 
@@ -125,11 +125,7 @@ export const PostForm = ({ post }: PostFormProps) => {
                 <FormItem>
                   <FormLabel>Content</FormLabel>
                   <FormControl>
-                    <Textarea
-                      placeholder="Content"
-                      {...field}
-                      value={field.value || ""}
-                    />
+                    <TiptapEditor content={field.value || ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

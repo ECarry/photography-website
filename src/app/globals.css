@@ -45,6 +45,28 @@
   /* Custom Marquee Animation */
   --animate-marquee: marquee var(--duration, 20s) linear infinite;
   --animate-marquee-vertical: marquee-vertical var(--duration) linear infinite;
+
+  /* Custom Highlight Colors */
+  --color-highlight-red: var(----highlight-red);
+  --color-highlight-pink: var(----highlight-pink);
+  --color-highlight-purple: var(----highlight-purple);
+  --color-highlight-blue: var(----highlight-blue);
+  --color-highlight-green: var(----highlight-green);
+  --color-highlight-yellow: var(----highlight-yellow);
+  --color-highlight-orange: var(----highlight-orange);
+  --color-highlight-brown: var(----highlight-brown);
+  --color-highlight-gray: var(----highlight-gray);
+  --color-highlight-default: var(----highlight-default);
+  --color-text-red: var(----text-red);
+  --color-text-pink: var(----text-pink);
+  --color-text-purple: var(----text-purple);
+  --color-text-blue: var(----text-blue);
+  --color-text-green: var(----text-green);
+  --color-text-yellow: var(----text-yellow);
+  --color-text-orange: var(----text-orange);
+  --color-text-brown: var(----text-brown);
+  --color-text-gray: var(----text-gray);
+  --color-text-default: var(----text-default);
   @keyframes marquee {
     from {
       transform: translateX(0);
@@ -65,40 +87,40 @@
 
 :root {
   --radius: 0.625rem;
-  
+
   /* Pure minimal color scheme inspired by Hanssen template */
   --background: oklch(1 0 0); /* Pure white #FFFFFF */
   --foreground: oklch(0.15 0 0); /* Near black #0A0A0A */
-  
+
   --card: oklch(0.99 0 0); /* Off-white #FAFAFA */
   --card-foreground: oklch(0.15 0 0);
-  
+
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.15 0 0);
-  
+
   --primary: oklch(0.15 0 0); /* Near black for primary */
   --primary-foreground: oklch(1 0 0); /* White text */
-  
+
   --secondary: oklch(0.96 0 0); /* Light gray #F5F5F5 */
   --secondary-foreground: oklch(0.15 0 0);
-  
+
   --muted: oklch(0.96 0 0); /* Light gray #F5F5F5 */
   --muted-foreground: oklch(0.5 0 0); /* Mid gray #737373 */
-  
+
   --accent: oklch(0.96 0 0);
   --accent-foreground: oklch(0.15 0 0);
-  
+
   --destructive: oklch(0.55 0.22 27); /* Minimal red */
   --border: oklch(0.93 0 0); /* Soft border #E5E5E5 */
   --input: oklch(0.93 0 0);
   --ring: oklch(0.5 0 0); /* Mid gray for focus ring */
-  
+
   --chart-1: oklch(0.4 0 0);
   --chart-2: oklch(0.5 0 0);
   --chart-3: oklch(0.6 0 0);
   --chart-4: oklch(0.7 0 0);
   --chart-5: oklch(0.8 0 0);
-  
+
   --sidebar: oklch(0.99 0 0);
   --sidebar-foreground: oklch(0.15 0 0);
   --sidebar-primary: oklch(0.15 0 0);
@@ -107,42 +129,64 @@
   --sidebar-accent-foreground: oklch(0.15 0 0);
   --sidebar-border: oklch(0.93 0 0);
   --sidebar-ring: oklch(0.5 0 0);
+
+  /* Custom Text Colors */
+  --text-default: #000000;
+  --text-gray: #6b7280;
+  --text-brown: #92400e;
+  --text-orange: #ea580c;
+  --text-yellow: #ca8a04;
+  --text-green: #16a34a;
+  --text-blue: #2563eb;
+  --text-purple: #9333ea;
+  --text-pink: #db2777;
+  --text-red: #dc2626;
+  --highlight-default: #ffffff;
+  --highlight-gray: #f3f4f6;
+  --highlight-brown: #fef3c7;
+  --highlight-orange: #ffedd5;
+  --highlight-yellow: #fef9c3;
+  --highlight-green: #dcfce7;
+  --highlight-blue: #dbeafe;
+  --highlight-purple: #f3e8ff;
+  --highlight-pink: #fce7f3;
+  --highlight-red: #fee2e2;
 }
 
 .dark {
   /* Pure minimal dark mode inspired by Hanssen template */
   --background: oklch(0.15 0 0); /* Near black #0A0A0A */
   --foreground: oklch(0.99 0 0); /* Near white #FAFAFA */
-  
+
   --card: oklch(0.18 0 0); /* Slightly lighter #171717 */
   --card-foreground: oklch(0.99 0 0);
-  
+
   --popover: oklch(0.18 0 0);
   --popover-foreground: oklch(0.99 0 0);
-  
+
   --primary: oklch(0.99 0 0); /* Near white for primary */
   --primary-foreground: oklch(0.15 0 0); /* Black text */
-  
+
   --secondary: oklch(0.25 0 0); /* Dark gray #262626 */
   --secondary-foreground: oklch(0.99 0 0);
-  
+
   --muted: oklch(0.25 0 0); /* Dark gray #262626 */
   --muted-foreground: oklch(0.65 0 0); /* Mid gray #A3A3A3 */
-  
+
   --accent: oklch(0.25 0 0);
   --accent-foreground: oklch(0.99 0 0);
-  
-  --destructive: oklch(0.65 0.20 27); /* Minimal red */
+
+  --destructive: oklch(0.65 0.2 27); /* Minimal red */
   --border: oklch(0.3 0 0); /* Subtle border #404040 */
   --input: oklch(0.3 0 0);
   --ring: oklch(0.65 0 0); /* Mid gray for focus ring */
-  
+
   --chart-1: oklch(0.6 0 0);
   --chart-2: oklch(0.5 0 0);
   --chart-3: oklch(0.4 0 0);
   --chart-4: oklch(0.3 0 0);
   --chart-5: oklch(0.7 0 0);
-  
+
   --sidebar: oklch(0.18 0 0);
   --sidebar-foreground: oklch(0.99 0 0);
   --sidebar-primary: oklch(0.99 0 0);
@@ -151,6 +195,28 @@
   --sidebar-accent-foreground: oklch(0.99 0 0);
   --sidebar-border: oklch(0.3 0 0);
   --sidebar-ring: oklch(0.65 0 0);
+
+  /* Custom Text Colors */
+  --text-default: #ffffff;
+  --text-gray: #9ca3af;
+  --text-brown: #d97706;
+  --text-orange: #f97316;
+  --text-yellow: #eab308;
+  --text-green: #22c55e;
+  --text-blue: #3b82f6;
+  --text-purple: #a855f7;
+  --text-pink: #ec4899;
+  --text-red: #ef4444;
+  --highlight-default: #1f2937;
+  --highlight-gray: #374151;
+  --highlight-brown: #78350f;
+  --highlight-orange: #9a3412;
+  --highlight-yellow: #854d0e;
+  --highlight-green: #166534;
+  --highlight-blue: #1e40af;
+  --highlight-purple: #6b21a8;
+  --highlight-pink: #9d174d;
+  --highlight-red: #991b1b;
 }
 
 @layer base {
@@ -203,4 +269,53 @@
       clip-path: polygon(130% 0, -30% 0, -15% 100%, 110% 115%);
     }
   }
+}
+
+/* Tiptap Editor Styles */
+.ProseMirror {
+  @apply px-4 pt-2;
+  outline: none !important;
+}
+
+h1.tiptap-heading {
+  @apply mb-6 mt-8 text-4xl font-bold;
+}
+
+h2.tiptap-heading {
+  @apply mb-4 mt-6 text-3xl font-bold;
+}
+
+h3.tiptap-heading {
+  @apply mb-3 mt-4 text-xl font-bold;
+}
+
+h1.tiptap-heading:first-child,
+h2.tiptap-heading:first-child,
+h3.tiptap-heading:first-child {
+  margin-top: 0;
+}
+
+h1.tiptap-heading + h2.tiptap-heading,
+h1.tiptap-heading + h3.tiptap-heading,
+h2.tiptap-heading + h1.tiptap-heading,
+h2.tiptap-heading + h3.tiptap-heading,
+h3.tiptap-heading + h1.tiptap-heading,
+h3.tiptap-heading + h2.tiptap-heading {
+  margin-top: 0;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  @apply pointer-events-none float-left h-0 text-accent-foreground;
+  content: attr(data-placeholder);
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding: 0 1rem;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid gray;
+  margin: 1.5rem 0;
+  padding-left: 1rem;
 }
