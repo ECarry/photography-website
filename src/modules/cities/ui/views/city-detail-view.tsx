@@ -217,12 +217,12 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           </div>
         </div>
       </div>
-      <div className="w-full grid grid-cols-3">
+      <div className="w-full grid grid-cols-3 gap-x-1 gap-y-6">
         {cityData.photos.map((photo) => (
           <div key={photo.id} className="space-y-4">
             <div
               className={cn(
-                "relative space-y-4 flex items-center justify-center bg-gray-50",
+                "relative space-y-4 flex items-center justify-center bg-gray-50 h-[70vh]",
                 photo.aspectRatio < 1 ? "px-20 py-30" : "px-10 py-30"
               )}
             >
