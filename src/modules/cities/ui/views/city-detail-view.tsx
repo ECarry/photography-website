@@ -222,8 +222,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           <div key={photo.id} className="space-y-4">
             <div
               className={cn(
-                "relative space-y-4 flex items-center justify-center bg-gray-50 h-[70vh]",
-                photo.aspectRatio < 1 ? "px-20 py-30" : "px-10 py-30"
+                "relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh]",
+                photo.aspectRatio < 1 ? "px-20 py-50" : "px-10 py-50"
               )}
             >
               <FramedPhoto
@@ -247,8 +247,12 @@ export function CityDetailView({ city }: CityDetailViewProps) {
               </div>
             </div>
             <div className="flex flex-col w-full items-center justify-center">
-              <p className="text-sm">{photo.title}</p>
-              <p className="text-sm">{format(photo.createdAt, "mm dd, yy")}</p>
+              <p className="text-sm font-medium">{photo.title}</p>
+              <p className="text-xs text-muted-foreground">
+                {photo.dateTimeOriginal
+                  ? format(photo.dateTimeOriginal, "d MMM yyyy")
+                  : ""}
+              </p>
             </div>
           </div>
         ))}
