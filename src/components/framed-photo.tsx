@@ -36,7 +36,7 @@ export function FramedPhoto({
             src={keyToImage(src)}
             alt={alt}
             blurhash={blurhash}
-            className="block w-full h-auto object-cover border border-neutral-200"
+            className="block w-full h-auto max-h-[80vh] object-cover border border-neutral-200"
             width={width}
             height={height}
           />
