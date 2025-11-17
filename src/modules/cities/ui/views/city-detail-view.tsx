@@ -9,11 +9,10 @@ import {
   Image as ImageIcon,
   Star,
   Heart,
+  StarOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import BlurImage from "@/components/blur-image";
-import { keyToImage } from "@/lib/keyToImage";
 import Link from "next/link";
 import { format } from "date-fns";
 import {
@@ -34,6 +33,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { FramedPhoto } from "@/components/framed-photo";
+import { cn } from "@/lib/utils";
 
 const cityDescriptionSchema = z.object({
   description: z.string().optional(),
@@ -134,8 +134,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
   }
 
   return (
-    <>
-      <div className="min-h-screen bg-background">
+    <div className="min-h-screen pb-8">
+      <div className="bg-background">
         <div className="container mx-auto px-4 py-8">
           {/* Back Navigation */}
           <div className="mb-6">
@@ -146,7 +146,6 @@ export function CityDetailView({ city }: CityDetailViewProps) {
               </Button>
             </Link>
           </div>
-
           {/* Header Section */}
           <div className="mb-8">
             <div className="flex items-start justify-between mb-6">
@@ -216,132 +215,45 @@ export function CityDetailView({ city }: CityDetailViewProps) {
               </Form>
             </div>
           </div>
-
-          {/* Photos Section */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-semibold tracking-tight">Photos</h2>
-              {cityData.photos && cityData.photos.length > 0 && (
-                <p className="text-sm text-muted-foreground">
-                  {cityData.photos.length} photo
-                  {cityData.photos.length !== 1 ? "s" : ""}
-                </p>
-              )}
-            </div>
-
-            {cityData.photos && cityData.photos.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
-                {cityData.photos.map((photo) => {
-                  const isCover = cityData.coverPhotoId === photo.id;
-
-                  return (
-                    <div
-                      key={photo.id}
-                      className="group relative aspect-square overflow-hidden rounded-xl bg-muted border shadow-sm hover:shadow-md transition-all duration-300"
-                    >
-                      <Link
-                        href={`/dashboard/photos/${photo.id}`}
-                        className="block h-full"
-                      >
-                        <BlurImage
-                          src={keyToImage(photo.url)}
-                          alt={photo.title}
-                          fill
-                          className="object-cover transition-transform duration-500 group-hover:scale-110"
-                          blurhash={photo.blurData!}
-                        />
-                      </Link>
-
-                      {/* Cover Badge */}
-                      {isCover && (
-                        <div className="absolute top-3 left-3 bg-primary text-primary-foreground px-2.5 py-1.5 rounded-full text-xs font-medium flex items-center gap-1.5 shadow-lg">
-                          <Star className="h-3 w-3 fill-current" />
-                          Cover
-                        </div>
-                      )}
-
-                      {/* Overlay with enhanced styling */}
-                      <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300">
-                        {/* Set Cover Button */}
-                        {!isCover && (
-                          <div className="absolute top-3 right-3">
-                            <Button
-                              size="sm"
-                              variant="secondary"
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                handleSetCover(photo.id);
-                              }}
-                              disabled={updateCoverPhoto.isPending}
-                              className="h-8 px-3 text-xs backdrop-blur-sm bg-white/90 hover:bg-white text-black border-0 shadow-lg"
-                            >
-                              <Star className="mr-1.5 h-3 w-3" />
-                              Set Cover
-                            </Button>
-                          </div>
-                        )}
-
-                        {/* Photo Info */}
-                        <div className="absolute bottom-0 left-0 right-0 p-4">
-                          <p className="text-white font-medium text-sm truncate mb-1">
-                            {photo.title}
-                          </p>
-                          {photo.dateTimeOriginal && (
-                            <p
-                              className="text-white/90 text-xs"
-                              suppressHydrationWarning
-                            >
-                              {format(
-                                new Date(photo.dateTimeOriginal),
-                                "MMM d, yyyy"
-                              )}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="bg-card border rounded-xl p-12 text-center">
-                <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center mb-4">
-                  <ImageIcon className="h-10 w-10 text-muted-foreground" />
-                </div>
-                <h3 className="text-lg font-medium mb-2">No photos yet</h3>
-                <p className="text-muted-foreground text-sm max-w-sm mx-auto">
-                  Photos taken in {cityData.city} will appear here automatically
-                  when you upload them.
-                </p>
-              </div>
-            )}
-          </div>
         </div>
       </div>
       <div className="w-full grid grid-cols-3">
-        {cityData.photos && cityData.photos.length > 0 && (
-          <div className="relative">
-            <FramedPhoto
-              src={cityData.photos[0].url}
-              alt={cityData.city}
-              aspectRatio={cityData.photos[0].aspectRatio}
-              blurhash={cityData.photos[0].blurData!}
-              width={cityData.photos[0].width}
-              height={cityData.photos[0].height}
-            />
-            <div className="absolute bottom-3 right-3 flex items-center gap-2">
-              <Button variant="outline" size="icon">
-                <Star />
-              </Button>
-              <Button variant="outline" size="icon">
-                <Heart />
-              </Button>
+        {cityData.photos.map((photo) => (
+          <div key={photo.id} className="space-y-4">
+            <div
+              className={cn(
+                "relative space-y-4 flex items-center justify-center bg-gray-50",
+                photo.aspectRatio < 1 ? "px-20 py-30" : "px-10 py-30"
+              )}
+            >
+              <FramedPhoto
+                src={photo.url}
+                alt={cityData.city}
+                blurhash={photo.blurData!}
+                width={photo.width}
+                height={photo.height}
+              />
+              <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => handleSetCover(photo.id)}
+                >
+                  {photo.id === cityData.coverPhotoId ? <Star /> : <StarOff />}
+                </Button>
+                <Button variant="outline" size="icon">
+                  <Heart />
+                </Button>
+              </div>
+            </div>
+            <div className="flex flex-col w-full items-center justify-center">
+              <p className="text-sm">{photo.title}</p>
+              <p className="text-sm">{format(photo.createdAt, "mm dd, yy")}</p>
             </div>
           </div>
-        )}
+        ))}
       </div>
-    </>
+    </div>
   );
 }
 
