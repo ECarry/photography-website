@@ -242,7 +242,7 @@ const FileUploader = ({
   const hasError = files.some((file) => file.error);
 
   return (
-    <div className="w-full space-y-4">
+    <div className="w-full max-w-2xl space-y-4">
       <div
         {...getRootProps()}
         className={cn(
