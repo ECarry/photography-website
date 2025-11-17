@@ -9,6 +9,9 @@ import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { s3Client } from "@/modules/s3/lib/s3";
 import { keyToImage } from "@/lib/keyToImage";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { CloudUpload, ImageIcon, Upload, XIcon } from "lucide-react";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
@@ -33,6 +36,7 @@ const FileUploader = ({
       objectUrl?: string;
     }>
   >([]);
+  const [imageLoading, setImageLoading] = useState(true);
 
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
@@ -127,6 +131,9 @@ const FileUploader = ({
 
         setFiles(newFiles);
 
+        // when new file(s) selected, show image loading placeholder again
+        setImageLoading(true);
+
         // Auto upload after adding files
         newFiles.forEach((fileItem) => {
           uploadFile(fileItem.file, fileItem.id);
@@ -166,10 +173,12 @@ const FileUploader = ({
     }
   }, []);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+  const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
     onDrop,
     onDropRejected,
     maxFiles: 1,
+    noClick: true,
+    noKeyboard: true,
     accept: {
       "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
     },
@@ -216,91 +225,160 @@ const FileUploader = ({
     [deleteFile, files]
   );
 
+  const currentFile = files[0];
+  const displayImageUrl = currentFile?.objectUrl
+    ? currentFile.objectUrl
+    : value
+    ? keyToImage(value) || "/placeholder.svg"
+    : undefined;
+
+  const hasImage = !!displayImageUrl;
+  const hasError = files.some((file) => file.error);
+
   return (
-    <>
-      {value && (
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-center">
-            <img
-              src={keyToImage(value) || "/placeholder.svg"}
-              alt="Preview"
-              className="w-16 h-16 object-cover mr-2"
-            />
-            <div>
-              <p className="font-semibold">{value}</p>
-            </div>
-          </div>
-          <div className="flex items-center">
-            <button
-              onClick={() => handleDeleteFile(value)}
-              type="button"
-              className="text-red-500 hover:text-red-600"
-            >
-              Delete
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="w-full space-y-4">
       <div
         {...getRootProps()}
         className={cn(
-          "border border-dashed border-gray-300 p-4 cursor-pointer hover:bg-gray-100 transition-colors flex items-center justify-center duration-200 rounded-md",
-          isDragActive && "border-gray-500"
+          "group relative overflow-hidden rounded-xl transition-all duration-200 border border-border",
+          isDragActive
+            ? "border-dashed border-primary bg-primary/5"
+            : hasImage
+            ? "border-border bg-background hover:border-primary/50"
+            : "border-dashed border-muted-foreground/25 bg-muted/30 hover:border-primary hover:bg-primary/5"
         )}
       >
-        <input {...getInputProps()} accept="image/*" />
-        {isDragActive ? (
-          <p>Drop the file here ...</p>
-        ) : (
-          <p>Drag &apos;n&apos; drop some file here, or click to select file</p>
-        )}
-      </div>
-      {files.length > 0 && (
-        <div className="mt-4">
-          {files.map((file) => (
-            <div
-              key={file.id}
-              className="flex items-center justify-between mb-2"
-            >
-              <div className="flex items-center">
-                <img
-                  src={file.objectUrl}
-                  alt="Preview"
-                  className="w-16 h-16 object-cover mr-2"
-                />
-                <div>
-                  <p className="font-semibold">{file.file.name}</p>
-                  <p className="text-sm text-gray-500">
-                    {file.file.size} bytes
-                  </p>
+        <input {...getInputProps()} className="sr-only" />
+
+        {hasImage ? (
+          <div className="relative aspect-21/9 w-full">
+            {imageLoading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
+                <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                  <ImageIcon className="size-5" />
+                  <span className="text-sm">Loading image...</span>
                 </div>
               </div>
-              <div className="flex items-center">
-                {file.uploading ? (
-                  <div className="flex items-center">
-                    <p className="mr-2">Uploading...</p>
-                    <div className="w-20 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-blue-500"
-                        style={{ width: `${file.progress}%` }}
-                      />
-                    </div>
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleDeleteFile(file.key)}
+            )}
+
+            <img
+              src={displayImageUrl}
+              alt="Preview"
+              className={cn(
+                "h-full w-full object-cover transition-opacity duration-300",
+                imageLoading ? "opacity-0" : "opacity-100"
+              )}
+              onLoad={() => setImageLoading(false)}
+              onError={() => setImageLoading(false)}
+            />
+
+            <div className="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/40" />
+
+            {!currentFile?.uploading && (
+              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
+                <div className="flex gap-2">
+                  <Button
+                    onClick={open}
+                    variant="secondary"
+                    size="sm"
+                    className="bg-white/90 text-gray-900 hover:bg-white"
                     type="button"
-                    className="text-red-500 hover:text-red-600"
                   >
-                    Delete
-                  </button>
-                )}
+                    <Upload className="mr-1 size-4" />
+                    Change Image
+                  </Button>
+                  {(value || currentFile?.key) && (
+                    <Button
+                      onClick={() =>
+                        value
+                          ? handleDeleteFile(value)
+                          : handleDeleteFile(currentFile?.key)
+                      }
+                      variant="destructive"
+                      size="sm"
+                      type="button"
+                    >
+                      <XIcon className="mr-1 size-4" />
+                      Remove
+                    </Button>
+                  )}
+                </div>
               </div>
+            )}
+
+            {currentFile?.uploading && (
+              <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                <div className="relative">
+                  <svg className="size-16 -rotate-90" viewBox="0 0 64 64">
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      className="text-white/20"
+                    />
+                    <circle
+                      cx="32"
+                      cy="32"
+                      r="28"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="4"
+                      strokeDasharray={`${2 * Math.PI * 28}`}
+                      strokeDashoffset={`${
+                        2 * Math.PI * 28 * (1 - currentFile.progress / 100)
+                      }`}
+                      className="text-white transition-all duration-300"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-sm font-medium text-white">
+                      {Math.round(currentFile.progress)}%
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          <div
+            className="flex aspect-21/9 w-full cursor-pointer flex-col items-center justify-center gap-4 p-8 text-center"
+            onClick={open}
+          >
+            <div className="rounded-full bg-primary/10 p-4">
+              <CloudUpload className="size-8 text-primary" />
             </div>
-          ))}
-        </div>
+
+            <div className="space-y-2">
+              <h3 className="text-lg font-semibold">Upload Cover Image</h3>
+              <p className="text-sm text-muted-foreground">
+                Drag and drop an image here, or click to browse
+              </p>
+              <p className="text-xs text-muted-foreground">
+                Recommended size: 1200x514px • Max size: 5MB
+              </p>
+            </div>
+
+            <Button variant="outline" size="sm" type="button">
+              <ImageIcon className="mr-1 size-4" />
+              Browse Files
+            </Button>
+          </div>
+        )}
+      </div>
+
+      {hasError && (
+        <Alert variant="destructive" className="mt-2">
+          <AlertTitle>Upload failed</AlertTitle>
+          <AlertDescription>
+            <p>Something went wrong while uploading. Please try again.</p>
+          </AlertDescription>
+        </Alert>
       )}
-    </>
+    </div>
   );
 };
 
