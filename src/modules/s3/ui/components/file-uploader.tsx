@@ -37,6 +37,7 @@ const FileUploader = ({
     }>
   >([]);
   const [imageLoading, setImageLoading] = useState(true);
+  const [deletedKey, setDeletedKey] = useState<string | null>(null);
 
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
@@ -90,6 +91,8 @@ const FileUploader = ({
         );
 
         toast.success("File uploaded successfully");
+        // new successful upload, clear any previously deleted key marker
+        setDeletedKey(null);
         onUploadSuccess?.(publicUrl);
       } catch (error) {
         setFiles((prev) =>
@@ -211,6 +214,9 @@ const FileUploader = ({
           return remaining;
         });
 
+        // remember which key was deleted so we don't keep showing it via `value`
+        setDeletedKey(key);
+
         toast.success("File deleted successfully");
       } catch (error) {
         setFiles((prev) =>
@@ -228,7 +234,7 @@ const FileUploader = ({
   const currentFile = files[0];
   const displayImageUrl = currentFile?.objectUrl
     ? currentFile.objectUrl
-    : value
+    : value && value !== deletedKey
     ? keyToImage(value) || "/placeholder.svg"
     : undefined;
 
@@ -356,9 +362,6 @@ const FileUploader = ({
               <h3 className="text-lg font-semibold">Upload Cover Image</h3>
               <p className="text-sm text-muted-foreground">
                 Drag and drop an image here, or click to browse
-              </p>
-              <p className="text-xs text-muted-foreground">
-                Recommended size: 1200x514px • Max size: 5MB
               </p>
             </div>
 
