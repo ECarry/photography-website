@@ -14,6 +14,9 @@ export const discoverRouter = createTRPCRouter({
         latitude: photos.latitude,
         longitude: photos.longitude,
         blurData: photos.blurData,
+        width: photos.width,
+        height: photos.height,
+        dateTimeOriginal: photos.dateTimeOriginal,
       })
       .from(photos)
       .where(

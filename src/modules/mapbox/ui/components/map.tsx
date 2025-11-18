@@ -2,7 +2,7 @@
 
 // External dependencies
 import * as mapboxgl from "mapbox-gl";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import Map, {
   GeolocateControl,
   Layer,
@@ -10,7 +10,6 @@ import Map, {
   MapRef,
   Marker,
   NavigationControl,
-  Popup,
   Source,
 } from "react-map-gl/mapbox";
 // Hooks & Types
@@ -39,6 +38,7 @@ export interface MapboxProps {
   geoJsonData?: GeoJSON.FeatureCollection;
   onMarkerDragEnd?: (lngLat: { lng: number; lat: number }) => void;
   onGeoJsonClick?: (feature: GeoJSON.Feature) => void;
+  onMapClick?: () => void;
   onMove?: (viewState: {
     zoom: number;
     latitude: number;
@@ -68,6 +68,7 @@ const Mapbox = ({
   geoJsonData,
   onMarkerDragEnd,
   onGeoJsonClick,
+  onMapClick,
   onMove,
   draggableMarker = false,
   showGeocoder = false,
@@ -78,12 +79,6 @@ const Mapbox = ({
 }: MapboxProps) => {
   const mapRef = useRef<MapRef>(null);
   const { theme } = useTheme();
-  const [popupInfo, setPopupInfo] = useState<{
-    id: string;
-    longitude: number;
-    latitude: number;
-    content: React.ReactNode;
-  } | null>(null);
 
   // GeoJSON layer style for visited countries
   const layerStyle: LayerProps = {
@@ -148,14 +143,17 @@ const Mapbox = ({
         features?: mapboxgl.GeoJSONFeature[];
       }
     ) => {
-      if (!onGeoJsonClick) return;
-
       const feature = event.features?.[0];
-      if (feature) {
+      if (feature && onGeoJsonClick) {
         onGeoJsonClick(feature as GeoJSON.Feature);
+        return;
+      }
+
+      if (onMapClick) {
+        onMapClick();
       }
     },
-    [onGeoJsonClick]
+    [onGeoJsonClick, onMapClick]
   );
 
   // Fly to location
@@ -213,56 +211,14 @@ const Mapbox = ({
           onDragEnd={
             onMarkerDragEnd ? (e) => onMarkerDragEnd(e.lngLat) : undefined
           }
-          onClick={() => {
-            if (marker.popupContent) {
-              setPopupInfo({
-                id: marker.id,
-                longitude: marker.longitude,
-                latitude: marker.latitude,
-                content: marker.popupContent,
-              });
-            }
+          onClick={(e) => {
+            // Prevent map-level click handler from firing when clicking a marker
+            e.originalEvent.stopPropagation();
           }}
         >
           {marker.element}
         </Marker>
       ))}
-
-      {/* Popup */}
-      {popupInfo && (
-        <Popup
-          longitude={popupInfo.longitude}
-          latitude={popupInfo.latitude}
-          anchor="bottom"
-          offset={15}
-          className="p-0! rounded-xl! overflow-hidden max-w-none"
-          closeButton={false}
-          closeOnClick={false}
-          onClose={() => setPopupInfo(null)}
-        >
-          <div className="relative">
-            <button
-              onClick={() => setPopupInfo(null)}
-              className="absolute top-2 right-2 z-10 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center transition-colors"
-            >
-              <span className="sr-only">Close</span>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className="w-5 h-5 text-white"
-              >
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
-            {popupInfo.content}
-          </div>
-        </Popup>
-      )}
 
       {/* GeoJSON Layer */}
       {geoJsonData && (

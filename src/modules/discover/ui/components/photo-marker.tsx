@@ -4,10 +4,11 @@ import type { PhotoPoint } from "@/modules/discover/lib/clustering";
 
 interface PhotoMarkerProps {
   photo: PhotoPoint;
+  onClick?: () => void;
 }
 
-export const PhotoMarker = ({ photo }: PhotoMarkerProps) => (
-  <div className="relative group cursor-pointer">
+export const PhotoMarker = ({ photo, onClick }: PhotoMarkerProps) => (
+  <div className="relative group cursor-pointer" onClick={onClick}>
     {/* Container positioned so arrow tip is at coordinate center */}
     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center">
       {/* Image above arrow */}

@@ -4,14 +4,15 @@ import type { Cluster } from "@/modules/discover/lib/clustering";
 
 interface ClusterMarkerProps {
   cluster: Cluster;
+  onClick?: () => void;
 }
 
-export const ClusterMarker = ({ cluster }: ClusterMarkerProps) => {
+export const ClusterMarker = ({ cluster, onClick }: ClusterMarkerProps) => {
   // Use first photo as thumbnail
   const thumbnail = cluster.photos[0];
 
   return (
-    <div className="relative group cursor-pointer">
+    <div className="relative group cursor-pointer" onClick={onClick}>
       {/* Container positioned so arrow tip is at coordinate center */}
       <div className="absolute bottom-0 left-1/2 -translate-x-1/2 flex flex-col items-center">
         {/* Image above arrow */}
