@@ -2,7 +2,7 @@
 
 // UI Components
 import Link from "next/link";
-import Carousel from "@/components/Carousel";
+import Carousel from "@/components/photo-carousel";
 import BlurImage from "@/components/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
