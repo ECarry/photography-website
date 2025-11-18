@@ -19,6 +19,7 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
+import { cn } from "@/lib/utils";
 
 export const DiscoverView = () => {
   const trpc = useTRPC();
@@ -135,7 +136,12 @@ export const DiscoverView = () => {
           <div className="hidden md:flex h-full bg-background flex-col w-1/2 rounded-xl">
             <div className="h-full p-4 overflow-y-auto bg-muted rounded-xl hide-scrollbar">
               {selectedPhotos.length && (
-                <div className="w-full grid grid-cols-2 gap-x-1 gap-y-8">
+                <div
+                  className={cn(
+                    "w-full grid grid-cols-2 gap-x-1 gap-y-8",
+                    selectedPhotos.length === 1 ? "grid-cols-1" : "grid-cols-2"
+                  )}
+                >
                   {selectedPhotos.map((photo) => (
                     <div key={photo.id} className="space-y-2">
                       <div className="flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-10">
