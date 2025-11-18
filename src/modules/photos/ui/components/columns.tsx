@@ -8,6 +8,9 @@ import { format } from "date-fns";
 import { FavoriteToggle } from "./favorite-toggle";
 import { VisibilityToggle } from "./visibility-toggle";
 import { DeletePhotoButton } from "./delete-photo-button";
+import Link from "next/link";
+import { PenBoxIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const columns: ColumnDef<photoGetMany[number]>[] = [
   {
@@ -85,10 +88,18 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     header: "Actions",
     cell: ({ row }) => {
       return (
-        <DeletePhotoButton
-          photoId={row.original.id}
-          photoTitle={row.original.title}
-        />
+        <div className="flex items-center gap-2">
+          <DeletePhotoButton
+            photoId={row.original.id}
+            photoTitle={row.original.title}
+          />
+
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/dashboard/photos/${row.original.id}`}>
+              <PenBoxIcon className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       );
     },
   },

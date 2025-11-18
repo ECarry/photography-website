@@ -5,6 +5,8 @@ import { PostGetMany } from "../../types";
 import { VisibilityToggle } from "./visibility-toggle";
 import { DeletePostButton } from "./delete-post-button";
 import Link from "next/link";
+import { PenBoxIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 export const columns: ColumnDef<PostGetMany[number]>[] = [
   {
@@ -33,7 +35,12 @@ export const columns: ColumnDef<PostGetMany[number]>[] = [
             postId={row.original.id}
             postTitle={row.original.title}
           />
-          <Link href={`/dashboard/posts/${row.original.slug}`}>View</Link>
+
+          <Button variant="ghost" size="icon" asChild>
+            <Link href={`/dashboard/posts/${row.original.slug}`}>
+              <PenBoxIcon className="h-4 w-4" />
+            </Link>
+          </Button>
         </>
       );
     },
