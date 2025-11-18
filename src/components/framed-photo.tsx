@@ -10,6 +10,7 @@ interface FramedPhotoProps {
   blurhash: string;
   width?: number;
   height?: number;
+  className?: string;
 }
 
 export function FramedPhoto({
@@ -18,6 +19,7 @@ export function FramedPhoto({
   blurhash,
   width,
   height,
+  className,
 }: FramedPhotoProps) {
   return (
     <div className="relative inline-block shadow-[10px_10px_8px_rgba(0,0,0,0.65)]">
@@ -36,7 +38,10 @@ export function FramedPhoto({
             src={keyToImage(src)}
             alt={alt}
             blurhash={blurhash}
-            className="block w-full h-auto max-h-[80vh] object-cover border border-neutral-200"
+            className={cn(
+              "block w-full h-auto max-h-[80vh] object-cover border border-neutral-200",
+              className
+            )}
             width={width}
             height={height}
           />
