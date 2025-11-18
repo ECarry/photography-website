@@ -33,7 +33,6 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { FramedPhoto } from "@/components/framed-photo";
-import { cn } from "@/lib/utils";
 
 const cityDescriptionSchema = z.object({
   description: z.string().optional(),
@@ -220,12 +219,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-6">
         {cityData.photos.map((photo) => (
           <div key={photo.id} className="space-y-4">
-            <div
-              className={cn(
-                "relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh]",
-                photo.aspectRatio < 1 ? "px-20 py-50" : "px-10 py-50"
-              )}
-            >
+            <div className="relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-20">
               <FramedPhoto
                 src={photo.url}
                 alt={cityData.city}

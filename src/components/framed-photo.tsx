@@ -39,7 +39,7 @@ export function FramedPhoto({
             alt={alt}
             blurhash={blurhash}
             className={cn(
-              "block w-full h-auto max-h-[80vh] object-cover border border-neutral-200",
+              "block w-full h-auto max-h-[60vh] object-cover border border-neutral-200",
               className
             )}
             width={width}
