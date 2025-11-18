@@ -88,7 +88,6 @@ function TiptapImage(props: NodeViewProps) {
       : rawSrc ?? "";
 
   const handleDeleteImage = useCallback(async () => {
-    // 如果是 S3 key（不是完整 URL / data URL），尝试删除远端文件
     if (
       typeof rawSrc === "string" &&
       !rawSrc.startsWith("http://") &&
@@ -105,7 +104,6 @@ function TiptapImage(props: NodeViewProps) {
       }
     }
 
-    // 无论远端是否删除成功，始终从编辑器中移除节点，避免卡住
     deleteNode();
   }, [deleteFile, rawSrc, deleteNode]);
 
