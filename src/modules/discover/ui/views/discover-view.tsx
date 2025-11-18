@@ -108,7 +108,7 @@ export const DiscoverView = () => {
 
         {hasSelection && (
           <div className="h-full bg-background flex flex-col w-1/2 rounded-xl">
-            <div className="h-full p-4 overflow-y-auto bg-muted flex items-center justify-center rounded-xl">
+            <div className="h-full p-4 overflow-y-auto bg-muted rounded-xl">
               {selectedPhotos.length === 1 && (
                 <div key={selectedPhotos[0].id} className="space-y-4">
                   <div className="space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-10">
@@ -137,10 +137,10 @@ export const DiscoverView = () => {
               )}
 
               {selectedPhotos.length > 1 && (
-                <div className="w-full grid grid-cols-2 gap-1">
+                <div className="w-full grid grid-cols-2 gap-x-1 gap-y-8">
                   {selectedPhotos.map((photo) => (
-                    <div key={photo.id} className="space-y-4">
-                      <div className="space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-10">
+                    <div key={photo.id} className="space-y-2">
+                      <div className="flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-10">
                         <FramedPhoto
                           src={photo.url}
                           alt={photo.title}
