@@ -3,7 +3,7 @@
 import { FramedPhoto } from "@/components/framed-photo";
 import { photosUpdateSchema } from "@/db/schema";
 import { useTRPC } from "@/trpc/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
 
 interface PhotoIdViewProps {
   id: string;
@@ -16,6 +16,13 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
   const { data } = useSuspenseQuery(
     trpc.photos.getOne.queryOptions({
       id,
+    })
+  );
+
+  const updateMutation = useMutation(
+    trpc.photos.update.mutationOptions({
+      onSuccess: () => {},
+      onError: () => {},
     })
   );
 
