@@ -2,10 +2,12 @@
 
 import BlurImage from "@/components/blur-image";
 import Footer from "@/components/footer";
+import { FramedPhoto } from "@/components/framed-photo";
 import VectorCombined from "@/components/vector-combined";
 import { keyToImage } from "@/lib/keyToImage";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 
 interface Props {
   city: string;
@@ -90,27 +92,31 @@ export const CityView = ({ city }: Props) => {
           </div>
 
           {/* IMAGES  */}
-          {/* {cityPhotos.map((photo) => (
-            <AspectRatio
-              ratio={photo.aspectRatio}
-              key={photo.id}
-              className="overflow-hidden rounded-lg"
-            >
-              <FlipCard
-                id={photo.id}
-                image={photo.url}
-                title={photo.title || ""}
-                location={photo.city + ", " + photo.country}
-                camera={photo.make + " " + photo.model}
-                blurData={photo.blurData}
-                focalLength={photo.focalLength35mm}
-                fNumber={photo.fNumber}
-                exposureTime={photo.exposureTime}
-                iso={photo.iso}
-                rotate="y"
-              />
-            </AspectRatio>
-          ))} */}
+          <div className="w-full space-y-2">
+            {data.photos?.map((photo) => (
+              <div key={photo.id} className="space-y-2">
+                <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-4 rounded-xl">
+                  <FramedPhoto
+                    src={photo.url}
+                    alt={photo.title}
+                    blurhash={photo.blurData!}
+                    width={photo.width}
+                    height={photo.height}
+                  />
+                </div>
+                <div className="flex flex-col items-center justify-center">
+                  <p className="text-sm font-medium text-center">
+                    {photo.title}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    {photo.dateTimeOriginal
+                      ? format(photo.dateTimeOriginal, "d MMM yyyy")
+                      : ""}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
           {/* FOOTER  */}
           <Footer />
         </div>
