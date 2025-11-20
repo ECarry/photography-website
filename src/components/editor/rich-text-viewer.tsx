@@ -8,7 +8,8 @@ import Underline from "@tiptap/extension-underline";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { ImageExtension } from "./extensions/image";
-import Youtube from "@tiptap/extension-youtube";
+import { YoutubeExtension } from "./extensions/youtube";
+import { FontSize } from "./extensions/font-size";
 
 interface RichTextProps {
   content: string | Record<string, unknown>;
@@ -17,7 +18,7 @@ interface RichTextProps {
 export default function RichTextViewer({ content }: RichTextProps) {
   const editor = useEditor({
     extensions: [
-      Youtube.configure({
+      YoutubeExtension.configure({
         controls: false,
         nocookie: true,
       }),
@@ -43,6 +44,7 @@ export default function RichTextViewer({ content }: RichTextProps) {
         types: ["heading", "paragraph"],
       }),
       TextStyle,
+      FontSize,
       Underline,
       Color,
       Highlight.configure({
@@ -56,5 +58,10 @@ export default function RichTextViewer({ content }: RichTextProps) {
   });
 
   if (!editor) return null;
-  return <EditorContent editor={editor} />;
+  return (
+    <EditorContent
+      editor={editor}
+      className="[&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_iframe]:h-auto"
+    />
+  );
 }

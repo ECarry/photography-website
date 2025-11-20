@@ -124,6 +124,7 @@ export const ColorHighlightToolbar = () => {
                   color: currentColor,
                 }}
                 className={cn("h-8 w-14 p-0 font-normal")}
+                onMouseDown={(e) => e.preventDefault()}
               >
                 <span className="text-md">A</span>
                 <ChevronDown className="ml-2 h-4 w-4" />
@@ -133,7 +134,11 @@ export const ColorHighlightToolbar = () => {
           <TooltipContent>Text Color & Highlight</TooltipContent>
         </Tooltip>
 
-        <PopoverContent align="start" className="w-56 p-1 dark:bg-gray-2">
+        <PopoverContent
+          align="start"
+          className="w-56 p-1 dark:bg-gray-2"
+          onOpenAutoFocus={(e) => e.preventDefault()}
+        >
           <ScrollArea className="max-h-80 overflow-y-auto pr-2">
             <div className="mb-2.5 mt-2 px-2 text-xs text-gray-11">Color</div>
             {TEXT_COLORS.map(({ name, color }) => (

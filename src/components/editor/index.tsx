@@ -11,6 +11,7 @@ import StarterKit from "@tiptap/starter-kit";
 import { ImageExtension } from "./extensions/image";
 import { ImagePlaceholder } from "./extensions/image-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
+import { FontSize } from "./extensions/font-size";
 import { Subscript, Superscript } from "lucide-react";
 import { RedoToolbar } from "./toolbars/redo";
 import { BoldToolbar } from "./toolbars/bold";
@@ -19,6 +20,7 @@ import { BulletListToolbar } from "./toolbars/bullet-list";
 import { OrderedListToolbar } from "./toolbars/ordered-list";
 import { ImagePlaceholderToolbar } from "./toolbars/image-placeholder-toolbar";
 import { ColorHighlightToolbar } from "./toolbars/color-and-highlight";
+import { FontSizeToolbar } from "./toolbars/font-size";
 import { UndoToolbar } from "./toolbars/undo";
 import { HorizontalRuleToolbar } from "./toolbars/horizontal-rule";
 import { HardBreakToolbar } from "./toolbars/hard-break";
@@ -27,7 +29,7 @@ import { BlockquoteToolbar } from "./toolbars/blockquote";
 import { CodeBlockToolbar } from "./toolbars/code-block";
 import { StrikeThroughToolbar } from "./toolbars/strikethrough";
 import { YoutubeToolbar } from "./toolbars/youtube";
-import Youtube from "@tiptap/extension-youtube";
+import { YoutubeExtension } from "./extensions/youtube";
 import TextAlign from "@tiptap/extension-text-align";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
@@ -81,6 +83,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
           types: ["heading", "paragraph"],
         }),
         TextStyle,
+        FontSize,
         Subscript,
         Superscript,
         Underline,
@@ -88,7 +91,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         Highlight.configure({
           multicolor: true,
         }),
-        Youtube.configure({
+        YoutubeExtension.configure({
           controls: false,
           nocookie: true,
         }),
@@ -169,6 +172,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <HorizontalRuleToolbar />
             <YoutubeToolbar />
             <ImagePlaceholderToolbar />
+            <FontSizeToolbar />
             <ColorHighlightToolbar />
           </div>
         </ToolbarProvider>
@@ -188,6 +192,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
                 <BoldToolbar />
                 <ItalicToolbar />
                 <StrikeThroughToolbar />
+                <FontSizeToolbar />
                 <ColorHighlightToolbar />
               </div>
             </ToolbarProvider>
