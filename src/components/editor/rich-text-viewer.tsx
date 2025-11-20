@@ -8,6 +8,7 @@ import Underline from "@tiptap/extension-underline";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { ImageExtension } from "./extensions/image";
+import Youtube from "@tiptap/extension-youtube";
 
 interface RichTextProps {
   content: string | Record<string, unknown>;
@@ -16,6 +17,10 @@ interface RichTextProps {
 export default function RichTextViewer({ content }: RichTextProps) {
   const editor = useEditor({
     extensions: [
+      Youtube.configure({
+        controls: false,
+        nocookie: true,
+      }),
       StarterKit.configure({
         orderedList: {
           HTMLAttributes: {

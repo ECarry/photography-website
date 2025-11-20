@@ -6,6 +6,7 @@ import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
 import { EditorContent, type Extension, useEditor } from "@tiptap/react";
+import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { ImageExtension } from "./extensions/image";
 import { ImagePlaceholder } from "./extensions/image-placeholder";
@@ -22,6 +23,11 @@ import { UndoToolbar } from "./toolbars/undo";
 import { HorizontalRuleToolbar } from "./toolbars/horizontal-rule";
 import { HardBreakToolbar } from "./toolbars/hard-break";
 import { AlignmentToolbar } from "./toolbars/alignment";
+import { BlockquoteToolbar } from "./toolbars/blockquote";
+import { CodeBlockToolbar } from "./toolbars/code-block";
+import { StrikeThroughToolbar } from "./toolbars/strikethrough";
+import { YoutubeToolbar } from "./toolbars/youtube";
+import Youtube from "@tiptap/extension-youtube";
 import TextAlign from "@tiptap/extension-text-align";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
@@ -60,6 +66,16 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
               class: "tiptap-heading",
             },
           },
+          codeBlock: {
+            HTMLAttributes: {
+              class: "bg-muted rounded-md p-4 font-mono text-sm",
+            },
+          },
+          blockquote: {
+            HTMLAttributes: {
+              class: "border-l-4 border-primary pl-4 italic",
+            },
+          },
         }),
         TextAlign.configure({
           types: ["heading", "paragraph"],
@@ -71,6 +87,10 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         Color,
         Highlight.configure({
           multicolor: true,
+        }),
+        Youtube.configure({
+          controls: false,
+          nocookie: true,
         }),
         ImageExtension,
         ImagePlaceholder.configure({
@@ -139,11 +159,15 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <Separator orientation="vertical" className="h-7" />
             <BoldToolbar />
             <ItalicToolbar />
+            <StrikeThroughToolbar />
             <BulletListToolbar />
             <OrderedListToolbar />
+            <CodeBlockToolbar />
+            <BlockquoteToolbar />
             <AlignmentToolbar />
             <HardBreakToolbar />
             <HorizontalRuleToolbar />
+            <YoutubeToolbar />
             <ImagePlaceholderToolbar />
             <ColorHighlightToolbar />
           </div>
@@ -157,6 +181,31 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         className="cursor-text min-h-72 bg-background"
       >
         <EditorContent className="outline-none" editor={editor} />
+        {editor && (
+          <BubbleMenu editor={editor}>
+            <ToolbarProvider editor={editor}>
+              <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
+                <BoldToolbar />
+                <ItalicToolbar />
+                <StrikeThroughToolbar />
+                <ColorHighlightToolbar />
+              </div>
+            </ToolbarProvider>
+          </BubbleMenu>
+        )}
+
+        {editor && (
+          <FloatingMenu editor={editor}>
+            <ToolbarProvider editor={editor}>
+              <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
+                <ImagePlaceholderToolbar />
+                <YoutubeToolbar />
+                <CodeBlockToolbar />
+                <BlockquoteToolbar />
+              </div>
+            </ToolbarProvider>
+          </FloatingMenu>
+        )}
       </div>
     </div>
   );
