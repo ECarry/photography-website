@@ -58,10 +58,5 @@ export default function RichTextViewer({ content }: RichTextProps) {
   });
 
   if (!editor) return null;
-  return (
-    <EditorContent
-      editor={editor}
-      className="[&_img]:max-w-full [&_img]:h-auto"
-    />
-  );
+  return <EditorContent editor={editor} />;
 }

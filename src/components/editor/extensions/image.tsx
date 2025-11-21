@@ -230,7 +230,7 @@ function TiptapImage(props: NodeViewProps) {
         node.attrs.align === "center" && "left-1/2 -translate-x-1/2",
         node.attrs.align === "right" && "left-full -translate-x-full"
       )}
-      style={{ width: node.attrs.width }}
+      style={{ width: node.attrs.width, maxWidth: "100%" }}
     >
       <div
         className={cn(
@@ -243,6 +243,7 @@ function TiptapImage(props: NodeViewProps) {
           src={imageSrc}
           alt={node.attrs.alt}
           title={node.attrs.title}
+          className="max-w-full h-auto"
         />
         <figcaption className="text-center">
           <NodeViewContent />
