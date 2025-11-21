@@ -61,7 +61,7 @@ export default function RichTextViewer({ content }: RichTextProps) {
   return (
     <EditorContent
       editor={editor}
-      className="[&_img]:max-w-full [&_img]:h-auto [&_iframe]:max-w-full [&_iframe]:h-auto"
+      className="[&_img]:max-w-full [&_img]:h-auto"
     />
   );
 }
