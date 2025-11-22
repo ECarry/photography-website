@@ -1,5 +1,6 @@
 "use client";
 
+import "./editor.css";
 import { EditorContent, useEditor } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
@@ -35,9 +36,19 @@ export default function RichTextViewer({ content }: RichTextProps) {
           },
         },
         heading: {
-          levels: [1, 2, 3, 4],
+          levels: [1, 2, 3],
           HTMLAttributes: {
             class: "tiptap-heading",
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class: "bg-muted rounded-md p-4 font-mono text-sm",
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: "border-l-4 border-primary pl-4 italic",
           },
         },
       }),
