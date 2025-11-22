@@ -49,6 +49,9 @@ declare module "@tiptap/core" {
         longitude: number;
         latitude: number;
         zoom?: number;
+        scrollZoom?: boolean;
+        doubleClickZoom?: boolean;
+        boxZoom?: boolean;
       }) => ReturnType;
     };
   }
@@ -80,6 +83,15 @@ export const MapboxExtension = Node.create<MapboxOptions>({
       },
       align: {
         default: "center",
+      },
+      scrollZoom: {
+        default: true,
+      },
+      doubleClickZoom: {
+        default: true,
+      },
+      boxZoom: {
+        default: true,
       },
     };
   },
@@ -263,9 +275,11 @@ function TiptapMapbox(props: NodeViewProps) {
             },
           ]}
           showControls={!editor?.isEditable}
-          scrollZoom={!editor?.isEditable}
-          doubleClickZoom={!editor?.isEditable}
-          boxZoom={!editor?.isEditable}
+          scrollZoom={editor?.isEditable ? false : node.attrs.scrollZoom}
+          doubleClickZoom={
+            editor?.isEditable ? false : node.attrs.doubleClickZoom
+          }
+          boxZoom={editor?.isEditable ? false : node.attrs.boxZoom}
         />
 
         {/* Overlay to capture clicks when selected or resizing */}
