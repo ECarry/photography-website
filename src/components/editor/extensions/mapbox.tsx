@@ -51,7 +51,7 @@ declare module "@tiptap/core" {
         zoom?: number;
         scrollZoom?: boolean;
         doubleClickZoom?: boolean;
-        boxZoom?: boolean;
+        dragRotate?: boolean;
       }) => ReturnType;
     };
   }
@@ -90,7 +90,7 @@ export const MapboxExtension = Node.create<MapboxOptions>({
       doubleClickZoom: {
         default: true,
       },
-      boxZoom: {
+      dragRotate: {
         default: true,
       },
     };
@@ -274,12 +274,19 @@ function TiptapMapbox(props: NodeViewProps) {
               latitude: node.attrs.latitude,
             },
           ]}
-          showControls={!editor?.isEditable}
+          showControls={
+            editor?.isEditable
+              ? false
+              : node.attrs.scrollZoom ||
+                node.attrs.doubleClickZoom ||
+                node.attrs.dragRotate
+          }
           scrollZoom={editor?.isEditable ? false : node.attrs.scrollZoom}
           doubleClickZoom={
             editor?.isEditable ? false : node.attrs.doubleClickZoom
           }
-          boxZoom={editor?.isEditable ? false : node.attrs.boxZoom}
+          dragRotate={editor?.isEditable ? false : node.attrs.dragRotate}
+          dragPan={editor?.isEditable ? false : node.attrs.dragRotate}
         />
 
         {/* Overlay to capture clicks when selected or resizing */}

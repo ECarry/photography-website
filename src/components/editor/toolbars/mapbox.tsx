@@ -68,7 +68,7 @@ export const MapboxToolbar = React.forwardRef<HTMLButtonElement>((_, ref) => {
         zoom: z,
         scrollZoom: enableScroll,
         doubleClickZoom: enableZoom,
-        boxZoom: enableDrag,
+        dragRotate: enableDrag,
       })
       .run();
 
@@ -129,10 +129,11 @@ export const MapboxToolbar = React.forwardRef<HTMLButtonElement>((_, ref) => {
               ]}
               draggableMarker={true}
               showGeocoder={true}
-              showControls={true}
+              showControls={enableScroll || enableZoom || enableDrag}
               scrollZoom={enableScroll}
               doubleClickZoom={enableZoom}
-              boxZoom={enableDrag}
+              dragRotate={enableDrag}
+              dragPan={enableDrag}
               onMarkerDragEnd={(lngLat) => {
                 setLongitude(lngLat.lng.toFixed(6));
                 setLatitude(lngLat.lat.toFixed(6));

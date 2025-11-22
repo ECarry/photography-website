@@ -50,6 +50,8 @@ export interface MapboxProps {
   scrollZoom?: boolean;
   doubleClickZoom?: boolean;
   boxZoom?: boolean;
+  dragRotate?: boolean;
+  dragPan?: boolean;
 }
 
 const MAP_STYLES = {
@@ -76,6 +78,8 @@ const Mapbox = ({
   scrollZoom = true,
   doubleClickZoom = true,
   boxZoom = true,
+  dragRotate = true,
+  dragPan = true,
 }: MapboxProps) => {
   const mapRef = useRef<MapRef>(null);
   const { theme } = useTheme();
@@ -172,6 +176,8 @@ const Mapbox = ({
       scrollZoom={scrollZoom}
       doubleClickZoom={doubleClickZoom}
       boxZoom={boxZoom}
+      dragRotate={dragRotate}
+      dragPan={dragPan}
       mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
       initialViewState={initialViewState}
       style={{ width: "100%", height: "100%" }}
