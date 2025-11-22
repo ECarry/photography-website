@@ -5,10 +5,10 @@ import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { ArrowDownIcon } from "lucide-react";
 import Image from "next/image";
-import { PostPreview } from "../components/post-preview";
 import ContactCard from "@/components/contact-card";
 import Footer from "@/components/footer";
 import { keyToImage } from "@/lib/keyToImage";
+import RichTextViewer from "@/components/editor/rich-text-viewer";
 
 export const BlogSlugView = ({ slug }: { slug: string }) => {
   const trpc = useTRPC();
@@ -77,7 +77,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
         </div>
 
         {/* POST PREVIEW */}
-        <PostPreview content={data.content} />
+        <RichTextViewer content={data.content || ""} />
 
         {/* CONTACT CARD  */}
         <ContactCard

@@ -16,7 +16,7 @@ export const LatestPostSection = ({ data }: LatestPostSectionProps) => {
   if (!data) {
     return (
       <div className="w-full h-full flex items-center justify-center bg-muted rounded-xl">
-        <p className="text-muted-foreground">No posts available</p>
+        <p className="text-muted-foreground">No blog available</p>
       </div>
     );
   }

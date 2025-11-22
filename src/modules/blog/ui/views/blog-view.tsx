@@ -5,8 +5,8 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import CardContainer from "@/components/card-container";
 import Footer from "@/components/footer";
 import ContactCard from "@/components/contact-card";
-import { PostsSection } from "../components/posts-section";
-import { LatestPostSection } from "../components/latest-post-section";
+import { PostsSection } from "../components/blog-items";
+import { LatestPostSection } from "../components/latest-blog-section";
 import { Skeleton } from "@/components/ui/skeleton";
 
 export const BlogView = () => {
