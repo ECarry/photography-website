@@ -12,7 +12,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { ChevronDown, Type } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { useToolbar } from "./toolbar-provider";
 import { useEditorState } from "@tiptap/react";
 
@@ -39,18 +39,22 @@ export const FontSizeToolbar = () => {
     editor.chain().focus().setFontSize(fontSize).run();
   };
 
+  // 获取当前字体大小的数值（去掉 px 单位）
+  const currentSize = editorState.currentFontSize.replace("px", "");
+
   return (
     <Popover>
       <Tooltip>
         <TooltipTrigger asChild>
           <PopoverTrigger disabled={editorState.isDisabled} asChild>
             <Button
+              type="button"
               variant="ghost"
               size="sm"
-              className={cn("h-8 w-auto px-2 gap-1 p-0 font-normal")}
+              className={cn("h-8 w-14 px-2 gap-0.5 font-normal")}
               onMouseDown={(e) => e.preventDefault()}
             >
-              <Type className="h-4 w-4" />
+              <span className="text-xs font-medium">{currentSize}</span>
               <ChevronDown className="h-3 w-3 opacity-50" />
             </Button>
           </PopoverTrigger>
@@ -66,6 +70,7 @@ export const FontSizeToolbar = () => {
         {FONT_SIZES.map(({ label, value }) => (
           <button
             key={value}
+            type="button"
             onClick={() => handleSetFontSize(value)}
             className={cn(
               "flex w-full items-center justify-between rounded-sm px-2 py-1.5 text-sm hover:bg-accent hover:text-accent-foreground",
