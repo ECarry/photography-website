@@ -11,15 +11,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
-import type { Extension } from "@tiptap/core";
-import type { StarterKitOptions } from "@tiptap/starter-kit";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-unused-vars
-type StarterKitExtensions = Extension<StarterKitOptions, any>;
+import { useEditorState } from "@tiptap/react";
 
 const BoldToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isBold: ctx.editor.isActive("bold") ?? false,
+        canBold: ctx.editor.can().chain().toggleBold().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -29,14 +34,14 @@ const BoldToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("bold") && "bg-accent",
+              editorState.isBold && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleBold().run();
+              editor.chain().focus().toggleBold().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleBold().run()}
+            disabled={!editorState.canBold}
             ref={ref}
             {...props}
           >

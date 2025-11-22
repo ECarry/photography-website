@@ -11,10 +11,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "@/components/editor/toolbars/toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const StrikeThroughToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isStrike: ctx.editor.isActive("strike") ?? false,
+        canStrike: ctx.editor.can().chain().toggleStrike().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -24,14 +34,14 @@ const StrikeThroughToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("strike") && "bg-accent",
+              editorState.isStrike && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleStrike().run();
+              editor.chain().focus().toggleStrike().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleStrike().run()}
+            disabled={!editorState.canStrike}
             ref={ref}
             {...props}
           >

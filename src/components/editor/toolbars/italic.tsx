@@ -11,10 +11,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const ItalicToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isItalic: ctx.editor.isActive("italic") ?? false,
+        canItalic: ctx.editor.can().chain().toggleItalic().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -24,14 +34,14 @@ const ItalicToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("italic") && "bg-accent",
+              editorState.isItalic && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleItalic().run();
+              editor.chain().focus().toggleItalic().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleItalic().run()}
+            disabled={!editorState.canItalic}
             ref={ref}
             {...props}
           >

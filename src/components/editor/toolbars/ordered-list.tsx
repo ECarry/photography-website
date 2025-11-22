@@ -11,10 +11,21 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "@/components/editor/toolbars/toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const OrderedListToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isOrderedList: ctx.editor.isActive("orderedList") ?? false,
+        canOrderedList:
+          ctx.editor.can().chain().toggleOrderedList().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -24,14 +35,14 @@ const OrderedListToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("orderedList") && "bg-accent",
+              editorState.isOrderedList && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleOrderedList().run();
+              editor.chain().focus().toggleOrderedList().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleOrderedList().run()}
+            disabled={!editorState.canOrderedList}
             ref={ref}
             {...props}
           >

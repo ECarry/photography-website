@@ -11,10 +11,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const CodeBlockToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isCodeBlock: ctx.editor.isActive("codeBlock") ?? false,
+        canCodeBlock: ctx.editor.can().chain().toggleCodeBlock().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -24,14 +34,14 @@ const CodeBlockToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("codeBlock") && "bg-accent",
+              editorState.isCodeBlock && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleCodeBlock().run();
+              editor.chain().focus().toggleCodeBlock().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleCodeBlock().run()}
+            disabled={!editorState.canCodeBlock}
             ref={ref}
             {...props}
           >

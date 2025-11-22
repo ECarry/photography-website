@@ -11,10 +11,20 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const BulletListToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isBulletList: ctx.editor.isActive("bulletList") ?? false,
+        canBulletList:
+          ctx.editor.can().chain().toggleBulletList().run() ?? false,
+      }),
+    });
 
     return (
       <Tooltip>
@@ -25,14 +35,14 @@ const BulletListToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("bulletList") && "bg-accent",
+              editorState.isBulletList && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleBulletList().run();
+              editor.chain().focus().toggleBulletList().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleBulletList().run()}
+            disabled={!editorState.canBulletList}
             ref={ref}
             {...props}
           >

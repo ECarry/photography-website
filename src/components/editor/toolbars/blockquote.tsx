@@ -11,10 +11,21 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const BlockquoteToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        isBlockquote: ctx.editor.isActive("blockquote") ?? false,
+        canBlockquote:
+          ctx.editor.can().chain().toggleBlockquote().run() ?? false,
+      }),
+    });
+
     return (
       <Tooltip>
         <TooltipTrigger asChild>
@@ -24,14 +35,14 @@ const BlockquoteToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn(
               "h-8 w-8",
-              editor?.isActive("blockquote") && "bg-accent",
+              editorState.isBlockquote && "bg-accent",
               className
             )}
             onClick={(e) => {
-              editor?.chain().focus().toggleBlockquote().run();
+              editor.chain().focus().toggleBlockquote().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().toggleBlockquote().run()}
+            disabled={!editorState.canBlockquote}
             ref={ref}
             {...props}
           >

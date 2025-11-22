@@ -11,10 +11,18 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "@/components/editor/toolbars/toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const RedoToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        canRedo: ctx.editor.can().chain().redo().run() ?? false,
+      }),
+    });
 
     return (
       <Tooltip>
@@ -25,10 +33,10 @@ const RedoToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn("h-8 w-8", className)}
             onClick={(e) => {
-              editor?.chain().focus().redo().run();
+              editor.chain().focus().redo().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().redo().run()}
+            disabled={!editorState.canRedo}
             ref={ref}
             {...props}
           >

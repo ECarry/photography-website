@@ -10,10 +10,18 @@ import { cn } from "@/lib/utils";
 import { useToolbar } from "@/components/editor/toolbars/toolbar-provider";
 import { CornerUpLeft } from "lucide-react";
 import React from "react";
+import { useEditorState } from "@tiptap/react";
 
 const UndoToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, onClick, children, ...props }, ref) => {
     const { editor } = useToolbar();
+
+    const editorState = useEditorState({
+      editor,
+      selector: (ctx) => ({
+        canUndo: ctx.editor.can().chain().undo().run() ?? false,
+      }),
+    });
 
     return (
       <Tooltip>
@@ -24,10 +32,10 @@ const UndoToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
             size="icon"
             className={cn("h-8 w-8", className)}
             onClick={(e) => {
-              editor?.chain().focus().undo().run();
+              editor.chain().focus().undo().run();
               onClick?.(e);
             }}
-            disabled={!editor?.can().chain().focus().undo().run()}
+            disabled={!editorState.canUndo}
             ref={ref}
             {...props}
           >

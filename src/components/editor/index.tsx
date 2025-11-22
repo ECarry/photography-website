@@ -185,6 +185,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         className="cursor-text min-h-72 bg-background"
       >
         <EditorContent className="outline-none" editor={editor} />
+
         {editor && (
           <BubbleMenu editor={editor}>
             <ToolbarProvider editor={editor}>

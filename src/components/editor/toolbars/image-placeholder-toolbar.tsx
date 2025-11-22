@@ -11,12 +11,22 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 const ImagePlaceholderToolbar = React.forwardRef<
   HTMLButtonElement,
   ButtonProps
 >(({ className, onClick, children, ...props }, ref) => {
   const { editor } = useToolbar();
+
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      isImagePlaceholderActive:
+        ctx.editor.isActive("image-placeholder") ?? false,
+    }),
+  });
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
@@ -26,11 +36,11 @@ const ImagePlaceholderToolbar = React.forwardRef<
           size="icon"
           className={cn(
             "h-8 w-8",
-            editor?.isActive("image-placeholder") && "bg-accent",
+            editorState.isImagePlaceholderActive && "bg-accent",
             className
           )}
           onClick={(e) => {
-            editor?.chain().focus().insertImagePlaceholder().run();
+            editor.chain().focus().insertImagePlaceholder().run();
             onClick?.(e);
           }}
           ref={ref}

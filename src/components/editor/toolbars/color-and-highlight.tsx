@@ -20,6 +20,7 @@ import type { Extension } from "@tiptap/core";
 import type { ColorOptions } from "@tiptap/extension-color";
 import type { HighlightOptions } from "@tiptap/extension-highlight";
 import { Check, ChevronDown } from "lucide-react";
+import { useEditorState } from "@tiptap/react";
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 type TextStylingExtensions =
@@ -88,40 +89,46 @@ const ColorHighlightButton = ({
 export const ColorHighlightToolbar = () => {
   const { editor } = useToolbar();
 
-  const currentColor = editor?.getAttributes("textStyle").color;
-  const currentHighlight = editor?.getAttributes("highlight").color;
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => ({
+      currentColor: ctx.editor.getAttributes("textStyle").color,
+      currentHighlight: ctx.editor.getAttributes("highlight").color,
+      isDisabled:
+        !ctx.editor.can().chain().setHighlight().run() ||
+        !ctx.editor.can().chain().setColor("").run(),
+    }),
+  });
 
   const handleSetColor = (color: string) => {
     editor
-      ?.chain()
+      .chain()
       .focus()
-      .setColor(color === currentColor ? "" : color)
+      .setColor(color === editorState.currentColor ? "" : color)
       .run();
   };
 
   const handleSetHighlight = (color: string) => {
     editor
-      ?.chain()
+      .chain()
       .focus()
-      .setHighlight(color === currentHighlight ? { color: "" } : { color })
+      .setHighlight(
+        color === editorState.currentHighlight ? { color: "" } : { color }
+      )
       .run();
   };
-
-  const isDisabled =
-    !editor?.can().chain().setHighlight().run() ||
-    !editor?.can().chain().setColor("").run();
 
   return (
     <Popover>
       <div className="relative h-full">
         <Tooltip>
           <TooltipTrigger asChild>
-            <PopoverTrigger disabled={isDisabled} asChild>
+            <PopoverTrigger disabled={editorState.isDisabled} asChild>
               <Button
                 variant="ghost"
                 size="sm"
                 style={{
-                  color: currentColor,
+                  color: editorState.currentColor,
                 }}
                 className={cn("h-8 w-14 p-0 font-normal")}
                 onMouseDown={(e) => e.preventDefault()}
@@ -146,7 +153,7 @@ export const ColorHighlightToolbar = () => {
                 key={name}
                 name={name}
                 color={color}
-                isActive={currentColor === color}
+                isActive={editorState.currentColor === color}
                 onClick={() => handleSetColor(color)}
               />
             ))}
@@ -161,7 +168,7 @@ export const ColorHighlightToolbar = () => {
                 key={name}
                 name={name}
                 color={color}
-                isActive={currentHighlight === color}
+                isActive={editorState.currentHighlight === color}
                 onClick={() => handleSetHighlight(color)}
                 isHighlight
               />

@@ -23,32 +23,35 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useToolbar } from "./toolbar-provider";
+import { useEditorState } from "@tiptap/react";
 
 export const AlignmentToolbar = () => {
   const { editor } = useToolbar();
+
+  const editorState = useEditorState({
+    editor,
+    selector: (ctx) => {
+      let currentAlign = "left";
+      if (ctx.editor.isActive({ textAlign: "left" })) {
+        currentAlign = "left";
+      } else if (ctx.editor.isActive({ textAlign: "center" })) {
+        currentAlign = "center";
+      } else if (ctx.editor.isActive({ textAlign: "right" })) {
+        currentAlign = "right";
+      } else if (ctx.editor.isActive({ textAlign: "justify" })) {
+        currentAlign = "justify";
+      }
+
+      return {
+        isDisabled:
+          ctx.editor.isActive("image") || ctx.editor.isActive("video"),
+        currentTextAlign: currentAlign,
+      };
+    },
+  });
+
   const handleAlign = (value: string) => {
-    editor?.chain().focus().setTextAlign(value).run();
-  };
-
-  const isDisabled =
-    (editor?.isActive("image") || editor?.isActive("video") || !editor) ??
-    false;
-
-  const currentTextAlign = () => {
-    if (editor?.isActive({ textAlign: "left" })) {
-      return "left";
-    }
-    if (editor?.isActive({ textAlign: "center" })) {
-      return "center";
-    }
-    if (editor?.isActive({ textAlign: "right" })) {
-      return "right";
-    }
-    if (editor?.isActive({ textAlign: "justify" })) {
-      return "justify";
-    }
-
-    return "left";
+    editor.chain().focus().setTextAlign(value).run();
   };
 
   const alignmentOptions = [
@@ -82,7 +85,7 @@ export const AlignmentToolbar = () => {
     <DropdownMenu>
       <Tooltip>
         <TooltipTrigger asChild>
-          <DropdownMenuTrigger disabled={isDisabled} asChild>
+          <DropdownMenuTrigger disabled={editorState.isDisabled} asChild>
             <Button
               variant="ghost"
               size="sm"
@@ -90,9 +93,9 @@ export const AlignmentToolbar = () => {
               type="button"
             >
               <span className="mr-2">
-                {alignmentOptions[findIndex(currentTextAlign())].icon}
+                {alignmentOptions[findIndex(editorState.currentTextAlign)].icon}
               </span>
-              {alignmentOptions[findIndex(currentTextAlign())].name}
+              {alignmentOptions[findIndex(editorState.currentTextAlign)].name}
               <ChevronDown className="ml-2 h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -116,7 +119,7 @@ export const AlignmentToolbar = () => {
               <span className="mr-2">{option.icon}</span>
               {option.name}
 
-              {option.value === currentTextAlign() && (
+              {option.value === editorState.currentTextAlign && (
                 <Check className="ml-auto h-4 w-4" />
               )}
             </DropdownMenuItem>
