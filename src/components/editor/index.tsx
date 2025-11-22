@@ -1,5 +1,6 @@
 "use client";
 
+import "./editor.css";
 import { useMemo } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Color } from "@tiptap/extension-color";
@@ -36,6 +37,7 @@ import { useMutation } from "@tanstack/react-query";
 import { s3Client } from "@/modules/s3/lib/s3";
 import { toast } from "sonner";
 import { ToolbarProvider } from "./toolbars/toolbar-provider";
+import { HeadingToolbar } from "./toolbars/heading";
 
 interface TiptapEditorProps {
   content?: string;
@@ -152,9 +154,10 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
   if (!editor) {
     return null;
   }
+
   return (
-    <div className="border relative rounded-md overflow-hidden pb-3">
-      <div className="flex w-full items-center py-2 px-2 justify-between border-b  sticky top-0 left-0 bg-background z-20">
+    <div className="border relative rounded-md pb-3">
+      <div className="flex w-full items-center py-2 px-2 justify-between border-b sticky top-0 left-0 bg-background z-10">
         <ToolbarProvider editor={editor}>
           <div className="flex items-center gap-2">
             <UndoToolbar />
@@ -163,6 +166,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <BoldToolbar />
             <ItalicToolbar />
             <StrikeThroughToolbar />
+            <HeadingToolbar />
             <BulletListToolbar />
             <OrderedListToolbar />
             <CodeBlockToolbar />
@@ -180,38 +184,34 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
 
       <div
         onClick={() => {
-          editor?.chain().focus().run();
+          editor.chain().focus().run();
         }}
-        className="cursor-text min-h-72 bg-background"
+        className="cursor-text min-h-72 bg-background relative"
       >
+        <BubbleMenu editor={editor} className="z-50">
+          <ToolbarProvider editor={editor}>
+            <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
+              <BoldToolbar />
+              <ItalicToolbar />
+              <StrikeThroughToolbar />
+              <FontSizeToolbar />
+              <ColorHighlightToolbar />
+            </div>
+          </ToolbarProvider>
+        </BubbleMenu>
+
+        <FloatingMenu editor={editor} className="z-50">
+          <ToolbarProvider editor={editor}>
+            <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
+              <ImagePlaceholderToolbar />
+              <YoutubeToolbar />
+              <CodeBlockToolbar />
+              <BlockquoteToolbar />
+            </div>
+          </ToolbarProvider>
+        </FloatingMenu>
+
         <EditorContent className="outline-none" editor={editor} />
-
-        {editor && (
-          <BubbleMenu editor={editor}>
-            <ToolbarProvider editor={editor}>
-              <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
-                <BoldToolbar />
-                <ItalicToolbar />
-                <StrikeThroughToolbar />
-                <FontSizeToolbar />
-                <ColorHighlightToolbar />
-              </div>
-            </ToolbarProvider>
-          </BubbleMenu>
-        )}
-
-        {editor && (
-          <FloatingMenu editor={editor}>
-            <ToolbarProvider editor={editor}>
-              <div className="flex items-center gap-1 rounded-md border bg-background p-1 shadow-md">
-                <ImagePlaceholderToolbar />
-                <YoutubeToolbar />
-                <CodeBlockToolbar />
-                <BlockquoteToolbar />
-              </div>
-            </ToolbarProvider>
-          </FloatingMenu>
-        )}
       </div>
     </div>
   );

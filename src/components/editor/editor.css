@@ -1,0 +1,105 @@
+/* Tiptap Editor Styles */
+.ProseMirror {
+  padding-left: 1rem;
+  padding-right: 1rem;
+  padding-top: 0.5rem;
+  outline: none !important;
+  position: relative;
+}
+
+h1.tiptap-heading {
+  margin-bottom: 1.5rem;
+  margin-top: 2rem;
+  font-size: 2.25rem;
+  line-height: 2.5rem;
+  font-weight: 700;
+}
+
+h2.tiptap-heading {
+  margin-bottom: 1rem;
+  margin-top: 1.5rem;
+  font-size: 1.875rem;
+  line-height: 2.25rem;
+  font-weight: 700;
+}
+
+h3.tiptap-heading {
+  margin-bottom: 0.75rem;
+  margin-top: 1rem;
+  font-size: 1.25rem;
+  line-height: 1.75rem;
+  font-weight: 700;
+}
+
+h1.tiptap-heading:first-child,
+h2.tiptap-heading:first-child,
+h3.tiptap-heading:first-child {
+  margin-top: 0;
+}
+
+h1.tiptap-heading + h2.tiptap-heading,
+h1.tiptap-heading + h3.tiptap-heading,
+h2.tiptap-heading + h1.tiptap-heading,
+h2.tiptap-heading + h3.tiptap-heading,
+h3.tiptap-heading + h1.tiptap-heading,
+h3.tiptap-heading + h2.tiptap-heading {
+  margin-top: 0;
+}
+
+.tiptap p.is-editor-empty:first-child::before {
+  pointer-events: none;
+  float: left;
+  height: 0;
+  color: hsl(var(--accent-foreground));
+  content: attr(data-placeholder);
+}
+
+.tiptap ul,
+.tiptap ol {
+  padding: 0 1rem;
+}
+
+.tiptap blockquote {
+  border-left: 3px solid gray;
+  margin: 1.5rem 0;
+  padding-left: 1rem;
+}
+
+/* Tiptap BubbleMenu and FloatingMenu styles */
+
+/* Ensure menus are always on top and can escape container bounds */
+.tippy-box {
+  z-index: 99999 !important;
+}
+
+/* Popper portal should also have high z-index */
+[data-tippy-root] {
+  z-index: 99999 !important;
+}
+
+/* Allow menus to flip when near viewport edges */
+.tippy-box[data-placement^="top"] {
+  margin-bottom: 8px;
+}
+
+.tippy-box[data-placement^="bottom"] {
+  margin-top: 8px;
+}
+
+.tippy-box[data-placement^="left"] {
+  margin-right: 8px;
+}
+
+.tippy-box[data-placement^="right"] {
+  margin-left: 8px;
+}
+
+/* Smooth transitions */
+.tippy-box[data-animation="fade"][data-state="hidden"] {
+  opacity: 0;
+}
+
+.tippy-box[data-animation="fade"][data-state="visible"] {
+  opacity: 1;
+  transition: opacity 0.2s;
+}
