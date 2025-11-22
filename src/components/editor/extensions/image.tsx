@@ -279,6 +279,7 @@ function TiptapImage(props: NodeViewProps) {
               )}
             >
               <Button
+                type="button"
                 size="icon"
                 className={cn(
                   "size-7",
@@ -294,6 +295,7 @@ function TiptapImage(props: NodeViewProps) {
                 <AlignLeft className="size-4" />
               </Button>
               <Button
+                type="button"
                 size="icon"
                 className={cn(
                   "size-7",
@@ -309,6 +311,7 @@ function TiptapImage(props: NodeViewProps) {
                 <AlignCenter className="size-4" />
               </Button>
               <Button
+                type="button"
                 size="icon"
                 className={cn(
                   "size-7",
@@ -331,7 +334,12 @@ function TiptapImage(props: NodeViewProps) {
                 }}
               >
                 <DropdownMenuTrigger asChild>
-                  <Button size="icon" className="size-7" variant="ghost">
+                  <Button
+                    type="button"
+                    size="icon"
+                    className="size-7"
+                    variant="ghost"
+                  >
                     <MoreVertical className="size-4" />
                   </Button>
                 </DropdownMenuTrigger>

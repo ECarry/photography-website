@@ -99,10 +99,16 @@ const YoutubeToolbar = React.forwardRef<HTMLButtonElement, ButtonProps>(
               </div>
             </div>
             <DialogFooter>
-              <Button variant="outline" onClick={() => setIsOpen(false)}>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setIsOpen(false)}
+              >
                 Cancel
               </Button>
-              <Button onClick={addYoutubeVideo}>Insert</Button>
+              <Button type="button" onClick={addYoutubeVideo}>
+                Insert
+              </Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>

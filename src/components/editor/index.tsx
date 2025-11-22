@@ -186,7 +186,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         onClick={() => {
           editor.chain().focus().run();
         }}
-        className="cursor-text min-h-72 bg-background relative"
+        className="cursor-text min-h-72 bg-background relative pt-10"
       >
         <BubbleMenu editor={editor} className="z-50">
           <ToolbarProvider editor={editor}>
