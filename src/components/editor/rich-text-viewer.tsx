@@ -9,6 +9,7 @@ import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import { ImageExtension } from "./extensions/image";
 import { YoutubeExtension } from "./extensions/youtube";
+import { MapboxExtension } from "./extensions/mapbox";
 import { FontSize } from "./extensions/font-size";
 
 interface RichTextProps {
@@ -50,6 +51,7 @@ export default function RichTextViewer({ content }: RichTextProps) {
       Highlight.configure({
         multicolor: true,
       }),
+      MapboxExtension,
       ImageExtension,
     ],
     content: content,

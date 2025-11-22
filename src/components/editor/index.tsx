@@ -32,6 +32,8 @@ import { CodeBlockToolbar } from "./toolbars/code-block";
 import { StrikeThroughToolbar } from "./toolbars/strikethrough";
 import { YoutubeToolbar } from "./toolbars/youtube";
 import { YoutubeExtension } from "./extensions/youtube";
+import { MapboxToolbar } from "./toolbars/mapbox";
+import { MapboxExtension } from "./extensions/mapbox";
 import TextAlign from "@tiptap/extension-text-align";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
@@ -98,6 +100,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
           controls: false,
           nocookie: true,
         }),
+        MapboxExtension,
         ImageExtension,
         ImagePlaceholder.configure({
           allowedMimeTypes: {
@@ -176,6 +179,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <HardBreakToolbar />
             <HorizontalRuleToolbar />
             <YoutubeToolbar />
+            <MapboxToolbar />
             <ImagePlaceholderToolbar />
             <FontSizeToolbar />
             <ColorToolbar />

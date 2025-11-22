@@ -76,7 +76,10 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
           </div>
         </div>
 
-        <PostPreview content={data.content} />
+        {/* POST PREVIEW */}
+        <div className="px-3">
+          <PostPreview content={data.content} />
+        </div>
 
         {/* CONTACT CARD  */}
         <ContactCard
