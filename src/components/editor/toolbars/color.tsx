@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -8,7 +7,6 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Separator } from "@/components/ui/separator";
 import {
   Tooltip,
   TooltipContent,
@@ -16,16 +14,8 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { useToolbar } from "./toolbar-provider";
-import type { Extension } from "@tiptap/core";
-import type { ColorOptions } from "@tiptap/extension-color";
-import type { HighlightOptions } from "@tiptap/extension-highlight";
 import { Check, ChevronDown } from "lucide-react";
 import { useEditorState } from "@tiptap/react";
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-type TextStylingExtensions =
-  | Extension<ColorOptions, any>
-  | Extension<HighlightOptions, any>;
 
 const TEXT_COLORS = [
   { name: "Default", color: "var(--text-default)" },
@@ -40,43 +30,23 @@ const TEXT_COLORS = [
   { name: "Red", color: "var(--text-red)" },
 ];
 
-const HIGHLIGHT_COLORS = [
-  { name: "Default", color: "var(--highlight-default)" },
-  { name: "Gray", color: "var(--highlight-gray)" },
-  { name: "Brown", color: "var(--highlight-brown)" },
-  { name: "Orange", color: "var(--highlight-orange)" },
-  { name: "Yellow", color: "var(--highlight-yellow)" },
-  { name: "Green", color: "var(--highlight-green)" },
-  { name: "Blue", color: "var(--highlight-blue)" },
-  { name: "Purple", color: "var(--highlight-purple)" },
-  { name: "Pink", color: "var(--highlight-pink)" },
-  { name: "Red", color: "var(--highlight-red)" },
-];
-
-interface ColorHighlightButtonProps {
+interface ColorButtonProps {
   name: string;
   color: string;
   isActive: boolean;
   onClick: () => void;
-  isHighlight?: boolean;
 }
 
-const ColorHighlightButton = ({
-  name,
-  color,
-  isActive,
-  onClick,
-  isHighlight,
-}: ColorHighlightButtonProps) => (
+const ColorButton = ({ name, color, isActive, onClick }: ColorButtonProps) => (
   <button
     onClick={onClick}
-    className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-gray-3"
+    className="flex w-full items-center justify-between rounded-sm px-2 py-1 text-sm hover:bg-accent"
     type="button"
   >
     <div className="flex items-center space-x-2">
       <div
         className="rounded-sm border px-1 py-px font-medium"
-        style={isHighlight ? { backgroundColor: color } : { color }}
+        style={{ color }}
       >
         A
       </div>
@@ -86,17 +56,14 @@ const ColorHighlightButton = ({
   </button>
 );
 
-export const ColorHighlightToolbar = () => {
+export const ColorToolbar = () => {
   const { editor } = useToolbar();
 
   const editorState = useEditorState({
     editor,
     selector: (ctx) => ({
       currentColor: ctx.editor.getAttributes("textStyle").color,
-      currentHighlight: ctx.editor.getAttributes("highlight").color,
-      isDisabled:
-        !ctx.editor.can().chain().setHighlight().run() ||
-        !ctx.editor.can().chain().setColor("").run(),
+      isDisabled: !ctx.editor.can().chain().setColor("").run(),
     }),
   });
 
@@ -108,16 +75,6 @@ export const ColorHighlightToolbar = () => {
       .run();
   };
 
-  const handleSetHighlight = (color: string) => {
-    editor
-      .chain()
-      .focus()
-      .setHighlight(
-        color === editorState.currentHighlight ? { color: "" } : { color }
-      )
-      .run();
-  };
-
   return (
     <Popover>
       <div className="relative h-full">
@@ -125,6 +82,7 @@ export const ColorHighlightToolbar = () => {
           <TooltipTrigger asChild>
             <PopoverTrigger disabled={editorState.isDisabled} asChild>
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 style={{
@@ -138,39 +96,25 @@ export const ColorHighlightToolbar = () => {
               </Button>
             </PopoverTrigger>
           </TooltipTrigger>
-          <TooltipContent>Text Color & Highlight</TooltipContent>
+          <TooltipContent>Text Color</TooltipContent>
         </Tooltip>
 
         <PopoverContent
           align="start"
-          className="w-56 p-1 dark:bg-gray-2"
+          className="w-56 p-1"
           onOpenAutoFocus={(e) => e.preventDefault()}
         >
           <ScrollArea className="max-h-80 overflow-y-auto pr-2">
-            <div className="mb-2.5 mt-2 px-2 text-xs text-gray-11">Color</div>
+            <div className="mb-2.5 mt-2 px-2 text-xs text-muted-foreground">
+              Color
+            </div>
             {TEXT_COLORS.map(({ name, color }) => (
-              <ColorHighlightButton
+              <ColorButton
                 key={name}
                 name={name}
                 color={color}
                 isActive={editorState.currentColor === color}
                 onClick={() => handleSetColor(color)}
-              />
-            ))}
-
-            <Separator className="my-3" />
-
-            <div className="mb-2.5 w-full px-2 pr-3 text-xs text-gray-11">
-              Background
-            </div>
-            {HIGHLIGHT_COLORS.map(({ name, color }) => (
-              <ColorHighlightButton
-                key={name}
-                name={name}
-                color={color}
-                isActive={editorState.currentHighlight === color}
-                onClick={() => handleSetHighlight(color)}
-                isHighlight
               />
             ))}
           </ScrollArea>

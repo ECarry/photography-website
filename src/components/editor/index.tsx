@@ -20,7 +20,8 @@ import { ItalicToolbar } from "./toolbars/italic";
 import { BulletListToolbar } from "./toolbars/bullet-list";
 import { OrderedListToolbar } from "./toolbars/ordered-list";
 import { ImagePlaceholderToolbar } from "./toolbars/image-placeholder-toolbar";
-import { ColorHighlightToolbar } from "./toolbars/color-and-highlight";
+import { ColorToolbar } from "./toolbars/color";
+import { HighlightToolbar } from "./toolbars/highlight";
 import { FontSizeToolbar } from "./toolbars/font-size";
 import { UndoToolbar } from "./toolbars/undo";
 import { HorizontalRuleToolbar } from "./toolbars/horizontal-rule";
@@ -177,7 +178,8 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
             <YoutubeToolbar />
             <ImagePlaceholderToolbar />
             <FontSizeToolbar />
-            <ColorHighlightToolbar />
+            <ColorToolbar />
+            <HighlightToolbar />
           </div>
         </ToolbarProvider>
       </div>
@@ -195,7 +197,8 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
               <ItalicToolbar />
               <StrikeThroughToolbar />
               <FontSizeToolbar />
-              <ColorHighlightToolbar />
+              <ColorToolbar />
+              <HighlightToolbar />
             </div>
           </ToolbarProvider>
         </BubbleMenu>
