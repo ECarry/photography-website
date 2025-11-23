@@ -228,13 +228,13 @@ export function PhotoForm({
                     <MapboxComponent
                       draggableMarker
                       markers={mapValues.markers}
-                      onMarkerDragEnd={(data) => {
+                      onMarkerDragEnd={(markerId, lngLat) => {
                         setCurrentLocation({
-                          lat: data.lat,
-                          lng: data.lng,
+                          lat: lngLat.lat,
+                          lng: lngLat.lng,
                         });
-                        form.setValue("latitude", data.lat);
-                        form.setValue("longitude", data.lng);
+                        form.setValue("latitude", lngLat.lat);
+                        form.setValue("longitude", lngLat.lng);
                       }}
                       initialViewState={{
                         longitude: currentLocation.lng,

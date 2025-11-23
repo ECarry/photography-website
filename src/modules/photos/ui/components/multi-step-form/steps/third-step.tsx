@@ -54,11 +54,11 @@ export function ThirdStep({
 
   // Manage current location state
   const [currentLocation, setCurrentLocation] = useState<{
-    lat: number | null;
-    lng: number | null;
+    lat: number;
+    lng: number;
   }>({
-    lat: initialLatitude,
-    lng: initialLongitude,
+    lat: initialLatitude || 0,
+    lng: initialLongitude || 0,
   });
 
   // Search state
@@ -69,7 +69,11 @@ export function ThirdStep({
   const form = useForm({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(thirdStepSchema) as any,
-    defaultValues: initialData,
+    defaultValues: {
+      latitude: initialData?.latitude ?? 0,
+      longitude: initialData?.longitude ?? 0,
+      ...initialData,
+    },
     mode: "onChange",
   });
 
@@ -78,8 +82,8 @@ export function ThirdStep({
 
   // Get address from coordinates using the hook
   const { data: addressData } = useGetAddress({
-    lat: currentLocation?.lat || 0,
-    lng: currentLocation?.lng || 0,
+    lat: currentLocation.lat,
+    lng: currentLocation.lng,
   });
 
   // Update parent component when address data changes
@@ -143,8 +147,8 @@ export function ThirdStep({
 
   // Memoize map values to reduce re-renders
   const mapValues = useMemo(() => {
-    const longitude = currentLocation?.lng ?? initialLongitude;
-    const latitude = currentLocation?.lat ?? initialLatitude;
+    const longitude = currentLocation.lng || initialLongitude;
+    const latitude = currentLocation.lat || initialLatitude;
 
     return {
       markers:
@@ -164,8 +168,8 @@ export function ThirdStep({
       },
     };
   }, [
-    currentLocation?.lat,
-    currentLocation?.lng,
+    currentLocation.lat,
+    currentLocation.lng,
     initialLatitude,
     initialLongitude,
   ]);
@@ -175,8 +179,8 @@ export function ThirdStep({
     // Include current location in submitted data
     onNext({
       ...data,
-      latitude: currentLocation?.lat ?? initialLatitude,
-      longitude: currentLocation?.lng ?? initialLongitude,
+      latitude: currentLocation.lat || initialLatitude,
+      longitude: currentLocation.lng || initialLongitude,
     });
   };
 
@@ -235,14 +239,13 @@ export function ThirdStep({
           <FormControl>
             <div className="h-[400px] w-full rounded-md border overflow-hidden">
               <MapboxComponent
-                key={`${currentLocation?.lat}-${currentLocation?.lng}`}
                 draggableMarker
                 markers={mapValues.markers}
                 initialViewState={mapValues.viewState}
-                onMarkerDragEnd={(data) => {
+                onMarkerDragEnd={(markerId, lngLat) => {
                   setCurrentLocation({
-                    lat: data.lat,
-                    lng: data.lng,
+                    lat: lngLat.lat,
+                    lng: lngLat.lng,
                   });
                 }}
               />
@@ -254,7 +257,7 @@ export function ThirdStep({
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               <span className="text-xs">
-                {currentLocation?.lat && currentLocation?.lng
+                {currentLocation.lat !== 0 && currentLocation.lng !== 0
                   ? formatGPSCoordinates(
                       currentLocation.lat,
                       currentLocation.lng

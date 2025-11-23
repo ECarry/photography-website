@@ -517,10 +517,10 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                           ? 10
                           : 2,
                     }}
-                    onMarkerDragEnd={(pos) => {
-                      setCurrentLocation({ lat: pos.lat, lng: pos.lng });
-                      form.setValue("latitude", pos.lat);
-                      form.setValue("longitude", pos.lng);
+                    onMarkerDragEnd={(markerId, lngLat) => {
+                      setCurrentLocation({ lat: lngLat.lat, lng: lngLat.lng });
+                      form.setValue("latitude", lngLat.lat);
+                      form.setValue("longitude", lngLat.lng);
                     }}
                   />
                 </Suspense>
