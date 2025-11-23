@@ -36,7 +36,10 @@ export interface MapboxProps {
     element?: React.ReactNode;
   }>;
   geoJsonData?: GeoJSON.FeatureCollection;
-  onMarkerDragEnd?: (lngLat: { lng: number; lat: number }) => void;
+  onMarkerDragEnd?: (
+    markerId: string,
+    lngLat: { lng: number; lat: number }
+  ) => void;
   onGeoJsonClick?: (feature: GeoJSON.Feature) => void;
   onMapClick?: () => void;
   onMove?: (viewState: {
@@ -83,6 +86,9 @@ const Mapbox = ({
 }: MapboxProps) => {
   const mapRef = useRef<MapRef>(null);
   const { theme } = useTheme();
+
+  // Ensure markers is always an array
+  const safeMarkers = Array.isArray(markers) ? markers : [];
 
   // GeoJSON layer style for visited countries
   const layerStyle: LayerProps = {
@@ -207,7 +213,7 @@ const Mapbox = ({
         />
       )}
       {/* Markers */}
-      {markers.map((marker) => (
+      {safeMarkers.map((marker) => (
         <Marker
           key={marker.id}
           longitude={marker.longitude}
@@ -215,7 +221,9 @@ const Mapbox = ({
           draggable={draggableMarker}
           style={{ cursor: draggableMarker ? "grab" : "pointer" }}
           onDragEnd={
-            onMarkerDragEnd ? (e) => onMarkerDragEnd(e.lngLat) : undefined
+            onMarkerDragEnd
+              ? (e) => onMarkerDragEnd(marker.id, e.lngLat)
+              : undefined
           }
           onClick={(e) => {
             // Prevent map-level click handler from firing when clicking a marker

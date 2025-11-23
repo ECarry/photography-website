@@ -15,7 +15,7 @@ import {
   MoreVertical,
   Trash,
 } from "lucide-react";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 
 import { Button } from "@/components/ui/button";
@@ -42,12 +42,18 @@ export interface MapboxOptions {
   HTMLAttributes: Record<string, unknown>;
 }
 
+export interface MapboxMarker {
+  id: string;
+  longitude: number;
+  latitude: number;
+  label?: string;
+}
+
 declare module "@tiptap/core" {
   interface Commands<ReturnType> {
     mapbox: {
       setMapbox: (options: {
-        longitude: number;
-        latitude: number;
+        markers: MapboxMarker[];
         zoom?: number;
         scrollZoom?: boolean;
         doubleClickZoom?: boolean;
@@ -66,14 +72,42 @@ export const MapboxExtension = Node.create<MapboxOptions>({
 
   addAttributes() {
     return {
-      longitude: {
-        default: -122.4194,
-      },
-      latitude: {
-        default: 37.7749,
+      markers: {
+        default: [
+          {
+            id: "marker-1",
+            longitude: -122.4194,
+            latitude: 37.7749,
+            label: "Location 1",
+          },
+        ],
+        parseHTML: (element) => {
+          const markersStr = element.getAttribute("data-markers");
+          if (!markersStr) return [];
+          try {
+            const parsed = JSON.parse(markersStr);
+            return Array.isArray(parsed) ? parsed : [];
+          } catch {
+            return [];
+          }
+        },
+        renderHTML: (attributes) => {
+          if (!attributes.markers) return {};
+          return {
+            "data-markers": JSON.stringify(attributes.markers),
+          };
+        },
       },
       zoom: {
         default: 12,
+        parseHTML: (element) => {
+          return parseInt(element.getAttribute("data-zoom") || "12");
+        },
+        renderHTML: (attributes) => {
+          return {
+            "data-zoom": attributes.zoom,
+          };
+        },
       },
       width: {
         default: "100%",
@@ -86,12 +120,36 @@ export const MapboxExtension = Node.create<MapboxOptions>({
       },
       scrollZoom: {
         default: true,
+        parseHTML: (element) => {
+          return element.getAttribute("data-scroll-zoom") === "true";
+        },
+        renderHTML: (attributes) => {
+          return {
+            "data-scroll-zoom": attributes.scrollZoom,
+          };
+        },
       },
       doubleClickZoom: {
         default: true,
+        parseHTML: (element) => {
+          return element.getAttribute("data-double-click-zoom") === "true";
+        },
+        renderHTML: (attributes) => {
+          return {
+            "data-double-click-zoom": attributes.doubleClickZoom,
+          };
+        },
       },
       dragRotate: {
         default: true,
+        parseHTML: (element) => {
+          return element.getAttribute("data-drag-rotate") === "true";
+        },
+        renderHTML: (attributes) => {
+          return {
+            "data-drag-rotate": attributes.dragRotate,
+          };
+        },
       },
     };
   },
@@ -105,7 +163,13 @@ export const MapboxExtension = Node.create<MapboxOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    return ["div", mergeAttributes(HTMLAttributes, { "data-type": "mapbox" })];
+    console.log("Mapbox renderHTML - HTMLAttributes:", HTMLAttributes);
+    return [
+      "div",
+      mergeAttributes(HTMLAttributes, {
+        "data-type": "mapbox",
+      }),
+    ];
   },
 
   addCommands() {
@@ -115,7 +179,18 @@ export const MapboxExtension = Node.create<MapboxOptions>({
         ({ commands }) => {
           return commands.insertContent({
             type: this.name,
-            attrs: options,
+            attrs: {
+              markers: options.markers || [],
+              zoom: options.zoom || 12,
+              scrollZoom:
+                options.scrollZoom !== undefined ? options.scrollZoom : true,
+              doubleClickZoom:
+                options.doubleClickZoom !== undefined
+                  ? options.doubleClickZoom
+                  : true,
+              dragRotate:
+                options.dragRotate !== undefined ? options.dragRotate : true,
+            },
           });
         },
     };
@@ -137,6 +212,26 @@ function TiptapMapbox(props: NodeViewProps) {
   const [resizeInitialWidth, setResizeInitialWidth] = useState(0);
   const [resizeInitialMouseX, setResizeInitialMouseX] = useState(0);
   const [openedMore, setOpenedMore] = useState(false);
+
+  // Calculate initial view state based on markers
+  const initialViewState = useMemo(() => {
+    const markers = Array.isArray(node.attrs.markers) ? node.attrs.markers : [];
+    console.log("Mapbox Extension - Loading markers:", markers);
+    console.log("Mapbox Extension - Node attrs:", node.attrs);
+
+    if (markers.length > 0) {
+      return {
+        longitude: markers[0].longitude,
+        latitude: markers[0].latitude,
+        zoom: node.attrs.zoom,
+      };
+    }
+    return {
+      longitude: -122.4194,
+      latitude: 37.7749,
+      zoom: node.attrs.zoom,
+    };
+  }, [node.attrs]);
 
   const handleDelete = useCallback(() => {
     deleteNode();
@@ -262,18 +357,8 @@ function TiptapMapbox(props: NodeViewProps) {
         style={{ height: node.attrs.height }}
       >
         <Mapbox
-          initialViewState={{
-            longitude: node.attrs.longitude,
-            latitude: node.attrs.latitude,
-            zoom: node.attrs.zoom,
-          }}
-          markers={[
-            {
-              id: "location",
-              longitude: node.attrs.longitude,
-              latitude: node.attrs.latitude,
-            },
-          ]}
+          initialViewState={initialViewState}
+          markers={Array.isArray(node.attrs.markers) ? node.attrs.markers : []}
           showControls={
             editor?.isEditable
               ? false
