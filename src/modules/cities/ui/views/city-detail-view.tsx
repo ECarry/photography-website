@@ -69,6 +69,12 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           trpc.city.getOne.queryOptions({ city })
         );
         await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
+        await queryClient.invalidateQueries(
+          trpc.home.getCitySets.queryOptions({ limit: 9 })
+        );
+        await queryClient.invalidateQueries(
+          trpc.travel.getCitySets.queryOptions({})
+        );
         toast.success("Description updated successfully");
       },
       onError: (error) => {

@@ -28,7 +28,7 @@ import {
 import { TagsInput } from "./tags-input";
 
 import { useTRPC } from "@/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import TiptapEditor from "@/components/editor";
@@ -41,12 +41,17 @@ interface PostFormProps {
 
 export const PostForm = ({ post }: PostFormProps) => {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const router = useRouter();
 
   const createPost = useMutation(
     trpc.posts.create.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success("Post created successfully");
+        await queryClient.invalidateQueries(
+          trpc.posts.getMany.queryOptions({})
+        );
+        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
         form.reset();
         router.push(`/dashboard/posts/${data.slug}`);
       },
@@ -61,8 +66,15 @@ export const PostForm = ({ post }: PostFormProps) => {
 
   const updatePost = useMutation(
     trpc.posts.update.mutationOptions({
-      onSuccess: (data) => {
+      onSuccess: async (data) => {
         toast.success("Post updated successfully");
+        await queryClient.invalidateQueries(
+          trpc.posts.getOne.queryOptions({ slug: data.slug })
+        );
+        await queryClient.invalidateQueries(
+          trpc.posts.getMany.queryOptions({})
+        );
+        await queryClient.invalidateQueries(trpc.blog.getMany.queryOptions());
         form.reset();
         router.push(`/dashboard/posts/${data.slug}`);
       },

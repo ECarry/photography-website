@@ -89,15 +89,6 @@ export default function MultiStepForm({
 
     // Step 1: Add upload data and EXIF
     if (step === 0) {
-      console.log("=== Step 0: EXIF Data Extraction ===");
-      console.log("EXIF data:", exif);
-      console.log("Extracted fields:");
-      console.log("  - dateTimeOriginal:", exif?.dateTimeOriginal);
-      console.log("  - latitude:", exif?.latitude);
-      console.log("  - longitude:", exif?.longitude);
-      console.log("  - gpsAltitude:", exif?.gpsAltitude);
-      console.log("=====================================");
-
       updatedData = {
         ...updatedData,
         url: url || "",
@@ -154,15 +145,6 @@ export default function MultiStepForm({
         placeFormatted: address?.features?.[0]?.properties?.place_formatted,
       };
 
-      console.log("=== Form Submission ===");
-      console.log("Final data:", finalData);
-      console.log("Key fields:");
-      console.log("  - dateTimeOriginal:", finalData.dateTimeOriginal);
-      console.log("  - latitude:", finalData.latitude);
-      console.log("  - longitude:", finalData.longitude);
-      console.log("  - gpsAltitude:", finalData.gpsAltitude);
-      console.log("======================");
-
       setIsSubmitting(true);
 
       // Use tRPC mutation instead of callback
@@ -172,6 +154,13 @@ export default function MultiStepForm({
           await queryClient.invalidateQueries(
             trpc.photos.getMany.queryOptions({})
           );
+          await queryClient.invalidateQueries(
+            trpc.home.getManyLikePhotos.queryOptions({ limit: 10 })
+          );
+          await queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 9 })
+          );
+          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
 
           toast.success("Photo uploaded successfully!");
           setIsComplete(true);
