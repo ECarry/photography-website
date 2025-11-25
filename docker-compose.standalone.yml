@@ -1,0 +1,112 @@
+# Standalone Configuration (Local Postgres + RustFS)
+# Run with: docker compose -f docker-compose.standalone.yml up
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: photography
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  rustfs:
+    image: rustfs/rustfs:latest
+    environment:
+      RUSTFS_ACCESS_KEY: rustfsadmin
+      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_CONSOLE_ENABLE: "true"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - rustfs_data:/data
+
+  create-bucket:
+    image: minio/mc
+    depends_on:
+      rustfs:
+        condition: service_started
+    entrypoint: >
+      /bin/sh -c "
+      until /usr/bin/mc alias set myminio http://rustfs:9000 rustfsadmin rustfsadmin; do echo '...waiting...' && sleep 1; done;
+      /usr/bin/mc mb myminio/photography --ignore-existing;
+      /usr/bin/mc anonymous set public myminio/photography;
+      exit 0;
+      "
+
+  migrate:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: deps
+    working_dir: /app
+    environment:
+      DATABASE_URL: postgres://postgres:password@postgres:5432/photography
+    command: bunx drizzle-kit push
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./src/db:/app/src/db
+      - ./drizzle.config.ts:/app/drizzle.config.ts
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - next_cache:/app/.next
+    command: >
+      /bin/sh -c "
+        echo 'Waiting for database...' &&
+        bun run db:push &&
+        echo 'Building application (SSG)...' &&
+        bun run build &&
+        echo 'Starting server...' &&
+        bun start
+      "
+    environment:
+      # Database
+      DATABASE_PROVIDER: local
+      DATABASE_URL: postgres://postgres:password@postgres:5432/photography
+      
+      # Auth
+      BETTER_AUTH_SECRET: development_secret_key_change_me
+      BETTER_AUTH_URL: http://localhost:3000
+      
+      # App
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      
+      # S3 (RustFS)
+      S3_ENDPOINT: http://rustfs:9000
+      S3_BUCKET_NAME: photography
+      S3_ACCESS_KEY_ID: rustfsadmin
+      S3_SECRET_ACCESS_KEY: rustfsadmin
+      S3_PUBLIC_URL: http://localhost:9000/photography
+      NEXT_PUBLIC_S3_PUBLIC_URL: http://localhost:9000/photography
+      
+      # Mapbox (Optional, needs real token for maps)
+      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+    extra_hosts:
+      - "localhost:host-gateway"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rustfs:
+        condition: service_started
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  rustfs_data:
+  next_cache:

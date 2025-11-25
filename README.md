@@ -258,7 +258,49 @@ bun run seed:user
   - Ensure your public access domain is configured via `S3_PUBLIC_URL` or `NEXT_PUBLIC_S3_PUBLIC_URL`. At runtime, the app combines this base URL with the key to form a full public URL.
   - If you have custom prefixes or multiple buckets, validate the script behavior in a staging environment first.
 
-## 🔧 Configuration Options
+## 🐳 Docker Deployment
+
+This project supports two Docker deployment modes: **Standalone** (self-hosted) and **Cloud** (managed services).
+
+### 1. Standalone Mode (Default)
+Run the entire stack (App, PostgreSQL, RustFS) locally. Ideal for testing and self-hosting.
+
+```bash
+docker compose up -d
+# or explicitly:
+docker compose -f docker-compose.standalone.yml up -d
+```
+*   **App**: http://localhost:3000
+*   **Postgres**: localhost:5432
+*   **RustFS (S3)**: localhost:9000
+*   **RustFS Console**: http://localhost:9001
+
+### 2. Cloud Mode
+Run only the App container, connecting to external services (e.g., Neon Postgres, AWS S3, Cloudflare R2).
+
+1.  Create a `.env` file with your credentials:
+    ```bash
+    DATABASE_PROVIDER=cloud
+    DATABASE_URL="postgres://..."
+    BETTER_AUTH_SECRET="..."
+    S3_ACCESS_KEY_ID="..."
+    S3_SECRET_ACCESS_KEY="..."
+    S3_BUCKET_NAME="..."
+    S3_ENDPOINT="..." # Optional
+    S3_PUBLIC_URL="..."
+    ```
+2.  Start the service:
+    ```bash
+    docker compose -f docker-compose.cloud.yml up -d
+    ```
+
+### ⚠️ Important Note on Building
+This project uses a **Runtime Build** strategy for Docker. The Next.js application is built *inside* the container when it starts, not when the Docker image is built.
+This ensures that Static Site Generation (SSG) can successfully fetch data from the database (which is only available at runtime in the Standalone mode).
+*   **First Start**: Will take 1-2 minutes to compile.
+*   **Restarts**: Will be fast (cached via `next_cache` volume).
+
+## 🛠 Tech Stack
 
 ### Custom Domain Setup
 
