@@ -32,7 +32,7 @@ import { cn, duplicateContent } from "@/lib/utils";
 export const YoutubeExtension = Youtube.extend({
   addAttributes() {
     return {
-      // @ts-ignore
+      // @ts-expect-error -- Tiptap types are not perfectly aligned here
       ...this.parent?.(),
       width: {
         default: "100%",

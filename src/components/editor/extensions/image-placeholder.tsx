@@ -22,11 +22,11 @@ import {
 	ReactNodeViewRenderer,
 	mergeAttributes,
 } from "@tiptap/react";
-import { Image, Link, Upload } from "lucide-react";
+import { Image as ImageIcon, Link, Upload } from "lucide-react";
 import { type FormEvent, useState } from "react";
 
 export interface ImagePlaceholderOptions {
-	HTMLAttributes: Record<string, any>;
+	HTMLAttributes: Record<string, unknown>;
 	onDrop: (files: File[], editor: Editor) => void;
 	onDropRejected?: (files: File[], editor: Editor) => void;
 	onEmbed: (url: string, editor: Editor) => void;
@@ -52,9 +52,9 @@ export const ImagePlaceholder = Node.create<ImagePlaceholderOptions>({
 	addOptions() {
 		return {
 			HTMLAttributes: {},
-			onDrop: () => {},
-			onDropRejected: () => {},
-			onEmbed: () => {},
+			onDrop: () => { },
+			onDropRejected: () => { },
+			onEmbed: () => { },
 		};
 	},
 
@@ -201,7 +201,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
 							selected && "bg-primary/10 hover:bg-primary/20",
 						)}
 					>
-						<Image className="h-6 w-6" />
+						<ImageIcon className="h-6 w-6" />
 						Add an image
 					</div>
 				</PopoverTrigger>
