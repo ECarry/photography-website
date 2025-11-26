@@ -66,12 +66,7 @@ export const photosRouter = createTRPCRouter({
               sql`${citySets.country} = ${insertedPhoto.country} AND ${citySets.city} = ${insertedPhoto.city}`
             );
 
-          console.log("Updated city set:", updatedCitySet);
         } else {
-          console.log(
-            "No geo information available for photo:",
-            insertedPhoto.id
-          );
         }
 
         return insertedPhoto;
@@ -105,11 +100,11 @@ export const photosRouter = createTRPCRouter({
           });
         }
 
-        console.log("🗑️ Deleting photo:", photo.id, photo.title);
+
 
         // city set related
         if (photo.country && photo.city) {
-          console.log("📍 Processing city set:", photo.country, photo.city);
+
           const [citySet] = await db
             .select()
             .from(citySets)
@@ -173,17 +168,17 @@ export const photosRouter = createTRPCRouter({
         try {
           // photo.url is stored as S3 key directly in database
           const key = photo.url;
-          console.log("🔑 S3 Key:", key);
+
 
           const command = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
             Key: key,
           });
           await s3Client.send(command);
-          console.log("✅ S3 file deleted");
+
 
           await db.delete(photos).where(eq(photos.id, id));
-          console.log("✅ Photo record deleted from database");
+
         } catch (error) {
           if (error instanceof Error) {
             throw new TRPCError({

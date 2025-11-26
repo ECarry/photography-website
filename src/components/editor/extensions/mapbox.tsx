@@ -163,7 +163,7 @@ export const MapboxExtension = Node.create<MapboxOptions>({
   },
 
   renderHTML({ HTMLAttributes }) {
-    console.log("Mapbox renderHTML - HTMLAttributes:", HTMLAttributes);
+
     return [
       "div",
       mergeAttributes(HTMLAttributes, {
@@ -176,23 +176,23 @@ export const MapboxExtension = Node.create<MapboxOptions>({
     return {
       setMapbox:
         (options) =>
-        ({ commands }) => {
-          return commands.insertContent({
-            type: this.name,
-            attrs: {
-              markers: options.markers || [],
-              zoom: options.zoom || 12,
-              scrollZoom:
-                options.scrollZoom !== undefined ? options.scrollZoom : true,
-              doubleClickZoom:
-                options.doubleClickZoom !== undefined
-                  ? options.doubleClickZoom
-                  : true,
-              dragRotate:
-                options.dragRotate !== undefined ? options.dragRotate : true,
-            },
-          });
-        },
+          ({ commands }) => {
+            return commands.insertContent({
+              type: this.name,
+              attrs: {
+                markers: options.markers || [],
+                zoom: options.zoom || 12,
+                scrollZoom:
+                  options.scrollZoom !== undefined ? options.scrollZoom : true,
+                doubleClickZoom:
+                  options.doubleClickZoom !== undefined
+                    ? options.doubleClickZoom
+                    : true,
+                dragRotate:
+                  options.dragRotate !== undefined ? options.dragRotate : true,
+              },
+            });
+          },
     };
   },
 
@@ -216,8 +216,7 @@ function TiptapMapbox(props: NodeViewProps) {
   // Calculate initial view state based on markers
   const initialViewState = useMemo(() => {
     const markers = Array.isArray(node.attrs.markers) ? node.attrs.markers : [];
-    console.log("Mapbox Extension - Loading markers:", markers);
-    console.log("Mapbox Extension - Node attrs:", node.attrs);
+
 
     if (markers.length > 0) {
       return {
@@ -363,8 +362,8 @@ function TiptapMapbox(props: NodeViewProps) {
             editor?.isEditable
               ? false
               : node.attrs.scrollZoom ||
-                node.attrs.doubleClickZoom ||
-                node.attrs.dragRotate
+              node.attrs.doubleClickZoom ||
+              node.attrs.dragRotate
           }
           scrollZoom={editor?.isEditable ? false : node.attrs.scrollZoom}
           doubleClickZoom={

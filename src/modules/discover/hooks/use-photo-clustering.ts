@@ -42,22 +42,16 @@ export function usePhotoClustering({
     if (!clusterIndex) return { clusters: [], singlePhotos: [] };
 
     const result = getClustersFromIndex(clusterIndex, zoom, bounds);
-    
-    console.log("Clustering result:", {
-      zoom,
-      bounds,
-      clusters: result.clusters.length,
-      singlePhotos: result.singlePhotos.length,
-      totalPhotos: validPhotos.length,
-    });
-    
+
     return result;
+
+
   }, [clusterIndex, zoom, bounds, validPhotos.length]);
 
   // Handle map move/zoom changes
   const handleMove = useCallback(
     (viewState: { zoom: number; latitude: number; longitude: number }) => {
-      console.log("Zoom changed:", viewState.zoom);
+
       setZoom(viewState.zoom);
 
       // Calculate approximate bounds based on viewport

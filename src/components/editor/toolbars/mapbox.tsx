@@ -87,7 +87,7 @@ export const MapboxToolbar = React.forwardRef<HTMLButtonElement>((_, ref) => {
       return;
     }
 
-    console.log("MapboxToolbar - Inserting markers:", validMarkers);
+
 
     editor
       .chain()

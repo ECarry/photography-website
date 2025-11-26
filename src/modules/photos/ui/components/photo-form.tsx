@@ -118,12 +118,12 @@ export function PhotoForm({
       currentLocation.lng === 0 && currentLocation.lat === 0
         ? []
         : [
-            {
-              id: "location",
-              longitude: currentLocation.lng,
-              latitude: currentLocation.lat,
-            },
-          ],
+          {
+            id: "location",
+            longitude: currentLocation.lng,
+            latitude: currentLocation.lat,
+          },
+        ],
   };
 
   const onSubmit = (values: z.infer<typeof photosInsertSchema>) => {
@@ -136,14 +136,14 @@ export function PhotoForm({
       city:
         address?.features[0].properties.context.country?.country_code ===
           "JP" ||
-        address?.features[0].properties.context.country?.country_code === "TW"
+          address?.features[0].properties.context.country?.country_code === "TW"
           ? address?.features[0].properties.context.region?.name
           : address?.features[0].properties.context.place?.name,
       district: address?.features[0].properties.context.locality?.name,
       fullAddress: address?.features[0].properties.full_address,
       placeFormatted: address?.features[0].properties.place_formatted,
     };
-    console.log(formData);
+
 
     createPhoto.mutate(formData);
   };

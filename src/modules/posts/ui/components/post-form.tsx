@@ -56,7 +56,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-        console.log(e);
+
         toast.error("Failed to create post", {
           description: e.message,
         });
@@ -79,7 +79,7 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-        console.log(e);
+
         toast.error("Failed to update post", {
           description: e.message,
         });
