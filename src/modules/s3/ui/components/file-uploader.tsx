@@ -7,8 +7,8 @@ import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
-import { s3Client } from "@/modules/s3/lib/s3";
-import { keyToImage } from "@/lib/keyToImage";
+import { s3Client } from "@/modules/s3/lib/upload-client";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CloudUpload, ImageIcon, Upload, XIcon } from "lucide-react";
@@ -235,7 +235,7 @@ const FileUploader = ({
   const displayImageUrl = currentFile?.objectUrl
     ? currentFile.objectUrl
     : value && value !== deletedKey
-    ? keyToImage(value) || "/placeholder.svg"
+    ? keyToUrl(value) || "/placeholder.svg"
     : undefined;
 
   const hasImage = !!displayImageUrl;

@@ -5,7 +5,7 @@ import BlurImage from "@/components/blur-image";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { type Photo } from "@/db/schema";
 import VectorTopLeftAnimation from "./vector-top-left-animation";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface Props {
   title: string;
@@ -25,7 +25,7 @@ const CityCard = ({ title, coverPhoto }: Props) => {
         className="overflow-hidden rounded-lg relative"
       >
         <BlurImage
-          src={keyToImage(coverPhoto.url)}
+          src={keyToUrl(coverPhoto.url)}
           alt={coverPhoto.title}
           fill
           sizes="(max-width: 767px) 100vw, (max-width: 1535px) 50vw, 33vw"

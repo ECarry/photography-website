@@ -6,7 +6,7 @@ import Carousel from "@/components/photo-carousel";
 import BlurImage from "@/components/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/empty-state";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -45,7 +45,7 @@ export const SliderView = () => {
         return (
           <div key={photo.id} className="flex-[0_0_100%] h-full relative">
             <BlurImage
-              src={keyToImage(photo.url)}
+              src={keyToUrl(photo.url)}
               alt={photo.title}
               fill
               sizes="75vw"

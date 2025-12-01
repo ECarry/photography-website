@@ -1,5 +1,5 @@
 import BlurImage from "@/components/blur-image";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import type { PhotoPoint } from "@/modules/discover/lib/clustering";
 
 interface PhotoPopupProps {
@@ -9,7 +9,7 @@ interface PhotoPopupProps {
 export const PhotoPopup = ({ photo }: PhotoPopupProps) => (
   <div className="w-64 h-64">
     <BlurImage
-      src={keyToImage(photo.url)}
+      src={keyToUrl(photo.url)}
       alt={photo.title}
       width={256}
       height={256}

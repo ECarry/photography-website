@@ -6,7 +6,7 @@ import Link from "next/link";
 // UI Components
 import { Badge } from "@/components/ui/badge";
 import { postsGetMany } from "@/modules/blog/types";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface LatestPostSectionProps {
   data?: postsGetMany[0];
@@ -27,7 +27,7 @@ export const LatestPostSection = ({ data }: LatestPostSectionProps) => {
       className="block w-full h-full relative rounded-xl overflow-hidden group cursor-pointer"
     >
       <Image
-        src={keyToImage(data.coverImage) || "/placeholder.svg"}
+        src={keyToUrl(data.coverImage) || "/placeholder.svg"}
         alt={data.title || "Blog post"}
         fill
         unoptimized

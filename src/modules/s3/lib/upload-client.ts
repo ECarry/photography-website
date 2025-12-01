@@ -1,5 +1,10 @@
 import { IMAGE_SIZE_LIMIT } from "@/constants";
 
+/**
+ * Client-side S3 upload helper.
+ * This utility handles file validation and uploading to S3 using presigned URLs.
+ * It is designed to be used in frontend components.
+ */
 interface UploadToS3Options {
   file: File;
   folder: string;

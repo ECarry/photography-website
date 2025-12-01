@@ -1,4 +1,4 @@
-import { s3Client } from "@/lib/s3";
+import { s3Client } from "@/modules/s3/lib/server-client";
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";

@@ -30,7 +30,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useGetAddress } from "@/modules/mapbox/hooks/use-get-address";
 import type { TExifData, TImageInfo } from "@/modules/photos/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 const MapboxComponent = dynamic(
   () => import("@/modules/mapbox/ui/components/map"),
@@ -118,12 +118,12 @@ export function PhotoForm({
       currentLocation.lng === 0 && currentLocation.lat === 0
         ? []
         : [
-          {
-            id: "location",
-            longitude: currentLocation.lng,
-            latitude: currentLocation.lat,
-          },
-        ],
+            {
+              id: "location",
+              longitude: currentLocation.lng,
+              latitude: currentLocation.lat,
+            },
+          ],
   };
 
   const onSubmit = (values: z.infer<typeof photosInsertSchema>) => {
@@ -136,14 +136,13 @@ export function PhotoForm({
       city:
         address?.features[0].properties.context.country?.country_code ===
           "JP" ||
-          address?.features[0].properties.context.country?.country_code === "TW"
+        address?.features[0].properties.context.country?.country_code === "TW"
           ? address?.features[0].properties.context.region?.name
           : address?.features[0].properties.context.place?.name,
       district: address?.features[0].properties.context.locality?.name,
       fullAddress: address?.features[0].properties.full_address,
       placeFormatted: address?.features[0].properties.place_formatted,
     };
-
 
     createPhoto.mutate(formData);
   };
@@ -311,7 +310,7 @@ export function PhotoForm({
             <div className="flex flex-col gap-4 bg-muted rounded-md overflow-hidden h-fit">
               <div className="aspect-video overflow-hidden relative">
                 <BlurImage
-                  src={keyToImage(url)}
+                  src={keyToUrl(url)}
                   alt="photo"
                   fill
                   blurhash={imageInfo.blurhash}

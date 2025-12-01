@@ -1,5 +1,5 @@
 import BlurImage from "@/components/blur-image";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import type { Cluster } from "@/modules/discover/lib/clustering";
 
 interface ClusterMarkerProps {
@@ -18,7 +18,7 @@ export const ClusterMarker = ({ cluster, onClick }: ClusterMarkerProps) => {
         {/* Image above arrow */}
         <div className="w-20 h-20 rounded-2xl overflow-hidden border-[3px] border-white shadow-2xl hover:brightness-110 duration-150 transition-all relative mb-[-2px]">
           <BlurImage
-            src={keyToImage(thumbnail.url)}
+            src={keyToUrl(thumbnail.url)}
             alt={`Cluster of ${cluster.count} photos`}
             width={80}
             height={80}

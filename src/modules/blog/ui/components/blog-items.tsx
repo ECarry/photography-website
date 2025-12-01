@@ -7,7 +7,7 @@ import Link from "next/link";
 // Internal dependencies - UI Components
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { postsGetMany } from "@/modules/blog/types";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface PostsSectionProps {
   data: postsGetMany;
@@ -34,7 +34,7 @@ export const PostsSection = ({ data }: PostsSectionProps) => {
             className="block w-full h-full relative rounded-xl overflow-hidden group cursor-pointer"
           >
             <Image
-              src={keyToImage(item.coverImage) || "/placeholder.svg"}
+              src={keyToUrl(item.coverImage) || "/placeholder.svg"}
               alt={item.title || "Blog post"}
               fill
               unoptimized

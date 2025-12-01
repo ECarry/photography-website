@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { s3Client } from "@/modules/s3/lib/s3";
+import { s3Client } from "@/modules/s3/lib/upload-client";
 import {
   type TExifData,
   type TImageInfo,

@@ -2,7 +2,7 @@
 
 import { ColumnDef } from "@tanstack/react-table";
 import { photoGetMany } from "../../types";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import BlurImage from "@/components/blur-image";
 import { format } from "date-fns";
 import { FavoriteToggle } from "./favorite-toggle";
@@ -18,7 +18,7 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     header: "Image",
     cell: ({ row }) => {
       const url = row.original.url;
-      const imageUrl = keyToImage(url);
+      const imageUrl = keyToUrl(url);
 
       return (
         <div className="w-16 h-16 overflow-hidden">

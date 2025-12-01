@@ -1,6 +1,6 @@
 import BlurImage from "@/components/blur-image";
 import { CitySetWithPhotos } from "@/db/schema";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import VectorCombined from "@/components/vector-combined";
 
 interface CoverPhotoProps {
@@ -22,7 +22,7 @@ export const CoverPhoto = ({ citySet, citySets }: CoverPhotoProps) => {
               }`}
             >
               <BlurImage
-                src={keyToImage(city.coverPhoto.url)}
+                src={keyToUrl(city.coverPhoto.url)}
                 alt={city.city}
                 fill
                 blurhash={city.coverPhoto.blurData}

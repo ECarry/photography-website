@@ -5,7 +5,7 @@ import { BrandsLogo } from "@/components/brands-logo";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { formatExposureTime } from "@/modules/photos/lib/utils";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface PhotoPreviewCardProps {
   url: string;
@@ -60,7 +60,7 @@ export function PhotoPreviewCard({
         }}
       >
         <BlurImage
-          src={keyToImage(url)}
+          src={keyToUrl(url)}
           alt={title || "Photo preview"}
           width={imageInfo.width}
           height={imageInfo.height}
@@ -92,9 +92,7 @@ export function PhotoPreviewCard({
                 />
                 <div className="hidden sm:flex flex-col gap-[2px]">
                   <div className="space-x-[6px] text-xs lg:text-sm font-mono text-gray-800">
-                    <span>
-                      {focalLength35mm && focalLength35mm + "mm"}
-                    </span>
+                    <span>{focalLength35mm && focalLength35mm + "mm"}</span>
                     <span>{fNumber && "ƒ/" + fNumber}</span>
                     <span>
                       {exposureTime && formatExposureTime(exposureTime)}

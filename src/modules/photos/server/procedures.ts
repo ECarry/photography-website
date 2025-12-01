@@ -20,7 +20,7 @@ import {
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
-import { s3Client } from "@/lib/s3";
+import { s3Client } from "@/modules/s3/lib/server-client";
 
 export const photosRouter = createTRPCRouter({
   create: protectedProcedure
@@ -65,7 +65,6 @@ export const photosRouter = createTRPCRouter({
             .where(
               sql`${citySets.country} = ${insertedPhoto.country} AND ${citySets.city} = ${insertedPhoto.city}`
             );
-
         } else {
         }
 
@@ -100,11 +99,8 @@ export const photosRouter = createTRPCRouter({
           });
         }
 
-
-
         // city set related
         if (photo.country && photo.city) {
-
           const [citySet] = await db
             .select()
             .from(citySets)
@@ -169,16 +165,13 @@ export const photosRouter = createTRPCRouter({
           // photo.url is stored as S3 key directly in database
           const key = photo.url;
 
-
           const command = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
             Key: key,
           });
           await s3Client.send(command);
 
-
           await db.delete(photos).where(eq(photos.id, id));
-
         } catch (error) {
           if (error instanceof Error) {
             throw new TRPCError({

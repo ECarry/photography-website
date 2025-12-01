@@ -37,7 +37,7 @@ import { MapboxExtension } from "./extensions/mapbox";
 import TextAlign from "@tiptap/extension-text-align";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
-import { s3Client } from "@/modules/s3/lib/s3";
+import { s3Client } from "@/modules/s3/lib/upload-client";
 import { toast } from "sonner";
 import { ToolbarProvider } from "./toolbars/toolbar-provider";
 import { HeadingToolbar } from "./toolbars/heading";

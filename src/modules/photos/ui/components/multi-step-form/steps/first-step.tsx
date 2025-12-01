@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/input-group";
 import { Form, FormField, FormItem, FormMessage } from "@/components/ui/form";
 import { PhotoUploader } from "../../photo-uploader";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { firstStepSchema, FirstStepData, UploadStepProps } from "../types";
 import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
 
@@ -39,7 +39,7 @@ export function FirstStep({
   const handleCopyUrl = async () => {
     if (!url) return;
     try {
-      await navigator.clipboard.writeText(keyToImage(url));
+      await navigator.clipboard.writeText(keyToUrl(url));
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
@@ -95,7 +95,7 @@ export function FirstStep({
               <div className="relative aspect-video w-full overflow-hidden rounded-lg border bg-muted">
                 <BlurImage
                   blurhash={imageInfo.blurhash}
-                  src={keyToImage(url)}
+                  src={keyToUrl(url)}
                   alt="Uploaded photo"
                   fill
                   className="object-contain w-full h-full"
@@ -108,7 +108,7 @@ export function FirstStep({
                 <label className="text-sm font-medium">Image URL</label>
                 <InputGroup>
                   <InputGroupInput
-                    value={keyToImage(url)}
+                    value={keyToUrl(url)}
                     readOnly
                     className="font-mono text-xs"
                   />

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import BlurImage from "@/components/blur-image";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import type { CityGetMany } from "../../types";
 
 interface CityCardProps {
@@ -20,7 +20,7 @@ export function CityCard({ citySet }: CityCardProps) {
       <div className="group relative aspect-3/4 overflow-hidden rounded-3xl bg-muted shadow-lg transition-all hover:shadow-2xl">
         {/* Background Image */}
         <BlurImage
-          src={keyToImage(coverPhotoUrl!)}
+          src={keyToUrl(coverPhotoUrl!)}
           alt={`${city}, ${country}`}
           fill
           className="object-cover"

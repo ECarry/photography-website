@@ -4,7 +4,7 @@ import BlurImage from "@/components/blur-image";
 import Footer from "@/components/footer";
 import { FramedPhoto } from "@/components/framed-photo";
 import VectorCombined from "@/components/vector-combined";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
@@ -26,7 +26,7 @@ export const CityView = ({ city }: Props) => {
         <div className="w-full h-[70vh] lg:w-1/2 lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3">
           <div className="w-full h-full relative">
             <BlurImage
-              src={keyToImage(coverPhoto?.url) || "/placeholder.svg"}
+              src={keyToUrl(coverPhoto?.url) || "/placeholder.svg"}
               alt={data.city}
               fill
               quality={75}

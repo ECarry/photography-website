@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import { cn, duplicateContent } from "@/lib/utils";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -84,7 +84,7 @@ function TiptapImage(props: NodeViewProps) {
     !rawSrc.startsWith("http://") &&
     !rawSrc.startsWith("https://") &&
     !rawSrc.startsWith("data:")
-      ? keyToImage(rawSrc)
+      ? keyToUrl(rawSrc)
       : rawSrc ?? "";
 
   const handleDeleteImage = useCallback(async () => {

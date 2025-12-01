@@ -2,7 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import BlurImage from "./blur-image";
-import { keyToImage } from "@/lib/keyToImage";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
 interface FramedPhotoProps {
   src: string;
@@ -35,7 +35,7 @@ export function FramedPhoto({
           )}
         >
           <BlurImage
-            src={keyToImage(src)}
+            src={keyToUrl(src)}
             alt={alt}
             blurhash={blurhash}
             className={cn(
