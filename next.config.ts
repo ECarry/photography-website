@@ -11,6 +11,8 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
     qualities: [65, 75],
+    loader: "custom",
+    loaderFile: "./src/lib/cloudflare-image-loader.ts",
     remotePatterns: s3Hostname
       ? [
           {
