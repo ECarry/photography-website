@@ -3,6 +3,7 @@ import { db } from "@/db";
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
 import { desc, eq, and } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
+import { TRPCError } from "@trpc/server";
 
 export const homeRouter = createTRPCRouter({
   getManyLikePhotos: baseProcedure
@@ -42,6 +43,28 @@ export const homeRouter = createTRPCRouter({
         orderBy: [desc(citySets.updatedAt)],
         limit: limit,
       });
+
+      return data;
+    }),
+  getPhotoById: baseProcedure
+    .input(
+      z.object({
+        id: z.uuid(),
+      })
+    )
+    .query(async ({ input }) => {
+      const { id } = input;
+
+      const data = await db.query.photos.findFirst({
+        where: and(eq(photos.id, id), eq(photos.visibility, "public")),
+      });
+
+      if (!data) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Photo not found",
+        });
+      }
 
       return data;
     }),

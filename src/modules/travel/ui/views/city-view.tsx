@@ -8,6 +8,7 @@ import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
+import Link from "next/link";
 
 interface Props {
   city: string;
@@ -32,7 +33,7 @@ export const CityView = ({ city }: Props) => {
               quality={75}
               blurhash={coverPhoto?.blurData || ""}
               sizes="75vw"
-              className="object-cover rounded-xl overflow-hidden cursor-pointer"
+              className="object-cover rounded-xl overflow-hidden"
             />
             <div className="absolute right-0 bottom-0">
               <VectorCombined title={data.city} position="bottom-right" />
@@ -94,7 +95,11 @@ export const CityView = ({ city }: Props) => {
           {/* IMAGES  */}
           <div className="w-full space-y-2">
             {data.photos?.map((photo) => (
-              <div key={photo.id} className="space-y-2">
+              <Link
+                href={`/p/${photo.id}`}
+                key={photo.id}
+                className="space-y-2"
+              >
                 <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-4 rounded-xl">
                   <FramedPhoto
                     src={photo.url}
@@ -114,7 +119,7 @@ export const CityView = ({ city }: Props) => {
                       : ""}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
           {/* FOOTER  */}

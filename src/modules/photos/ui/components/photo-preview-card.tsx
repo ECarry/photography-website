@@ -15,13 +15,13 @@ interface PhotoPreviewCardProps {
     height: number;
     blurhash: string;
   };
-  make?: string;
-  model?: string;
-  lensModel?: string;
-  focalLength35mm?: number;
-  fNumber?: number;
-  exposureTime?: number;
-  iso?: number;
+  make?: string | null;
+  model?: string | null;
+  lensModel?: string | null;
+  focalLength35mm?: number | null;
+  fNumber?: number | null;
+  exposureTime?: number | null;
+  iso?: number | null;
   dateTimeOriginal?: string;
   className?: string;
 }
