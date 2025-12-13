@@ -5,7 +5,10 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { PhotographView } from "@/modules/photograph/ui/views/photograph-view";
+import {
+  LoadingState,
+  PhotographView,
+} from "@/modules/photograph/ui/views/photograph-view";
 
 type Props = {
   params: Promise<{ id: string }>;
@@ -31,7 +34,7 @@ const page = async ({ params }: Props) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<p>Loading...</p>}>
+      <Suspense fallback={<LoadingState />}>
         <ErrorBoundary fallback={<p>Error</p>}>
           <PhotographView id={id} />
         </ErrorBoundary>
