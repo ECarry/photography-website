@@ -134,6 +134,17 @@ S3_BUCKET_NAME=your-wasabi-bucket
 NEXT_PUBLIC_S3_PUBLIC_URL=https://your-bucket.s3.wasabisys.com
 ```
 
+#### ⚠️ Image loader note (when not using Cloudflare R2)
+
+If you are **not using Cloudflare R2** (or you don’t want to use the Cloudflare-specific custom image loader), make sure to **remove or update** the following in `next.config.*`:
+
+```js
+loader: 'custom',
+loaderFile: './src/lib/cloudflare-image-loader.ts',
+```
+
+Otherwise, Next.js image optimization/loading may fail locally or in production.
+
 **Setup Instructions:**
 
 1. Choose your preferred S3-compatible storage provider
@@ -263,6 +274,7 @@ bun run seed:user
 This project supports two Docker deployment modes: **Standalone** (self-hosted) and **Cloud** (managed services).
 
 ### 1. Standalone Mode (Default)
+
 Run the entire stack (App, PostgreSQL, RustFS) locally. Ideal for testing and self-hosting.
 
 ```bash
@@ -270,12 +282,14 @@ docker compose up -d
 # or explicitly:
 docker compose -f docker-compose.standalone.yml up -d
 ```
-*   **App**: http://localhost:3000
-*   **Postgres**: localhost:5432
-*   **RustFS (S3)**: localhost:9000
-*   **RustFS Console**: http://localhost:9001
+
+- **App**: http://localhost:3000
+- **Postgres**: localhost:5432
+- **RustFS (S3)**: localhost:9000
+- **RustFS Console**: http://localhost:9001
 
 ### 2. Cloud Mode
+
 Run only the App container, connecting to external services (e.g., Neon Postgres, AWS S3, Cloudflare R2).
 
 1.  Create a `.env` file with your credentials:
@@ -295,10 +309,12 @@ Run only the App container, connecting to external services (e.g., Neon Postgres
     ```
 
 ### ⚠️ Important Note on Building
-This project uses a **Runtime Build** strategy for Docker. The Next.js application is built *inside* the container when it starts, not when the Docker image is built.
+
+This project uses a **Runtime Build** strategy for Docker. The Next.js application is built _inside_ the container when it starts, not when the Docker image is built.
 This ensures that Static Site Generation (SSG) can successfully fetch data from the database (which is only available at runtime in the Standalone mode).
-*   **First Start**: Will take 1-2 minutes to compile.
-*   **Restarts**: Will be fast (cached via `next_cache` volume).
+
+- **First Start**: Will take 1-2 minutes to compile.
+- **Restarts**: Will be fast (cached via `next_cache` volume).
 
 ## 🛠 Tech Stack
 
