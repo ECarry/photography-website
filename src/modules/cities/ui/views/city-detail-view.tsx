@@ -70,7 +70,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
         );
         await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
         await queryClient.invalidateQueries(
-          trpc.home.getCitySets.queryOptions({ limit: 9 })
+          trpc.home.getCitySets.queryOptions({ limit: 12 })
         );
         await queryClient.invalidateQueries(
           trpc.travel.getCitySets.queryOptions()

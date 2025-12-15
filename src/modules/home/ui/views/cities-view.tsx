@@ -10,7 +10,7 @@ import VectorTopLeftAnimation from "../components/vector-top-left-animation";
 export const CitiesView = () => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.home.getCitySets.queryOptions({ limit: 9 })
+    trpc.home.getCitySets.queryOptions({ limit: 12 })
   );
 
   return (

@@ -23,7 +23,7 @@ const page = async () => {
     trpc.home.getManyLikePhotos.queryOptions({ limit: 10 })
   );
   void queryClient.prefetchQuery(
-    trpc.home.getCitySets.queryOptions({ limit: 9 })
+    trpc.home.getCitySets.queryOptions({ limit: 12 })
   );
 
   return (
