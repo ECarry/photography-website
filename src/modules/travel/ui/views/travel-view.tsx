@@ -14,7 +14,7 @@ export const TravelView = () => {
   const trpc = useTRPC();
   const [activeCity, setActiveCity] = useState<CitySetWithPhotos | null>(null);
 
-  const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions({}));
+  const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions());
 
   useEffect(() => {
     if (!activeCity && data && data.length > 0) {

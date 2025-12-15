@@ -6,26 +6,17 @@ import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
 export const travelRouter = createTRPCRouter({
-  getCitySets: baseProcedure
-    .input(
-      z.object({
-        limit: z.number().min(1).max(100).default(10),
-      })
-    )
-    .query(async ({ input }) => {
-      const { limit } = input;
+  getCitySets: baseProcedure.query(async () => {
+    const data = await db.query.citySets.findMany({
+      with: {
+        coverPhoto: true,
+        photos: true,
+      },
+      orderBy: [desc(citySets.updatedAt)],
+    });
 
-      const data = await db.query.citySets.findMany({
-        with: {
-          coverPhoto: true,
-          photos: true,
-        },
-        orderBy: [desc(citySets.updatedAt)],
-        limit: limit,
-      });
-
-      return data;
-    }),
+    return data;
+  }),
   getOne: baseProcedure
     .input(
       z.object({

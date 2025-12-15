@@ -15,7 +15,7 @@ export const metadata = {
 
 const page = () => {
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.travel.getCitySets.queryOptions({}));
+  void queryClient.prefetchQuery(trpc.travel.getCitySets.queryOptions());
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

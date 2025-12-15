@@ -73,7 +73,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
           trpc.home.getCitySets.queryOptions({ limit: 9 })
         );
         await queryClient.invalidateQueries(
-          trpc.travel.getCitySets.queryOptions({})
+          trpc.travel.getCitySets.queryOptions()
         );
         toast.success("Description updated successfully");
       },
