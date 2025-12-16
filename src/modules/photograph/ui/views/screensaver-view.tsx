@@ -14,35 +14,49 @@ interface GridCell {
   isAnimating: boolean;
 }
 
+const CELL_SIZE = 300;
+const FLIP_DURATION = 2000;
+const FLIP_INTERVAL = 2000;
+
 export const ScreensaverView = () => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
     trpc.discover.getManyPhotos.queryOptions({})
   );
 
-  const [gridState] = useState(() => {
-    if (!data || data.length === 0 || typeof window === "undefined") {
-      return { cells: [], cols: 0, rows: 0 };
-    }
+  const [gridCells, setGridCells] = useState<GridCell[]>([]);
+  const [gridSize, setGridSize] = useState({ cols: 0, rows: 0 });
 
-    const cellSize = 250;
-    const cols = Math.ceil(window.innerWidth / cellSize);
-    const rows = Math.ceil(window.innerHeight / cellSize);
-    const totalCells = cols * rows;
+  useEffect(() => {
+    if (!data || data.length === 0 || typeof window === "undefined") return;
 
-    const cells: GridCell[] = Array.from({ length: totalCells }, (_, i) => ({
-      index: i,
-      currentPhotoIndex: Math.floor(Math.random() * data.length),
-      nextPhotoIndex: Math.floor(Math.random() * data.length),
-      rotationDegree: 0,
-      isAnimating: false,
-    }));
+    const initializeGrid = () => {
+      const cols = Math.ceil(window.innerWidth / CELL_SIZE);
+      const rows = Math.ceil(window.innerHeight / CELL_SIZE);
+      const totalCells = cols * rows;
 
-    return { cells, cols, rows };
-  });
+      const cells: GridCell[] = Array.from({ length: totalCells }, (_, i) => ({
+        index: i,
+        currentPhotoIndex: Math.floor(Math.random() * data.length),
+        nextPhotoIndex: Math.floor(Math.random() * data.length),
+        rotationDegree: 0,
+        isAnimating: false,
+      }));
 
-  const [gridCells, setGridCells] = useState<GridCell[]>(gridState.cells);
-  const gridSize = { cols: gridState.cols, rows: gridState.rows };
+      setGridCells(cells);
+      setGridSize({ cols, rows });
+    };
+
+    initializeGrid();
+
+    // Re-initialize on window resize
+    const handleResize = () => {
+      initializeGrid();
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [data]);
 
   // Random flip animation
   const flipRandomCell = useCallback(() => {
@@ -74,7 +88,7 @@ export const ScreensaverView = () => {
       });
     });
 
-    setTimeout(() => {
+    const timeoutId = setTimeout(() => {
       setGridCells((prev) =>
         prev.map((cell) =>
           cell.isAnimating
@@ -85,22 +99,28 @@ export const ScreensaverView = () => {
             : cell
         )
       );
-    }, 1500);
-  }, [gridCells.length, data]);
+    }, FLIP_DURATION);
+
+    return timeoutId;
+  }, [data, gridCells.length]);
 
   useEffect(() => {
     if (gridCells.length === 0) return;
 
-    const interval = setInterval(() => {
-      flipRandomCell();
-    }, 2000);
+    const timeoutIds: NodeJS.Timeout[] = [];
 
-    return () => clearInterval(interval);
+    const interval = setInterval(() => {
+      const timeoutId = flipRandomCell();
+      if (timeoutId) timeoutIds.push(timeoutId);
+    }, FLIP_INTERVAL);
+
+    return () => {
+      clearInterval(interval);
+      timeoutIds.forEach((id) => clearTimeout(id));
+    };
   }, [flipRandomCell, gridCells.length]);
 
   if (!data || gridCells.length === 0) return null;
-
-  const cellSize = 250;
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden">
@@ -108,8 +128,8 @@ export const ScreensaverView = () => {
         className="relative w-full h-full"
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${gridSize.cols}, ${cellSize}px)`,
-          gridTemplateRows: `repeat(${gridSize.rows}, ${cellSize}px)`,
+          gridTemplateColumns: `repeat(${gridSize.cols}, ${CELL_SIZE}px)`,
+          gridTemplateRows: `repeat(${gridSize.rows}, ${CELL_SIZE}px)`,
         }}
       >
         {gridCells.map((cell) => {
@@ -121,16 +141,17 @@ export const ScreensaverView = () => {
               key={cell.index}
               className="relative"
               style={{
-                width: `${cellSize}px`,
-                height: `${cellSize}px`,
+                width: `${CELL_SIZE}px`,
+                height: `${CELL_SIZE}px`,
                 perspective: "1000px",
               }}
             >
               <div
-                className="relative w-full h-full transition-transform duration-1500 ease-in-out"
+                className="relative w-full h-full transition-transform ease-in-out"
                 style={{
                   transformStyle: "preserve-3d",
                   transform: `rotateY(${cell.rotationDegree}deg)`,
+                  transitionDuration: `${FLIP_DURATION}ms`,
                 }}
               >
                 <div
@@ -142,8 +163,8 @@ export const ScreensaverView = () => {
                   <BlurImage
                     src={keyToUrl(currentPhoto.url)}
                     alt={currentPhoto.title}
-                    width={cellSize}
-                    height={cellSize}
+                    width={CELL_SIZE}
+                    height={CELL_SIZE}
                     blurhash={currentPhoto.blurData}
                     className="w-full h-full object-cover"
                   />
@@ -158,8 +179,8 @@ export const ScreensaverView = () => {
                   <BlurImage
                     src={keyToUrl(nextPhoto.url)}
                     alt={nextPhoto.title}
-                    width={cellSize}
-                    height={cellSize}
+                    width={CELL_SIZE}
+                    height={CELL_SIZE}
                     blurhash={nextPhoto.blurData}
                     className="w-full h-full object-cover"
                   />
