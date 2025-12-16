@@ -44,17 +44,25 @@ export function PhotoPreviewCard({
   const aspectRatio = imageInfo.width / imageInfo.height;
 
   // Calculate container width based on aspect ratio and max height
-  const containerWidth =
-    aspectRatio >= 1
-      ? `min(65vh * ${aspectRatio}, 90vw)` // Landscape or square
-      : `min(65vh * ${aspectRatio}, 50vw)`; // Portrait
+  // Use CSS variable for max-width constraint to handle responsive behavior
+  // Portrait: 90vw on mobile, 50vw on desktop
+  // Landscape: 90vw always
+  const widthConstraint = aspectRatio >= 1 ? "90vw" : "var(--width-constraint)";
 
   return (
-    <div className={cn("flex justify-center pb-14 w-full", className)}>
+    <div
+      className={cn(
+        "flex justify-center pb-14 w-full",
+        // Set CSS variable for portrait mode responsiveness
+        aspectRatio < 1 &&
+          "[--width-constraint:90vw] md:[--width-constraint:50vw]",
+        className
+      )}
+    >
       <div
         className="bg-white relative shadow-2xl rounded-lg w-full"
         style={{
-          maxWidth: containerWidth,
+          maxWidth: `min(65vh * ${aspectRatio}, ${widthConstraint})`,
           aspectRatio: aspectRatio,
           maxHeight: "65dvh",
         }}
@@ -68,7 +76,7 @@ export function PhotoPreviewCard({
           className="w-full h-full object-cover rounded-lg"
         />
 
-        <div className="absolute -bottom-12 left-0 px-6 py-3 w-full bg-white flex justify-between items-center select-none text-gray-900 shadow-md rounded-b-lg">
+        <div className="absolute -bottom-12 left-0 px-4 sm:px-6 py-3 w-full bg-white flex justify-between items-center select-none text-gray-900 shadow-md rounded-b-lg">
           <div className="flex flex-col text-center">
             <h1
               className={cn(
