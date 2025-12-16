@@ -5,6 +5,9 @@ import { useSuspenseQuery } from "@tanstack/react-query";
 import { useState, useEffect, useCallback } from "react";
 import BlurImage from "@/components/blur-image";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
+import { ScreensaverSettingsModal } from "@/modules/photograph/ui/components/screensaver-settings-modal";
+import { Button } from "@/components/ui/button";
+import { Settings, Maximize, Minimize } from "lucide-react";
 
 interface GridCell {
   index: number;
@@ -27,13 +30,18 @@ export const ScreensaverView = () => {
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [gridSize, setGridSize] = useState({ cols: 0, rows: 0 });
   const [cellSize, setCellSize] = useState(0);
+  const [showControls, setShowControls] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [rows, setRows] = useState(FIXED_ROWS);
+  const [flipInterval, setFlipInterval] = useState(FLIP_INTERVAL);
+  const [mouseTimeout, setMouseTimeout] = useState<NodeJS.Timeout | null>(null);
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   useEffect(() => {
     if (!data || data.length === 0 || typeof window === "undefined") return;
 
     const initializeGrid = () => {
       // Fixed rows, calculate cell size based on screen height
-      const rows = FIXED_ROWS;
       const calculatedCellSize = window.innerHeight / rows;
       setCellSize(calculatedCellSize);
 
@@ -62,7 +70,7 @@ export const ScreensaverView = () => {
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, [data]);
+  }, [data, rows]);
 
   // Random flip animation
   const flipRandomCell = useCallback(() => {
@@ -118,18 +126,98 @@ export const ScreensaverView = () => {
     const interval = setInterval(() => {
       const timeoutId = flipRandomCell();
       if (timeoutId) timeoutIds.push(timeoutId);
-    }, FLIP_INTERVAL);
+    }, flipInterval);
 
     return () => {
       clearInterval(interval);
       timeoutIds.forEach((id) => clearTimeout(id));
     };
-  }, [flipRandomCell, gridCells.length]);
+  }, [flipRandomCell, gridCells.length, flipInterval]);
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      setShowControls(true);
+
+      if (mouseTimeout) {
+        clearTimeout(mouseTimeout);
+      }
+
+      const timeout = setTimeout(() => {
+        setShowControls(false);
+      }, 3000);
+
+      setMouseTimeout(timeout);
+    };
+
+    window.addEventListener("mousemove", handleMouseMove);
+
+    return () => {
+      window.removeEventListener("mousemove", handleMouseMove);
+      if (mouseTimeout) {
+        clearTimeout(mouseTimeout);
+      }
+    };
+  }, [mouseTimeout]);
+
+  const handleApply = (newRows: number, newFlipInterval: number) => {
+    setRows(newRows);
+    setFlipInterval(newFlipInterval);
+    setShowModal(false);
+  };
+
+  const toggleFullscreen = async () => {
+    if (!document.fullscreenElement) {
+      await document.documentElement.requestFullscreen();
+      setIsFullscreen(true);
+    } else {
+      await document.exitFullscreen();
+      setIsFullscreen(false);
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () =>
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, []);
 
   if (!data || gridCells.length === 0) return null;
 
   return (
     <div className="fixed inset-0 bg-black overflow-hidden flex items-center justify-center">
+      {showControls && (
+        <div className="fixed top-8 right-8 z-50 flex gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={toggleFullscreen}
+            title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+          >
+            {isFullscreen ? <Minimize /> : <Maximize />}
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowModal(true)}
+            title="Settings"
+          >
+            <Settings />
+          </Button>
+        </div>
+      )}
+
+      <ScreensaverSettingsModal
+        isOpen={showModal}
+        rows={rows}
+        flipInterval={flipInterval}
+        onClose={() => setShowModal(false)}
+        onApply={handleApply}
+      />
+
       <div
         className="relative"
         style={{
