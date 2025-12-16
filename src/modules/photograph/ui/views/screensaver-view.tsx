@@ -14,7 +14,7 @@ interface GridCell {
   isAnimating: boolean;
 }
 
-const CELL_SIZE = 300;
+const FIXED_ROWS = 4;
 const FLIP_DURATION = 2000;
 const FLIP_INTERVAL = 2000;
 
@@ -26,13 +26,19 @@ export const ScreensaverView = () => {
 
   const [gridCells, setGridCells] = useState<GridCell[]>([]);
   const [gridSize, setGridSize] = useState({ cols: 0, rows: 0 });
+  const [cellSize, setCellSize] = useState(0);
 
   useEffect(() => {
     if (!data || data.length === 0 || typeof window === "undefined") return;
 
     const initializeGrid = () => {
-      const cols = Math.ceil(window.innerWidth / CELL_SIZE);
-      const rows = Math.ceil(window.innerHeight / CELL_SIZE);
+      // Fixed rows, calculate cell size based on screen height
+      const rows = FIXED_ROWS;
+      const calculatedCellSize = window.innerHeight / rows;
+      setCellSize(calculatedCellSize);
+
+      // Calculate cols - allow extra columns for horizontal overflow
+      const cols = Math.ceil(window.innerWidth / calculatedCellSize) + 2;
       const totalCells = cols * rows;
 
       const cells: GridCell[] = Array.from({ length: totalCells }, (_, i) => ({
@@ -123,13 +129,14 @@ export const ScreensaverView = () => {
   if (!data || gridCells.length === 0) return null;
 
   return (
-    <div className="fixed inset-0 bg-black overflow-hidden">
+    <div className="fixed inset-0 bg-black overflow-hidden flex items-center justify-center">
       <div
-        className="relative w-full h-full"
+        className="relative"
         style={{
           display: "grid",
-          gridTemplateColumns: `repeat(${gridSize.cols}, ${CELL_SIZE}px)`,
-          gridTemplateRows: `repeat(${gridSize.rows}, ${CELL_SIZE}px)`,
+          gridTemplateColumns: `repeat(${gridSize.cols}, ${cellSize}px)`,
+          gridTemplateRows: `repeat(${gridSize.rows}, ${cellSize}px)`,
+          height: "100vh",
         }}
       >
         {gridCells.map((cell) => {
@@ -141,8 +148,8 @@ export const ScreensaverView = () => {
               key={cell.index}
               className="relative"
               style={{
-                width: `${CELL_SIZE}px`,
-                height: `${CELL_SIZE}px`,
+                width: `${cellSize}px`,
+                height: `${cellSize}px`,
                 perspective: "1000px",
               }}
             >
@@ -163,8 +170,8 @@ export const ScreensaverView = () => {
                   <BlurImage
                     src={keyToUrl(currentPhoto.url)}
                     alt={currentPhoto.title}
-                    width={CELL_SIZE}
-                    height={CELL_SIZE}
+                    width={cellSize}
+                    height={cellSize}
                     blurhash={currentPhoto.blurData}
                     className="w-full h-full object-cover"
                   />
@@ -179,8 +186,8 @@ export const ScreensaverView = () => {
                   <BlurImage
                     src={keyToUrl(nextPhoto.url)}
                     alt={nextPhoto.title}
-                    width={CELL_SIZE}
-                    height={CELL_SIZE}
+                    width={cellSize}
+                    height={cellSize}
                     blurhash={nextPhoto.blurData}
                     className="w-full h-full object-cover"
                   />
