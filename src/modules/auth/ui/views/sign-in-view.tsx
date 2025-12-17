@@ -22,7 +22,7 @@ import { useState } from "react";
 import { authClient } from "../../lib/auth-client";
 
 const signInSchema = z.object({
-  email: z.string().email(),
+  email: z.email(),
   password: z.string().min(1, {
     message: "Password is required",
   }),

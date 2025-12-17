@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { db } from "@/db";
 import {
   createTRPCRouter,
@@ -59,7 +59,7 @@ export const photosRouter = createTRPCRouter({
               },
             });
 
-          const updatedCitySet = await db
+          await db
             .select()
             .from(citySets)
             .where(
@@ -79,7 +79,7 @@ export const photosRouter = createTRPCRouter({
   remove: protectedProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
       })
     )
     .mutation(async ({ input }) => {
@@ -220,7 +220,7 @@ export const photosRouter = createTRPCRouter({
   getOne: baseProcedure
     .input(
       z.object({
-        id: z.string().uuid(),
+        id: z.uuid(),
       })
     )
     .query(async ({ input }) => {

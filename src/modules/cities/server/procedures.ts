@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { db } from "@/db";
 import {
   createTRPCRouter,
@@ -72,8 +72,8 @@ export const cityRouter = createTRPCRouter({
   updateCoverPhoto: protectedProcedure
     .input(
       z.object({
-        cityId: z.string().uuid(),
-        photoId: z.string().uuid(),
+        cityId: z.uuid(),
+        photoId: z.uuid(),
       })
     )
     .mutation(async ({ input }) => {
@@ -130,7 +130,7 @@ export const cityRouter = createTRPCRouter({
   updateDescription: protectedProcedure
     .input(
       z.object({
-        cityId: z.string().uuid(),
+        cityId: z.uuid(),
         description: z.string(),
       })
     )

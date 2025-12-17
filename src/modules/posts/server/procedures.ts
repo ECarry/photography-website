@@ -1,4 +1,4 @@
-import z from "zod";
+import { z } from "zod";
 import { db } from "@/db";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { count, desc, eq, ilike } from "drizzle-orm";
