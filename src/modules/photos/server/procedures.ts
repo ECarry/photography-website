@@ -5,7 +5,7 @@ import {
   baseProcedure,
   protectedProcedure,
 } from "@/trpc/init";
-import { and, eq, desc, sql, ilike, count } from "drizzle-orm";
+import { and, eq, desc, asc, sql, ilike, count } from "drizzle-orm";
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -234,6 +234,7 @@ export const photosRouter = createTRPCRouter({
     .input(
       z.object({
         page: z.number().default(DEFAULT_PAGE),
+        orderBy: z.enum(["asc", "desc"] as const).default("desc"),
         pageSize: z
           .number()
           .min(MIN_PAGE_SIZE)
@@ -243,13 +244,17 @@ export const photosRouter = createTRPCRouter({
       })
     )
     .query(async ({ input }) => {
-      const { page, pageSize, search } = input;
+      const { page, pageSize, search, orderBy } = input;
 
       const data = await db
         .select()
         .from(photos)
         .where(search ? ilike(photos.title, `%${search}%`) : undefined)
-        .orderBy(desc(photos.createdAt), desc(photos.id))
+        .orderBy(
+          orderBy === "asc"
+            ? asc(photos.dateTimeOriginal)
+            : desc(photos.dateTimeOriginal)
+        )
         .limit(pageSize)
         .offset((page - 1) * pageSize);
 
