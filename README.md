@@ -2,6 +2,14 @@
 
 A modern photography portfolio website built with Next.js 16, featuring interactive maps, photo management, and a comprehensive dashboard.
 
+## 📸 Screenshots
+
+![Home Page](screenshots/home.png)
+_Home Page_
+
+![Dashboard](screenshots/dashboard.png)
+_Dashboard_
+
 ## 🚀 Features
 
 - **Next.js 16** with React 19 and React Compiler
