@@ -2,7 +2,7 @@
 
 // External dependencies
 import * as mapboxgl from "mapbox-gl";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, forwardRef } from "react";
 import Map, {
   GeolocateControl,
   Layer,
@@ -62,187 +62,206 @@ const MAP_STYLES = {
   dark: "mapbox://styles/ecarry/clp8hcmd300km01qx78rt0xaw",
 } as const;
 
-const Mapbox = ({
-  id,
-  initialViewState = {
-    longitude: -122.4,
-    latitude: 37.8,
-    zoom: 14,
-  },
-  markers = [],
-  geoJsonData,
-  onMarkerDragEnd,
-  onGeoJsonClick,
-  onMapClick,
-  onMove,
-  draggableMarker = false,
-  showGeocoder = false,
-  showControls = true,
-  scrollZoom = true,
-  doubleClickZoom = true,
-  boxZoom = true,
-  dragRotate = true,
-  dragPan = true,
-}: MapboxProps) => {
-  const mapRef = useRef<MapRef>(null);
-  const { theme } = useTheme();
+const Mapbox = forwardRef<MapRef, MapboxProps>(
+  (
+    {
+      id,
+      initialViewState = {
+        longitude: -122.4,
+        latitude: 37.8,
+        zoom: 14,
+      },
+      markers = [],
+      geoJsonData,
+      onMarkerDragEnd,
+      onGeoJsonClick,
+      onMapClick,
+      onMove,
+      draggableMarker = false,
+      showGeocoder = false,
+      showControls = true,
+      scrollZoom = true,
+      doubleClickZoom = true,
+      boxZoom = true,
+      dragRotate = true,
+      dragPan = true,
+    }: MapboxProps,
+    ref
+  ) => {
+    const mapRef = useRef<MapRef>(null);
+    const { theme } = useTheme();
 
-  // Ensure markers is always an array
-  const safeMarkers = Array.isArray(markers) ? markers : [];
-
-  // GeoJSON layer style for visited countries
-  const layerStyle: LayerProps = {
-    id: "data",
-    type: "fill",
-    paint: {
-      "fill-color": [
-        "case",
-        ["get", "visited"],
-        theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
-        "#0080ff", // Default color for non-visited
-      ],
-      "fill-opacity": [
-        "case",
-        ["get", "visited"],
-        0.6, // Higher opacity for visited countries
-        0.2, // Lower opacity for non-visited
-      ],
-    },
-  };
-
-  // Add stroke layer for visited countries
-  const strokeLayerStyle: LayerProps = {
-    id: "data-stroke",
-    type: "line",
-    paint: {
-      "line-color": [
-        "case",
-        ["get", "visited"],
-        theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
-        "transparent",
-      ],
-      "line-width": 2,
-      "line-opacity": 0.8,
-    },
-  };
-
-  // Add Geocoder control
-  useEffect(() => {
-    if (!showGeocoder || !mapRef.current) return;
-
-    const map = mapRef.current;
-    const geocoderOptions: GeocoderOptions = {
-      accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!,
-      mapboxgl: mapboxgl,
-    };
-    const geocoder = new MapboxGeocoder(geocoderOptions);
-
-    map.getMap().addControl(geocoder);
-
-    return () => {
-      if (map) {
-        map.getMap().removeControl(geocoder);
-      }
-    };
-  }, [showGeocoder]);
-
-  // Handle GeoJSON click
-  const onClick = useCallback(
-    (
-      event: mapboxgl.MapMouseEvent & {
-        features?: mapboxgl.GeoJSONFeature[];
-      }
-    ) => {
-      const feature = event.features?.[0];
-      if (feature && onGeoJsonClick) {
-        onGeoJsonClick(feature as GeoJSON.Feature);
-        return;
-      }
-
-      if (onMapClick) {
-        onMapClick();
-      }
-    },
-    [onGeoJsonClick, onMapClick]
-  );
-
-  // Fly to location
-  const flyToLocation = useCallback((longitude: number, latitude: number) => {
-    mapRef.current?.flyTo({
-      center: [longitude, latitude],
-      duration: 2000,
-      zoom: 14,
-    });
-  }, []);
-
-  return (
-    <Map
-      id={id}
-      ref={mapRef}
-      scrollZoom={scrollZoom}
-      doubleClickZoom={doubleClickZoom}
-      boxZoom={boxZoom}
-      dragRotate={dragRotate}
-      dragPan={dragPan}
-      mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
-      initialViewState={initialViewState}
-      style={{ width: "100%", height: "100%" }}
-      mapStyle={MAP_STYLES[theme === "dark" ? "dark" : "light"]}
-      interactiveLayerIds={geoJsonData ? ["data"] : undefined}
-      onClick={onClick}
-      onMove={(evt) => {
-        if (onMove) {
-          onMove({
-            zoom: evt.viewState.zoom,
-            latitude: evt.viewState.latitude,
-            longitude: evt.viewState.longitude,
-          });
+    const handleRef = useCallback(
+      (node: MapRef | null) => {
+        mapRef.current = node;
+        if (typeof ref === "function") {
+          ref(node);
+        } else if (ref) {
+          (ref as React.MutableRefObject<MapRef | null>).current = node;
         }
-      }}
-    >
-      {/* Navigation Controls */}
-      {showControls && <NavigationControl position="bottom-left" />}
-      {/* Show location button */}
-      {showControls && (
-        <GeolocateControl
-          position="bottom-left"
-          trackUserLocation
-          onGeolocate={(e) => {
-            flyToLocation(e.coords.longitude, e.coords.latitude);
-          }}
-        />
-      )}
-      {/* Markers */}
-      {safeMarkers.map((marker) => (
-        <Marker
-          key={marker.id}
-          longitude={marker.longitude}
-          latitude={marker.latitude}
-          draggable={draggableMarker}
-          style={{ cursor: draggableMarker ? "grab" : "pointer" }}
-          onDragEnd={
-            onMarkerDragEnd
-              ? (e) => onMarkerDragEnd(marker.id, e.lngLat)
-              : undefined
-          }
-          onClick={(e) => {
-            // Prevent map-level click handler from firing when clicking a marker
-            e.originalEvent.stopPropagation();
-          }}
-        >
-          {marker.element}
-        </Marker>
-      ))}
+      },
+      [ref]
+    );
 
-      {/* GeoJSON Layer */}
-      {geoJsonData && (
-        <Source type="geojson" data={geoJsonData}>
-          <Layer {...layerStyle} />
-          <Layer {...strokeLayerStyle} />
-        </Source>
-      )}
-    </Map>
-  );
-};
+    // Ensure markers is always an array
+    const safeMarkers = Array.isArray(markers) ? markers : [];
+
+    // GeoJSON layer style for visited countries
+    const layerStyle: LayerProps = {
+      id: "data",
+      type: "fill",
+      paint: {
+        "fill-color": [
+          "case",
+          ["get", "visited"],
+          theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+          "#0080ff", // Default color for non-visited
+        ],
+        "fill-opacity": [
+          "case",
+          ["get", "visited"],
+          0.6, // Higher opacity for visited countries
+          0.2, // Lower opacity for non-visited
+        ],
+      },
+    };
+
+    // Add stroke layer for visited countries
+    const strokeLayerStyle: LayerProps = {
+      id: "data-stroke",
+      type: "line",
+      paint: {
+        "line-color": [
+          "case",
+          ["get", "visited"],
+          theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+          "transparent",
+        ],
+        "line-width": 2,
+        "line-opacity": 0.8,
+      },
+    };
+
+    // Add Geocoder control
+    useEffect(() => {
+      if (!showGeocoder || !mapRef.current) return;
+
+      const map = mapRef.current;
+      const geocoderOptions: GeocoderOptions = {
+        accessToken: process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN!,
+        mapboxgl: mapboxgl,
+      };
+      const geocoder = new MapboxGeocoder(geocoderOptions);
+
+      map.getMap().addControl(geocoder);
+
+      return () => {
+        if (map) {
+          map.getMap().removeControl(geocoder);
+        }
+      };
+    }, [showGeocoder]);
+
+    // Handle GeoJSON click
+    const onClick = useCallback(
+      (
+        event: mapboxgl.MapMouseEvent & {
+          features?: mapboxgl.GeoJSONFeature[];
+        }
+      ) => {
+        const feature = event.features?.[0];
+        if (feature && onGeoJsonClick) {
+          onGeoJsonClick(feature as GeoJSON.Feature);
+          return;
+        }
+
+        if (onMapClick) {
+          onMapClick();
+        }
+      },
+      [onGeoJsonClick, onMapClick]
+    );
+
+    // Fly to location
+    const flyToLocation = useCallback((longitude: number, latitude: number) => {
+      mapRef.current?.flyTo({
+        center: [longitude, latitude],
+        duration: 2000,
+        zoom: 14,
+      });
+    }, []);
+
+    return (
+      <Map
+        id={id}
+        ref={handleRef}
+        scrollZoom={scrollZoom}
+        doubleClickZoom={doubleClickZoom}
+        boxZoom={boxZoom}
+        dragRotate={dragRotate}
+        dragPan={dragPan}
+        mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+        initialViewState={initialViewState}
+        style={{ width: "100%", height: "100%" }}
+        mapStyle={MAP_STYLES[theme === "dark" ? "dark" : "light"]}
+        interactiveLayerIds={geoJsonData ? ["data"] : undefined}
+        onClick={onClick}
+        onMove={(evt) => {
+          if (onMove) {
+            onMove({
+              zoom: evt.viewState.zoom,
+              latitude: evt.viewState.latitude,
+              longitude: evt.viewState.longitude,
+            });
+          }
+        }}
+      >
+        {/* Navigation Controls */}
+        {showControls && <NavigationControl position="bottom-left" />}
+        {/* Show location button */}
+        {showControls && (
+          <GeolocateControl
+            position="bottom-left"
+            trackUserLocation
+            onGeolocate={(e) => {
+              flyToLocation(e.coords.longitude, e.coords.latitude);
+            }}
+          />
+        )}
+        {/* Markers */}
+        {safeMarkers.map((marker) => (
+          <Marker
+            key={marker.id}
+            longitude={marker.longitude}
+            latitude={marker.latitude}
+            draggable={draggableMarker}
+            style={{ cursor: draggableMarker ? "grab" : "pointer" }}
+            onDragEnd={
+              onMarkerDragEnd
+                ? (e) => onMarkerDragEnd(marker.id, e.lngLat)
+                : undefined
+            }
+            onClick={(e) => {
+              // Prevent map-level click handler from firing when clicking a marker
+              e.originalEvent.stopPropagation();
+            }}
+          >
+            {marker.element}
+          </Marker>
+        ))}
+
+        {/* GeoJSON Layer */}
+        {geoJsonData && (
+          <Source type="geojson" data={geoJsonData}>
+            <Layer {...layerStyle} />
+            <Layer {...strokeLayerStyle} />
+          </Source>
+        )}
+      </Map>
+    );
+  }
+);
+
+Mapbox.displayName = "Mapbox";
 
 export default Mapbox;

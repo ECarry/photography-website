@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import Mapbox from "@/modules/mapbox/ui/components/map";
 import VectorCombined from "@/components/vector-combined";
 import { useTRPC } from "@/trpc/client";
@@ -13,6 +13,7 @@ import type { PhotoPoint } from "@/modules/discover/lib/clustering";
 import { FramedPhoto } from "@/components/framed-photo";
 import { format } from "date-fns/format";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { MapRef } from "react-map-gl/mapbox";
 import {
   Drawer,
   DrawerContent,
@@ -30,6 +31,65 @@ export const DiscoverView = () => {
   const isMobile = useIsMobile();
   const [selectedPhotos, setSelectedPhotos] = useState<PhotoPoint[]>([]);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const mapRef = useRef<MapRef>(null);
+
+  // Re-center map when selection changes and panel opens
+  useEffect(() => {
+    if (!mapRef.current || isMobile || selectedPhotos.length === 0) return;
+
+    // Trigger resize to ensure map knows its new container size
+    // We wrap it in a setTimeout to allow the transition to start/finish or layout to update
+    const timer = setTimeout(() => {
+      if (!mapRef.current) return;
+
+      mapRef.current.resize();
+
+      // Calculate center of selected photos
+      const validPhotos = selectedPhotos.filter(
+        (p) => p.latitude != null && p.longitude != null
+      );
+
+      if (validPhotos.length === 0) return;
+
+      if (validPhotos.length === 1) {
+        const photo = validPhotos[0];
+        mapRef.current.flyTo({
+          center: [photo.longitude!, photo.latitude!],
+          padding: { top: 50, bottom: 50, left: 50, right: 50 },
+          duration: 1000,
+        });
+      } else {
+        const longitudes = validPhotos.map((p) => p.longitude!);
+        const latitudes = validPhotos.map((p) => p.latitude!);
+        const minLng = Math.min(...longitudes);
+        const maxLng = Math.max(...longitudes);
+        const minLat = Math.min(...latitudes);
+        const maxLat = Math.max(...latitudes);
+
+        // Check if all points are the same
+        if (minLng === maxLng && minLat === maxLat) {
+          mapRef.current.flyTo({
+            center: [minLng, minLat],
+            padding: { top: 50, bottom: 50, left: 50, right: 50 },
+            duration: 1000,
+          });
+        } else {
+          mapRef.current.fitBounds(
+            [
+              [minLng, minLat],
+              [maxLng, maxLat],
+            ],
+            {
+              padding: { top: 50, bottom: 50, left: 50, right: 50 },
+              duration: 1000,
+            }
+          );
+        }
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [selectedPhotos, isMobile]);
 
   // Use clustering hook
   const { clusters, singlePhotos, handleMove } = usePhotoClustering({
@@ -112,6 +172,7 @@ export const DiscoverView = () => {
           style={{ width: !isMobile && hasSelection ? "50%" : "100%" }}
         >
           <Mapbox
+            ref={mapRef}
             id="discoverMap"
             initialViewState={{
               longitude: 121.2816980216146,
