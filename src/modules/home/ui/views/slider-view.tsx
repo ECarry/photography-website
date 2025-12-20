@@ -40,7 +40,7 @@ export const SliderView = () => {
       containerClassName="h-full"
     >
       {photos.map((photo, index) => {
-        const shouldPreload = index < 1;
+        const isFirstSlide = index === 0;
 
         return (
           <div key={photo.id} className="flex-[0_0_100%] h-full relative">
@@ -48,8 +48,9 @@ export const SliderView = () => {
               src={keyToUrl(photo.url)}
               alt={photo.title}
               fill
-              sizes="75vw"
-              loading={shouldPreload ? "eager" : "lazy"}
+              sizes="(max-width: 1023px) 100vw, 50vw"
+              loading={isFirstSlide ? "eager" : "lazy"}
+              fetchPriority={isFirstSlide ? "high" : undefined}
               blurhash={photo.blurData}
               className="w-full h-full object-cover"
             />
