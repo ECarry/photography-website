@@ -49,7 +49,6 @@ export const SliderView = () => {
               alt={photo.title}
               fill
               sizes="75vw"
-              priority={shouldPreload}
               loading={shouldPreload ? "eager" : "lazy"}
               blurhash={photo.blurData}
               className="w-full h-full object-cover"
