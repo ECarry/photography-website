@@ -44,14 +44,11 @@ export function usePhotoClustering({
     const result = getClustersFromIndex(clusterIndex, zoom, bounds);
 
     return result;
-
-
-  }, [clusterIndex, zoom, bounds, validPhotos.length]);
+  }, [clusterIndex, zoom, bounds]);
 
   // Handle map move/zoom changes
   const handleMove = useCallback(
     (viewState: { zoom: number; latitude: number; longitude: number }) => {
-
       setZoom(viewState.zoom);
 
       // Calculate approximate bounds based on viewport
