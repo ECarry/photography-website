@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Footer from "@/components/footer";
 import { CoverPhoto } from "../components/cover-photo";
 import { Introduction } from "../components/introduction";
@@ -12,16 +12,12 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 export const TravelView = () => {
   const trpc = useTRPC();
-  const [activeCity, setActiveCity] = useState<CitySetWithPhotos | null>(null);
-
   const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions());
 
-  useEffect(() => {
-    if (!activeCity && data && data.length > 0) {
-      // eslint-disable-next-line react-hooks/set-state-in-effect
-      setActiveCity(data[0]);
-    }
-  }, [activeCity, data]);
+  // Initialize with first city directly, no useEffect needed
+  const [activeCity, setActiveCity] = useState<CitySetWithPhotos | null>(
+    () => data?.[0] ?? null
+  );
 
   return (
     <div className="flex flex-col lg:flex-row min-h-screen w-full">

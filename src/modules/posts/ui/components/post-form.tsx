@@ -56,7 +56,6 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-
         toast.error("Failed to create post", {
           description: e.message,
         });
@@ -79,7 +78,6 @@ export const PostForm = ({ post }: PostFormProps) => {
         router.push(`/dashboard/posts/${data.slug}`);
       },
       onError: (e) => {
-
         toast.error("Failed to update post", {
           description: e.message,
         });
@@ -106,8 +104,7 @@ export const PostForm = ({ post }: PostFormProps) => {
       const slug = generateSlug(title);
       form.setValue("slug", slug);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [title]);
+  }, [title, form]);
 
   const isPending = createPost.isPending || updatePost.isPending;
 

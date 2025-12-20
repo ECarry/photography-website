@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TExifData, TImageInfo } from "@/modules/photos/lib/utils";
 import { PhotoFormData, INITIAL_FORM_VALUES, STEP_CONFIG } from "./types";
+import type { AddressData } from "@/modules/mapbox/hooks/use-get-address";
 import { FirstStep } from "./steps/first-step";
 import { SecondStep } from "./steps/second-step";
 import { ThirdStep } from "./steps/third-step";
@@ -57,8 +58,7 @@ export default function MultiStepForm({
   const [imageInfo, setImageInfo] = useState<TImageInfo>();
 
   // Address state for geocoding
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const [address, setAddress] = useState<any>(null);
+  const [address, setAddress] = useState<AddressData>(null);
 
   // ========================================
   // Handlers
@@ -198,8 +198,7 @@ export default function MultiStepForm({
   };
 
   // Handle address update from geocoding
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleAddressUpdate = (addressData: any) => {
+  const handleAddressUpdate = (addressData: AddressData) => {
     setAddress(addressData);
   };
 

@@ -30,6 +30,8 @@ export interface MapboxReverseGeocodingResponse extends FeatureCollection {
   query: [number, number];
 }
 
+export type AddressData = MapboxReverseGeocodingResponse | null;
+
 type LocationState = {
   data: MapboxReverseGeocodingResponse | null;
   isLoading: boolean;

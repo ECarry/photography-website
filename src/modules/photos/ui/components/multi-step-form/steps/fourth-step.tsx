@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { Form } from "@/components/ui/form";
-import { fourthStepSchema, StepProps } from "../types";
+import { fourthStepSchema, FourthStepData, StepProps } from "../types";
 import { PhotoPreviewCard } from "../../photo-preview-card";
 
 export function FourthStep({
@@ -12,18 +12,16 @@ export function FourthStep({
   initialData,
   isSubmitting,
 }: StepProps) {
-  const form = useForm({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(fourthStepSchema) as any,
-    defaultValues: initialData,
+  const form = useForm<FourthStepData>({
+    resolver: zodResolver(fourthStepSchema),
+    defaultValues: {},
     mode: "onChange",
   });
 
   const { handleSubmit, formState } = form;
   const { isValid } = formState;
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: FourthStepData) => {
     onNext(data);
   };
 

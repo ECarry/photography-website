@@ -1,10 +1,19 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useSyncExternalStore } from "react";
 import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+
+// Hydration-safe hook to detect if component is mounted on client
+const emptySubscribe = () => () => {};
+const useIsMounted = () =>
+  useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false
+  );
 
 // Utility function to handle view transitions
 const addViewTransition = (callback: () => void) => {
@@ -37,13 +46,8 @@ export function ThemeToggle() {
 
 // Home page Theme Switch
 export function ThemeSwitch() {
-  const [mounted, setMounted] = useState(false);
+  const mounted = useIsMounted();
   const { setTheme, resolvedTheme: theme } = useTheme();
-
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setMounted(true);
-  }, []);
 
   const switchTheme = () => {
     addViewTransition(() => {

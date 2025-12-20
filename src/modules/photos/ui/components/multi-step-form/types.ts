@@ -47,9 +47,8 @@ export const fourthStepSchema = z.object({});
 
 export type FourthStepData = z.infer<typeof fourthStepSchema>;
 
-// Combined schema for type inference (not used in runtime validation)
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-const formSchema = z.object({
+// Combined schema for type inference (exported for use in components)
+export const formSchema = z.object({
   ...firstStepSchema.shape,
   ...secondStepSchema.shape,
   ...thirdStepSchema.shape,

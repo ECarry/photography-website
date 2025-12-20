@@ -1,11 +1,12 @@
 import dynamic from "next/dynamic";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, X, MapPin } from "lucide-react";
 import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
-import { thirdStepSchema, StepProps } from "../types";
+import { thirdStepSchema, StepProps, ThirdStepData } from "../types";
+import type { AddressData } from "@/modules/mapbox/hooks/use-get-address";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatGPSCoordinates } from "@/lib/utils";
 import { useGetAddress } from "@/modules/mapbox/hooks/use-get-address";
@@ -37,8 +38,7 @@ interface SearchResult {
 }
 
 interface ThirdStepProps extends StepProps {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  onAddressUpdate?: (addressData: any) => void;
+  onAddressUpdate?: (addressData: AddressData | null) => void;
 }
 
 export function ThirdStep({
@@ -66,9 +66,8 @@ export function ThirdStep({
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
 
-  const form = useForm({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(thirdStepSchema) as any,
+  const form = useForm<ThirdStepData>({
+    resolver: zodResolver(thirdStepSchema),
     defaultValues: {
       latitude: initialData?.latitude ?? 0,
       longitude: initialData?.longitude ?? 0,
@@ -93,23 +92,8 @@ export function ThirdStep({
     }
   }, [addressData, onAddressUpdate]);
 
-  // Auto-search when query changes (with debounce)
-  useEffect(() => {
-    if (!searchQuery.trim()) {
-      setSearchResults([]);
-      return;
-    }
-
-    const debounceTimer = setTimeout(() => {
-      handleSearch();
-    }, 500); // 500ms delay
-
-    return () => clearTimeout(debounceTimer);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery]);
-
   // Search for places
-  const handleSearch = async () => {
+  const handleSearch = useCallback(async () => {
     if (!searchQuery.trim()) return;
 
     setIsSearching(true);
@@ -132,7 +116,21 @@ export function ThirdStep({
     } finally {
       setIsSearching(false);
     }
-  };
+  }, [searchQuery]);
+
+  // Auto-search when query changes (with debounce)
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      return;
+    }
+
+    const debounceTimer = setTimeout(() => {
+      handleSearch();
+    }, 500); // 500ms delay
+
+    return () => clearTimeout(debounceTimer);
+  }, [searchQuery, handleSearch]);
 
   // Handle selecting a search result
   const handleSelectLocation = (result: SearchResult) => {
@@ -174,8 +172,7 @@ export function ThirdStep({
     initialLongitude,
   ]);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onSubmit = (data: any) => {
+  const onSubmit = (data: ThirdStepData) => {
     // Include current location in submitted data
     onNext({
       ...data,
