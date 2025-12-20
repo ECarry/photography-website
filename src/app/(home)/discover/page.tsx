@@ -3,11 +3,15 @@ import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { DiscoverView } from "@/modules/discover/ui/views/discover-view";
+import {
+  DiscoverView,
+  DiscoverLoading,
+} from "@/modules/discover/ui/views/discover-view";
 
 export const metadata = {
   title: "Discover",
-  description: "Discover",
+  description:
+    "Explore photos on an interactive map. Discover stunning photography from cities and locations around the world.",
 };
 
 const page = () => {
@@ -16,7 +20,7 @@ const page = () => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<p>Loading...</p>}>
+      <Suspense fallback={<DiscoverLoading />}>
         <ErrorBoundary fallback={<p>Error</p>}>
           <DiscoverView />
         </ErrorBoundary>

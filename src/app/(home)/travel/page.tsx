@@ -10,7 +10,8 @@ import {
 
 export const metadata = {
   title: "Travel",
-  description: "Travel",
+  description:
+    "Browse travel photography by city. Explore beautiful destinations and discover photos from around the world.",
 };
 
 const page = () => {

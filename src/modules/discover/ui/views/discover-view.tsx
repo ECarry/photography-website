@@ -22,6 +22,24 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 
+import { Skeleton } from "@/components/ui/skeleton";
+
+export const DiscoverLoading = () => {
+  return (
+    <div className="w-full h-full rounded-xl overflow-hidden">
+      <div className="relative h-full rounded-xl overflow-hidden bg-muted">
+        <Skeleton className="w-full h-full" />
+        <div className="absolute inset-0 flex items-center justify-center">
+          <div className="flex flex-col items-center gap-2">
+            <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <p className="text-sm text-muted-foreground">Loading map...</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const DiscoverView = () => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
