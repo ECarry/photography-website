@@ -51,9 +51,9 @@ export const DiscoverView = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
 
-  // Re-center map when selection changes and panel opens
+  // Resize map when selection changes (panel opens or closes)
   useEffect(() => {
-    if (!mapRef.current || isMobile || selectedPhotos.length === 0) return;
+    if (!mapRef.current || isMobile) return;
 
     // Trigger resize to ensure map knows its new container size
     // We wrap it in a setTimeout to allow the transition to start/finish or layout to update
@@ -61,6 +61,9 @@ export const DiscoverView = () => {
       if (!mapRef.current) return;
 
       mapRef.current.resize();
+
+      // Only fly to photos if there's a selection
+      if (selectedPhotos.length === 0) return;
 
       // Calculate center of selected photos
       const validPhotos = selectedPhotos.filter(
