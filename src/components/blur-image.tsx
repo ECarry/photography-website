@@ -4,7 +4,8 @@ import { useEffect, useMemo, useState, memo } from "react";
 import Image, { ImageProps } from "next/image";
 import { Blurhash } from "react-blurhash";
 
-interface BlurImageProps extends Omit<ImageProps, "onLoad" | "priority"> {
+interface BlurImageProps
+  extends Omit<ImageProps, "onLoad" | "onLoadingComplete" | "priority"> {
   blurhash: string;
 }
 
@@ -79,7 +80,7 @@ const BlurImageInner = function BlurImageInner({
         } transition-opacity duration-500 ease-in-out ${
           imageLoaded ? "opacity-100" : "opacity-0"
         }`}
-        onLoadingComplete={() => {
+        onLoad={() => {
           window.requestAnimationFrame(() => {
             setImageLoaded(true);
           });
