@@ -17,7 +17,7 @@ export function CityCard({ citySet }: CityCardProps) {
 
   return (
     <Link href={href} className="block">
-      <div className="group relative aspect-3/4 overflow-hidden rounded-3xl bg-muted shadow-lg transition-all hover:shadow-2xl">
+      <div className="group relative aspect-3/4 overflow-hidden rounded-3xl bg-muted transition-all hover:shadow-md hover:scale-101 duration-300">
         {/* Background Image */}
         <BlurImage
           src={keyToUrl(coverPhotoUrl!)}
