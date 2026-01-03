@@ -41,8 +41,10 @@ export function SiteHeader() {
                 const segmentPath = `/dashboard/${segments
                   .slice(0, index + 1)
                   .join("/")}`;
+                const decodedSegment = decodeURIComponent(segment);
                 const formattedSegment =
-                  segment.charAt(0).toUpperCase() + segment.slice(1);
+                  decodedSegment.charAt(0).toUpperCase() +
+                  decodedSegment.slice(1);
 
                 return (
                   <React.Fragment key={segmentPath}>
