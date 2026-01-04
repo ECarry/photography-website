@@ -28,7 +28,10 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
           />
 
           <div className="absolute right-0 bottom-0">
-            <VectorCombined title="Tag" position="bottom-right" />
+            <VectorCombined
+              title={data.tags?.[0] || ""}
+              position="bottom-right"
+            />
           </div>
         </div>
       </div>
