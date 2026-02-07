@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { db } from "@/db";
 import {
   createTRPCRouter,
   baseProcedure,
@@ -11,8 +10,8 @@ import { TRPCError } from "@trpc/server";
 
 export const cityRouter = createTRPCRouter({
   // Get all city sets
-  getMany: baseProcedure.query(async () => {
-    const data = await db
+  getMany: baseProcedure.query(async ({ ctx }) => {
+    const data = await ctx.db
       .select({
         id: citySets.id,
         country: citySets.country,
@@ -40,13 +39,13 @@ export const cityRouter = createTRPCRouter({
     .input(
       z.object({
         city: z.string(),
-      })
+      }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const { city } = input;
 
       // Get city set info
-      const [citySet] = await db
+      const [citySet] = await ctx.db
         .select()
         .from(citySets)
         .where(and(eq(citySets.city, city)));
@@ -56,10 +55,10 @@ export const cityRouter = createTRPCRouter({
       }
 
       // Get all photos in this city
-      const cityPhotos = await db
+      const cityPhotos = await ctx.db
         .select()
         .from(photos)
-        .where(and(eq(photos.city, city)))
+        .where(and(eq(photos.city, city), eq(photos.visibility, "public")))
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
       return {
@@ -74,13 +73,13 @@ export const cityRouter = createTRPCRouter({
       z.object({
         cityId: z.uuid(),
         photoId: z.uuid(),
-      })
+      }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { cityId, photoId } = input;
 
       // Verify the photo exists
-      const [photo] = await db
+      const [photo] = await ctx.db
         .select()
         .from(photos)
         .where(eq(photos.id, photoId));
@@ -93,7 +92,7 @@ export const cityRouter = createTRPCRouter({
       }
 
       // Verify the city set exists
-      const [citySet] = await db
+      const [citySet] = await ctx.db
         .select()
         .from(citySets)
         .where(eq(citySets.id, cityId));
@@ -114,7 +113,7 @@ export const cityRouter = createTRPCRouter({
       }
 
       // Update the cover photo
-      const [updatedCitySet] = await db
+      const [updatedCitySet] = await ctx.db
         .update(citySets)
         .set({
           coverPhotoId: photoId,
@@ -132,13 +131,13 @@ export const cityRouter = createTRPCRouter({
       z.object({
         cityId: z.uuid(),
         description: z.string(),
-      })
+      }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { cityId, description } = input;
 
       // Verify the city set exists
-      const [citySet] = await db
+      const [citySet] = await ctx.db
         .select()
         .from(citySets)
         .where(eq(citySets.id, cityId));
@@ -151,7 +150,7 @@ export const cityRouter = createTRPCRouter({
       }
 
       // Update the description
-      const [updatedCitySet] = await db
+      const [updatedCitySet] = await ctx.db
         .update(citySets)
         .set({
           description,

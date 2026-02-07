@@ -1,10 +1,5 @@
 import { z } from "zod";
-import { db } from "@/db";
-import {
-  createTRPCRouter,
-  baseProcedure,
-  protectedProcedure,
-} from "@/trpc/init";
+import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { and, eq, desc, asc, sql, ilike, count } from "drizzle-orm";
 import {
   DEFAULT_PAGE,
@@ -22,14 +17,18 @@ import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
 
+function escapeLike(str: string): string {
+  return str.replace(/[%_\\]/g, "\\$&");
+}
+
 export const photosRouter = createTRPCRouter({
   create: protectedProcedure
     .input(photosInsertSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const values = input;
 
       try {
-        const [insertedPhoto] = await db
+        const [insertedPhoto] = await ctx.db
           .insert(photos)
           .values(values)
           .returning();
@@ -40,7 +39,7 @@ export const photosRouter = createTRPCRouter({
             : values.city;
 
         if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
-          await db
+          await ctx.db
             .insert(citySets)
             .values({
               country: insertedPhoto.country,
@@ -58,14 +57,6 @@ export const photosRouter = createTRPCRouter({
                 updatedAt: new Date(),
               },
             });
-
-          await db
-            .select()
-            .from(citySets)
-            .where(
-              sql`${citySets.country} = ${insertedPhoto.country} AND ${citySets.city} = ${insertedPhoto.city}`
-            );
-        } else {
         }
 
         return insertedPhoto;
@@ -80,9 +71,9 @@ export const photosRouter = createTRPCRouter({
     .input(
       z.object({
         id: z.uuid(),
-      })
+      }),
     )
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id } = input;
 
       if (!id) {
@@ -90,7 +81,10 @@ export const photosRouter = createTRPCRouter({
       }
 
       try {
-        const [photo] = await db.select().from(photos).where(eq(photos.id, id));
+        const [photo] = await ctx.db
+          .select()
+          .from(photos)
+          .where(eq(photos.id, id));
 
         if (!photo) {
           throw new TRPCError({
@@ -101,35 +95,35 @@ export const photosRouter = createTRPCRouter({
 
         // city set related
         if (photo.country && photo.city) {
-          const [citySet] = await db
+          const [citySet] = await ctx.db
             .select()
             .from(citySets)
             .where(
               and(
                 eq(citySets.country, photo.country),
-                eq(citySets.city, photo.city)
-              )
+                eq(citySets.city, photo.city),
+              ),
             );
 
           if (citySet) {
             // if city set photo count is 1, delete the city set
             if (citySet.photoCount === 1) {
-              await db.delete(citySets).where(eq(citySets.id, citySet.id));
+              await ctx.db.delete(citySets).where(eq(citySets.id, citySet.id));
             } else if (citySet.coverPhotoId === photo.id) {
               // if this is the cover photo, find a new cover photo
-              const [newCoverPhoto] = await db
+              const [newCoverPhoto] = await ctx.db
                 .select()
                 .from(photos)
                 .where(
                   and(
                     eq(photos.country, photo.country),
                     eq(photos.city, photo.city),
-                    sql`${photos.id} != ${photo.id}`
-                  )
+                    sql`${photos.id} != ${photo.id}`,
+                  ),
                 );
 
               // Update citySet with new cover photo or just decrease count
-              await db
+              await ctx.db
                 .update(citySets)
                 .set({
                   photoCount: sql`${citySets.photoCount} - 1`,
@@ -139,12 +133,12 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city)
-                  )
+                    eq(citySets.city, photo.city),
+                  ),
                 );
             } else {
               // not a cover photo, just update the count
-              await db
+              await ctx.db
                 .update(citySets)
                 .set({
                   photoCount: sql`${citySets.photoCount} - 1`,
@@ -153,8 +147,8 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city)
-                  )
+                    eq(citySets.city, photo.city),
+                  ),
                 );
             }
           }
@@ -171,7 +165,7 @@ export const photosRouter = createTRPCRouter({
           });
           await s3Client.send(command);
 
-          await db.delete(photos).where(eq(photos.id, id));
+          await ctx.db.delete(photos).where(eq(photos.id, id));
         } catch (error) {
           if (error instanceof Error) {
             throw new TRPCError({
@@ -187,6 +181,7 @@ export const photosRouter = createTRPCRouter({
 
         return photo;
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         console.error("Photo deletion error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -196,17 +191,18 @@ export const photosRouter = createTRPCRouter({
     }),
   update: protectedProcedure
     .input(photosUpdateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id } = input;
 
       if (!id) {
         throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
-      const [updatedPhoto] = await db
+      const [updatedPhoto] = await ctx.db
         .update(photos)
         .set({
           ...input,
+          updatedAt: new Date(),
         })
         .where(eq(photos.id, id))
         .returning();
@@ -217,20 +213,23 @@ export const photosRouter = createTRPCRouter({
 
       return updatedPhoto;
     }),
-  getOne: baseProcedure
+  getOne: protectedProcedure
     .input(
       z.object({
         id: z.uuid(),
-      })
+      }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const { id } = input;
 
-      const [photo] = await db.select().from(photos).where(eq(photos.id, id));
+      const [photo] = await ctx.db
+        .select()
+        .from(photos)
+        .where(eq(photos.id, id));
 
       return photo;
     }),
-  getMany: baseProcedure
+  getMany: protectedProcedure
     .input(
       z.object({
         page: z.number().default(DEFAULT_PAGE),
@@ -241,29 +240,33 @@ export const photosRouter = createTRPCRouter({
           .max(MAX_PAGE_SIZE)
           .default(DEFAULT_PAGE_SIZE),
         search: z.string().nullish(),
-      })
+      }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const { page, pageSize, search, orderBy } = input;
 
-      const data = await db
+      const data = await ctx.db
         .select()
         .from(photos)
-        .where(search ? ilike(photos.title, `%${search}%`) : undefined)
+        .where(
+          search ? ilike(photos.title, `%${escapeLike(search)}%`) : undefined,
+        )
         .orderBy(
           orderBy === "asc"
             ? asc(photos.dateTimeOriginal)
-            : desc(photos.dateTimeOriginal)
+            : desc(photos.dateTimeOriginal),
         )
         .limit(pageSize)
         .offset((page - 1) * pageSize);
 
-      const [total] = await db
+      const [total] = await ctx.db
         .select({
           count: count(),
         })
         .from(photos)
-        .where(search ? ilike(photos.title, `%${search}%`) : undefined);
+        .where(
+          search ? ilike(photos.title, `%${escapeLike(search)}%`) : undefined,
+        );
 
       const totalPages = Math.ceil(total.count / pageSize);
 
