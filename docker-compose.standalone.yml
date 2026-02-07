@@ -1,12 +1,13 @@
 # Standalone Configuration (Local Postgres + RustFS)
-# Run with: docker compose -f docker-compose.standalone.yml up
+# Run with: docker compose up
+# Override defaults by creating a .env file (see .env.example)
 services:
   postgres:
     image: postgres:15-alpine
     environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password
-      POSTGRES_DB: photography
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-photography}
     ports:
       - "5432:5432"
     volumes:
@@ -20,8 +21,8 @@ services:
   rustfs:
     image: rustfs/rustfs:latest
     environment:
-      RUSTFS_ACCESS_KEY: rustfsadmin
-      RUSTFS_SECRET_KEY: rustfsadmin
+      RUSTFS_ACCESS_KEY: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      RUSTFS_SECRET_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
       RUSTFS_CONSOLE_ENABLE: "true"
     ports:
       - "9000:9000"
@@ -36,7 +37,7 @@ services:
         condition: service_started
     entrypoint: >
       /bin/sh -c "
-      until /usr/bin/mc alias set myminio http://rustfs:9000 rustfsadmin rustfsadmin; do echo '...waiting...' && sleep 1; done;
+      until /usr/bin/mc alias set myminio http://rustfs:9000 $${RUSTFS_ACCESS_KEY:-rustfsadmin} $${RUSTFS_SECRET_KEY:-rustfsadmin}; do echo '...waiting...' && sleep 1; done;
       /usr/bin/mc mb myminio/photography --ignore-existing;
       /usr/bin/mc anonymous set public myminio/photography;
       exit 0;
@@ -49,7 +50,7 @@ services:
       target: deps
     working_dir: /app
     environment:
-      DATABASE_URL: postgres://postgres:password@postgres:5432/photography
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-photography}
     command: bunx drizzle-kit push
     depends_on:
       postgres:
@@ -77,25 +78,25 @@ services:
     environment:
       # Database
       DATABASE_PROVIDER: local
-      DATABASE_URL: postgres://postgres:password@postgres:5432/photography
-      
+      DATABASE_URL: postgres://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-password}@postgres:5432/${POSTGRES_DB:-photography}
+
       # Auth
-      BETTER_AUTH_SECRET: development_secret_key_change_me
-      BETTER_AUTH_URL: http://localhost:3000
-      
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:-development_secret_key_change_me}
+      BETTER_AUTH_URL: ${BETTER_AUTH_URL:-http://localhost:3000}
+
       # App
-      NEXT_PUBLIC_APP_URL: http://localhost:3000
-      
+      NEXT_PUBLIC_APP_URL: ${NEXT_PUBLIC_APP_URL:-http://localhost:3000}
+
       # S3 (RustFS)
       S3_ENDPOINT: http://rustfs:9000
-      S3_BUCKET_NAME: photography
-      S3_ACCESS_KEY_ID: rustfsadmin
-      S3_SECRET_ACCESS_KEY: rustfsadmin
-      S3_PUBLIC_URL: http://localhost:9000/photography
-      NEXT_PUBLIC_S3_PUBLIC_URL: http://localhost:9000/photography
-      
+      S3_BUCKET_NAME: ${POSTGRES_DB:-photography}
+      S3_ACCESS_KEY_ID: ${RUSTFS_ACCESS_KEY:-rustfsadmin}
+      S3_SECRET_ACCESS_KEY: ${RUSTFS_SECRET_KEY:-rustfsadmin}
+      S3_PUBLIC_URL: http://localhost:9000/${POSTGRES_DB:-photography}
+      NEXT_PUBLIC_S3_PUBLIC_URL: http://localhost:9000/${POSTGRES_DB:-photography}
+
       # Mapbox (Optional, needs real token for maps)
-      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
+      NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN: ${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:-}
     extra_hosts:
       - "localhost:host-gateway"
     depends_on:
