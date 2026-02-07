@@ -1,5 +1,4 @@
 import { z } from "zod";
-import { db } from "@/db";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { count, desc, eq, ilike } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
@@ -14,10 +13,10 @@ import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
 export const postsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(postsInsertSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const values = input;
 
-      const existingPost = await db
+      const existingPost = await ctx.db
         .select()
         .from(posts)
         .where(eq(posts.slug, values.slug));
@@ -29,14 +28,14 @@ export const postsRouter = createTRPCRouter({
         });
       }
 
-      const [newPost] = await db.insert(posts).values(values).returning();
+      const [newPost] = await ctx.db.insert(posts).values(values).returning();
 
       return newPost;
     }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
-    .mutation(async ({ input }) => {
-      const [data] = await db
+    .mutation(async ({ ctx, input }) => {
+      const [data] = await ctx.db
         .delete(posts)
         .where(eq(posts.id, input.id))
         .returning();
@@ -52,14 +51,14 @@ export const postsRouter = createTRPCRouter({
     }),
   update: protectedProcedure
     .input(postsUpdateSchema)
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { id } = input;
 
       if (!id) {
         throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
-      const [updatedPost] = await db
+      const [updatedPost] = await ctx.db
         .update(posts)
         .set({
           ...input,
@@ -75,8 +74,8 @@ export const postsRouter = createTRPCRouter({
     }),
   getOne: protectedProcedure
     .input(z.object({ slug: z.string() }))
-    .query(async ({ input }) => {
-      const [data] = await db
+    .query(async ({ ctx, input }) => {
+      const [data] = await ctx.db
         .select()
         .from(posts)
         .where(eq(posts.slug, input.slug));
@@ -100,12 +99,12 @@ export const postsRouter = createTRPCRouter({
           .max(MAX_PAGE_SIZE)
           .default(DEFAULT_PAGE_SIZE),
         search: z.string().nullish(),
-      })
+      }),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const { page, pageSize, search } = input;
 
-      const data = await db
+      const data = await ctx.db
         .select()
         .from(posts)
         .where(search ? ilike(posts.title, `%${search}%`) : undefined)
@@ -113,7 +112,7 @@ export const postsRouter = createTRPCRouter({
         .limit(pageSize)
         .offset((page - 1) * pageSize);
 
-      const [total] = await db
+      const [total] = await ctx.db
         .select({
           count: count(),
         })

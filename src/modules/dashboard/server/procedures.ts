@@ -1,5 +1,4 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
-import { db } from "@/db";
 import { photos, citySets } from "@/db/schema";
 import { sql, and, gte } from "drizzle-orm";
 import { z } from "zod";
@@ -26,16 +25,16 @@ export const dashboardRouter = createTRPCRouter({
         .object({
           years: z.number().min(1).max(10).default(3),
         })
-        .optional()
+        .optional(),
     )
-    .query(async ({ input }) => {
+    .query(async ({ ctx, input }) => {
       const years = input?.years ?? 3;
 
       // Calculate the start date (years ago from now)
       const startDate = new Date();
       startDate.setFullYear(startDate.getFullYear() - years);
 
-      const result = await db
+      const result = await ctx.db
         .select({
           month: sql<string>`TO_CHAR(${photos.dateTimeOriginal}, 'YYYY-MM')`,
           count: sql<number>`COUNT(*)::int`,
@@ -65,8 +64,8 @@ export const dashboardRouter = createTRPCRouter({
       return monthlyData;
     }),
 
-  getVisitedCountries: protectedProcedure.query(async () => {
-    const result = await db
+  getVisitedCountries: protectedProcedure.query(async ({ ctx }) => {
+    const result = await ctx.db
       .select({
         country: photos.country,
         countryCode: photos.countryCode,
@@ -76,16 +75,16 @@ export const dashboardRouter = createTRPCRouter({
       })
       .from(photos)
       .where(
-        sql`${photos.country} IS NOT NULL AND ${photos.countryCode} IS NOT NULL`
+        sql`${photos.country} IS NOT NULL AND ${photos.countryCode} IS NOT NULL`,
       )
       .groupBy(photos.country, photos.countryCode)
       .orderBy(sql`COUNT(*) DESC`);
     return result;
   }),
 
-  getVisitedCountriesWithGeoJson: protectedProcedure.query(async () => {
+  getVisitedCountriesWithGeoJson: protectedProcedure.query(async ({ ctx }) => {
     // Aggregate visited countries with counts and dates
-    const countries = await db
+    const countries = await ctx.db
       .select({
         country: photos.country,
         countryCode: photos.countryCode,
@@ -95,13 +94,13 @@ export const dashboardRouter = createTRPCRouter({
       })
       .from(photos)
       .where(
-        sql`${photos.country} IS NOT NULL AND ${photos.countryCode} IS NOT NULL`
+        sql`${photos.country} IS NOT NULL AND ${photos.countryCode} IS NOT NULL`,
       )
       .groupBy(photos.country, photos.countryCode)
       .orderBy(sql`COUNT(*) DESC`);
 
     const visitedSet = new Set(
-      countries.map((c) => c.countryCode as string).filter(Boolean)
+      countries.map((c) => c.countryCode as string).filter(Boolean),
     );
 
     const world = await loadWorldGeoJson();
@@ -120,8 +119,8 @@ export const dashboardRouter = createTRPCRouter({
     };
   }),
 
-  getVisitedCountriesGeoJson: protectedProcedure.query(async () => {
-    const visited = await db
+  getVisitedCountriesGeoJson: protectedProcedure.query(async ({ ctx }) => {
+    const visited = await ctx.db
       .select({
         countryCode: photos.countryCode,
       })
@@ -130,7 +129,7 @@ export const dashboardRouter = createTRPCRouter({
       .groupBy(photos.countryCode);
 
     const visitedSet = new Set(
-      visited.map((c) => c.countryCode as string).filter(Boolean)
+      visited.map((c) => c.countryCode as string).filter(Boolean),
     );
 
     if (visitedSet.size === 0) {
@@ -154,9 +153,9 @@ export const dashboardRouter = createTRPCRouter({
     } as GeoJSON.FeatureCollection;
   }),
 
-  getDashboardStats: protectedProcedure.query(async () => {
+  getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
     // Get total photo count
-    const totalPhotosResult = await db
+    const totalPhotosResult = await ctx.db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(photos)
       .where(sql`${photos.dateTimeOriginal} IS NOT NULL`);
@@ -166,14 +165,14 @@ export const dashboardRouter = createTRPCRouter({
     // Get current year photo count
     const currentYear = new Date().getFullYear();
     const yearStart = new Date(currentYear, 0, 1);
-    const thisYearPhotosResult = await db
+    const thisYearPhotosResult = await ctx.db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(photos)
       .where(
         and(
           gte(photos.dateTimeOriginal, yearStart),
-          sql`${photos.dateTimeOriginal} IS NOT NULL`
-        )
+          sql`${photos.dateTimeOriginal} IS NOT NULL`,
+        ),
       );
 
     const thisYearPhotos = thisYearPhotosResult[0]?.count ?? 0;
@@ -181,15 +180,15 @@ export const dashboardRouter = createTRPCRouter({
     // Get last year photo count
     const lastYearStart = new Date(currentYear - 1, 0, 1);
     const lastYearEnd = new Date(currentYear, 0, 1);
-    const lastYearPhotosResult = await db
+    const lastYearPhotosResult = await ctx.db
       .select({ count: sql<number>`COUNT(*)::int` })
       .from(photos)
       .where(
         and(
           gte(photos.dateTimeOriginal, lastYearStart),
           sql`${photos.dateTimeOriginal} < ${lastYearEnd}`,
-          sql`${photos.dateTimeOriginal} IS NOT NULL`
-        )
+          sql`${photos.dateTimeOriginal} IS NOT NULL`,
+        ),
       );
 
     const lastYearPhotos = lastYearPhotosResult[0]?.count ?? 0;
@@ -201,11 +200,11 @@ export const dashboardRouter = createTRPCRouter({
           ? 100
           : 0
         : Math.round(
-            ((thisYearPhotos - lastYearPhotos) / lastYearPhotos) * 100
+            ((thisYearPhotos - lastYearPhotos) / lastYearPhotos) * 100,
           );
 
     // Get total countries visited
-    const countriesResult = await db
+    const countriesResult = await ctx.db
       .selectDistinct({ country: photos.country })
       .from(photos)
       .where(sql`${photos.country} IS NOT NULL`);
@@ -213,15 +212,15 @@ export const dashboardRouter = createTRPCRouter({
     const totalCountries = countriesResult.length;
 
     // Get last year countries visited
-    const lastYearCountriesResult = await db
+    const lastYearCountriesResult = await ctx.db
       .selectDistinct({ country: photos.country })
       .from(photos)
       .where(
         and(
           gte(photos.dateTimeOriginal, lastYearStart),
           sql`${photos.dateTimeOriginal} < ${lastYearEnd}`,
-          sql`${photos.country} IS NOT NULL`
-        )
+          sql`${photos.country} IS NOT NULL`,
+        ),
       );
 
     const lastYearCountries = lastYearCountriesResult.length;
@@ -233,25 +232,25 @@ export const dashboardRouter = createTRPCRouter({
           ? 100
           : 0
         : Math.round(
-            ((totalCountries - lastYearCountries) / lastYearCountries) * 100
+            ((totalCountries - lastYearCountries) / lastYearCountries) * 100,
           );
 
     // Get total cities
-    const citiesResult = await db
+    const citiesResult = await ctx.db
       .selectDistinct({ city: citySets.city })
       .from(citySets);
 
     const totalCities = citiesResult.length;
 
     // Get last year cities
-    const lastYearCitiesResult = await db
+    const lastYearCitiesResult = await ctx.db
       .selectDistinct({ city: citySets.city })
       .from(citySets)
       .where(
         and(
           gte(citySets.createdAt, lastYearStart),
-          sql`${citySets.createdAt} < ${lastYearEnd}`
-        )
+          sql`${citySets.createdAt} < ${lastYearEnd}`,
+        ),
       );
 
     const lastYearCities = lastYearCitiesResult.length;

@@ -1,12 +1,11 @@
 import { z } from "zod";
-import { db } from "@/db";
 import { createTRPCRouter, baseProcedure } from "@/trpc/init";
 import { desc, eq, isNotNull, and } from "drizzle-orm";
 import { photos } from "@/db/schema";
 
 export const discoverRouter = createTRPCRouter({
-  getManyPhotos: baseProcedure.input(z.object({})).query(async () => {
-    const data = await db
+  getManyPhotos: baseProcedure.input(z.object({})).query(async ({ ctx }) => {
+    const data = await ctx.db
       .select({
         id: photos.id,
         url: photos.url,
@@ -23,8 +22,8 @@ export const discoverRouter = createTRPCRouter({
         and(
           eq(photos.visibility, "public"),
           isNotNull(photos.latitude),
-          isNotNull(photos.longitude)
-        )
+          isNotNull(photos.longitude),
+        ),
       )
       .orderBy(desc(photos.updatedAt));
 
