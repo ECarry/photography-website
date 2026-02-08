@@ -1,5 +1,6 @@
 import FooterNav from "./footer-nav";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { siteConfig } from "@/site.config";
 
 const Footer = () => {
   return (
@@ -7,14 +8,14 @@ const Footer = () => {
       <div className="flex flex-col lg:flex-row gap-4 items-center">
         {/* AVATAR  */}
         <Avatar className="size-[60px]">
-          <AvatarImage src="/avatar.jpg" alt="avatar" sizes="60px" />
-          <AvatarFallback>EC</AvatarFallback>
+          <AvatarImage src={siteConfig.avatar} alt="avatar" sizes="60px" />
+          <AvatarFallback>{siteConfig.initials}</AvatarFallback>
         </Avatar>
 
         {/* NAME  */}
         <div className="flex flex-col items-center lg:items-start gap-[2px]">
-          <h1 className="text-2xl">ECarry</h1>
-          <p className="text-sm opacity-60">Photographer</p>
+          <h1 className="text-2xl">{siteConfig.name}</h1>
+          <p className="text-sm opacity-60">{siteConfig.role}</p>
         </div>
       </div>
       <div className="grid lg:w-full grid-cols-1 lg:grid-cols-3 gap-7 lg:gap-14">
@@ -43,21 +44,21 @@ const Footer = () => {
         <p>
           <span className="opacity-60">© Design by </span>
           <a
-            href="https://templates.gola.io/template/hanssen"
+            href={siteConfig.footer.designCredit.href}
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2"
           >
-            Pawel Gola
+            {siteConfig.footer.designCredit.name}
           </a>
           <span className="opacity-60">. Powered by </span>
           <a
-            href="https://github.com/ecarry"
+            href={siteConfig.footer.poweredBy.href}
             target="_blank"
             rel="noopener noreferrer"
             className="underline underline-offset-2"
           >
-            ECarry
+            {siteConfig.footer.poweredBy.name}
           </a>
         </p>
       </div>

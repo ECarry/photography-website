@@ -1,22 +1,21 @@
 services:
   app:
-    build: .
+    build:
+      context: .
+      target: runner
+      args:
+        # These build args are needed for SSG pages during `next build`
+        - DATABASE_URL=${DATABASE_URL}
+        - NEXT_PUBLIC_APP_URL=${NEXT_PUBLIC_APP_URL}
+        - NEXT_PUBLIC_S3_PUBLIC_URL=${NEXT_PUBLIC_S3_PUBLIC_URL}
+        - NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=${NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN:-}
     restart: unless-stopped
     ports:
       - "3000:3000"
-    volumes:
-      - next_cache:/app/.next
-    command: >
-      /bin/sh -c "
-        echo 'Building application (SSG)...' &&
-        bun run build &&
-        echo 'Starting server...' &&
-        bun start
-      "
     environment:
       # Database (Defaults to Cloud/Neon if not set to 'local')
       - DATABASE_PROVIDER=cloud
-      
+
       # Environment variables should be passed via a .env file or the host environment
       # Required vars:
       # - DATABASE_URL
@@ -32,6 +31,3 @@ services:
       # - NEXT_PUBLIC_S3_PUBLIC_URL
     env_file:
       - .env
-
-volumes:
-  next_cache:

@@ -60,7 +60,9 @@ services:
       - ./drizzle.config.ts:/app/drizzle.config.ts
 
   app:
-    build: .
+    build:
+      context: .
+      target: dev
     restart: unless-stopped
     ports:
       - "3000:3000"
@@ -73,7 +75,7 @@ services:
         echo 'Building application (SSG)...' &&
         bun run build &&
         echo 'Starting server...' &&
-        bun start
+        bun .next/standalone/server.js
       "
     environment:
       # Database

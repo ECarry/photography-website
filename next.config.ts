@@ -1,9 +1,12 @@
 import type { NextConfig } from "next";
+import { siteConfig } from "./src/site.config";
 
 const s3PublicUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "";
 const s3Url = s3PublicUrl ? new URL(s3PublicUrl) : null;
 const s3Hostname = s3Url ? s3Url.hostname : "";
 const s3Protocol = s3Url ? s3Url.protocol.replace(":", "") : "https";
+
+const useCloudflareLoader = siteConfig.imageLoader === "cloudflare";
 
 const nextConfig: NextConfig = {
   output: "standalone",
@@ -11,8 +14,10 @@ const nextConfig: NextConfig = {
   reactCompiler: true,
   images: {
     qualities: [65, 75],
-    loader: "custom",
-    loaderFile: "./src/lib/cloudflare-image-loader.ts",
+    ...(useCloudflareLoader && {
+      loader: "custom",
+      loaderFile: "./src/lib/cloudflare-image-loader.ts",
+    }),
     remotePatterns: s3Hostname
       ? [
           {

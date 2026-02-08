@@ -33,6 +33,40 @@ Before deploying, ensure you have:
 - **Mapbox** account for map features
 - **Vercel** account for deployment (or any Node.js hosting provider)
 
+## 🎨 Customization
+
+All personal branding is centralized in **one file**: `src/site.config.ts`. Edit it to make the site your own:
+
+| Field         | Description                                                             |
+| ------------- | ----------------------------------------------------------------------- |
+| `name`        | Your name (logo, profile cards, footer)                                 |
+| `tagline`     | Short tagline next to logo (e.g. "Photo")                               |
+| `role`        | Your title (e.g. "Photographer")                                        |
+| `bio`         | Short bio on the home page                                              |
+| `avatar`      | Avatar image path (place file in `/public/avatar.jpg`)                  |
+| `initials`    | Fallback text when avatar fails to load                                 |
+| `metadata`    | SEO title & description                                                 |
+| `socialLinks` | Social links with icons (Instagram, GitHub, X, Xiaohongshu, Contact me) |
+| `footer`      | Footer attribution credits                                              |
+| `mapbox`      | Custom Mapbox style URLs for light/dark themes                          |
+| `imageLoader` | Set to `"cloudflare"` or `"default"` based on your storage provider     |
+| `gear`        | Camera gear shown on the About page                                     |
+
+**Quick start:**
+
+```bash
+# 1. Edit the config
+vim src/site.config.ts
+
+# 2. Replace avatar
+cp your-photo.jpg public/avatar.jpg
+
+# 3. Replace about background
+cp your-bg.jpg public/bg.jpg
+```
+
+> **Note:** If you are NOT using Cloudflare R2, set `imageLoader` to `"default"` in `site.config.ts`. This replaces the old manual edit of `next.config.ts`.
+
 ## 🛠️ Deployment Guide
 
 ### Step 1: Clone and Setup
@@ -144,14 +178,7 @@ NEXT_PUBLIC_S3_PUBLIC_URL=https://your-bucket.s3.wasabisys.com
 
 #### ⚠️ Image loader note (when not using Cloudflare R2)
 
-If you are **not using Cloudflare R2** (or you don’t want to use the Cloudflare-specific custom image loader), make sure to **remove or update** the following in `next.config.*`:
-
-```js
-loader: 'custom',
-loaderFile: './src/lib/cloudflare-image-loader.ts',
-```
-
-Otherwise, Next.js image optimization/loading may fail locally or in production.
+If you are **not using Cloudflare R2**, set `imageLoader` to `"default"` in `src/site.config.ts`. This is handled automatically — no need to manually edit `next.config.ts`.
 
 **Setup Instructions:**
 
@@ -256,12 +283,10 @@ bun run seed:user
 #### Upgrade: Photo URL storage change (S3 Key)
 
 - **Change Summary**
-
   - The database `url` field now stores the S3 object key (e.g., `photos/IMG_0001.jpg`) instead of a full public URL.
   - **Benefit**: You can switch domains or CDNs freely by updating environment variables for the public base URL, without mass-updating the database.
 
 - **Migration Steps (run before production, recommended)**
-
   1. **Backup your database** (strongly recommended).
   2. Run the cleanup script to convert existing full URLs to S3 keys:
      ```bash
@@ -318,18 +343,29 @@ Run only the App container, connecting to external services (e.g., Neon Postgres
 
 ### ⚠️ Important Note on Building
 
-This project uses a **Runtime Build** strategy for Docker. The Next.js application is built _inside_ the container when it starts, not when the Docker image is built.
-This ensures that Static Site Generation (SSG) can successfully fetch data from the database (which is only available at runtime in the Standalone mode).
+The Dockerfile uses a **multi-stage build** with two deployment targets:
+
+| Target   | Used by                            | Strategy                                                                                                       |
+| -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| `dev`    | `docker-compose.yml` (Standalone)  | **Runtime build** — app is built inside the container at startup so SSG can access the local database          |
+| `runner` | `docker-compose.cloud.yml` (Cloud) | **Pre-built** — app is built during `docker build` using Next.js standalone output for a smaller, faster image |
+
+**Standalone mode:**
 
 - **First Start**: Will take 1-2 minutes to compile.
 - **Restarts**: Will be fast (cached via `next_cache` volume).
+
+**Cloud mode:**
+
+- Image is pre-built and optimized (~200MB vs ~1GB).
+- Starts instantly — no build step at runtime.
+- Environment variables for SSG are passed as build args.
 
 ## 🛠 Tech Stack
 
 ### Custom Domain Setup
 
 1. **Vercel Custom Domain:**
-
    - Go to Project Settings > Domains
    - Add your custom domain
    - Configure DNS records as instructed
@@ -356,13 +392,11 @@ This ensures that Static Site Generation (SSG) can successfully fetch data from 
 ### Security Considerations
 
 1. **Environment Variables:**
-
    - Never commit `.env` files
    - Use strong, unique secrets
    - Rotate keys regularly
 
 2. **Database Security:**
-
    - Use connection pooling
    - Enable SSL connections
    - Restrict database access by IP

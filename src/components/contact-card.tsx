@@ -18,8 +18,10 @@ const iconMap = {
   "Contact me": <MdEmail size={18} />,
 };
 
+export type ContactCardTitle = keyof typeof iconMap;
+
 interface Props {
-  title: keyof typeof iconMap;
+  title: ContactCardTitle;
   href?: string;
   className?: string;
 }
@@ -31,7 +33,7 @@ const ContactCard = ({ title, href, className }: Props) => {
       target="_blank"
       className={cn(
         "w-full h-full p-3 lg:p-5 bg-muted hover:bg-muted-foreground/10 rounded-xl flex justify-between items-center cursor-pointer group transition-all duration-150 ease-[cubic-bezier(0.22, 1, 0.36, 1)]",
-        className
+        className,
       )}
     >
       <p className="text-sm">{title}</p>

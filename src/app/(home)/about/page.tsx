@@ -9,6 +9,7 @@ import CameraCard from "../../../modules/home/ui/components/camera-card";
 import ProfileCard from "../../../modules/home/ui/components/profile-card";
 import CardContainer from "@/components/card-container";
 import VectorCombined from "@/components/vector-combined";
+import { siteConfig } from "@/site.config";
 
 export const metadata: Metadata = {
   title: "About",
@@ -44,40 +45,14 @@ const AboutPage = () => {
         {/* CAMERA CARD  */}
         <CameraCard />
 
-        <CardContainer>
-          <div className="flex items-center justify-between p-6">
-            <h1 className="text-lg">SONY</h1>
-            <p className="text-sm">Alpha 7RⅡ</p>
-          </div>
-        </CardContainer>
-
-        <CardContainer>
-          <div className="flex items-center justify-between p-6">
-            <h1 className="text-lg">DJI</h1>
-            <p className="text-sm">Air 2S</p>
-          </div>
-        </CardContainer>
-
-        <CardContainer>
-          <div className="flex items-center justify-between p-6">
-            <h1 className="text-lg">Tamron</h1>
-            <p className="text-sm">50-400mm F/4.5-6.3 Di III VC VXD</p>
-          </div>
-        </CardContainer>
-
-        <CardContainer>
-          <div className="flex items-center justify-between p-6">
-            <h1 className="text-lg">Sigma</h1>
-            <p className="text-sm">35mm F/1.4 DG HSM</p>
-          </div>
-        </CardContainer>
-
-        <CardContainer>
-          <div className="flex items-center justify-between p-6">
-            <h1 className="text-lg">Viltrox</h1>
-            <p className="text-sm">AF 40mm F/2.5 FE</p>
-          </div>
-        </CardContainer>
+        {siteConfig.gear.map((item) => (
+          <CardContainer key={`${item.brand}-${item.model}`}>
+            <div className="flex items-center justify-between p-6">
+              <h1 className="text-lg">{item.brand}</h1>
+              <p className="text-sm">{item.model}</p>
+            </div>
+          </CardContainer>
+        ))}
 
         <Footer />
       </div>

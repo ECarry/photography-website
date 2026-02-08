@@ -5,6 +5,7 @@ import Link from "next/link";
 import ContactCard from "../../../../components/contact-card";
 import { PiArrowUpRight } from "react-icons/pi";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { siteConfig } from "@/site.config";
 
 const ProfileCard = () => {
   return (
@@ -17,23 +18,19 @@ const ProfileCard = () => {
           <div className="flex gap-4 items-center">
             {/* AVATAR  */}
             <Avatar className="size-[60px]">
-              <AvatarImage src="/avatar.jpg" alt="Avatar" />
-              <AvatarFallback>EC</AvatarFallback>
+              <AvatarImage src={siteConfig.avatar} alt="Avatar" />
+              <AvatarFallback>{siteConfig.initials}</AvatarFallback>
             </Avatar>
 
             {/* NAME  */}
             <div className="flex flex-col gap-[2px]">
-              <h1 className="text-lg">ECarry</h1>
-              <p className="text-sm text-text-muted">Photographer</p>
+              <h1 className="text-lg">{siteConfig.name}</h1>
+              <p className="text-sm text-text-muted">{siteConfig.role}</p>
             </div>
           </div>
 
           <div className="lg:mt-4 xl:mt-0">
-            <p className="text-text-muted text-[15px]">
-              I&apos;m ECarry, a photographer dedicated to capturing authentic
-              moments and telling stories through creative and emotional
-              imagery, wherever my journey takes me.
-            </p>
+            <p className="text-text-muted text-[15px]">{siteConfig.bio}</p>
           </div>
 
           <div className="absolute top-8 right-8 opacity-0 group-hover:top-6 group-hover:right-6 group-hover:opacity-100 transition-all duration-300 ease-in-out">
@@ -43,23 +40,17 @@ const ProfileCard = () => {
       </div>
 
       <div className="col-span-1 md:col-span-1 lg:col-span-1 xl:col-span-1 flex flex-col justify-between gap-3">
-        <ContactCard
-          title="Instagram"
-          href="https://instagram.com/ekkooooooooooo0o0"
-        />
-
-        <ContactCard title="GitHub" href="https://github.com/ecarry" />
-
-        <ContactCard
-          title="Xiaohongshu"
-          href="https://www.xiaohongshu.com/user/profile/66c84ba2000000001b01b3f1"
-        />
-
-        <ContactCard
-          title="Contact me"
-          href="mailto:lianshiliang93@gmail.com"
-          className="bg-primary text-white dark:text-black hover:bg-primary"
-        />
+        {siteConfig.socialLinks.map((link) => (
+          <ContactCard
+            key={link.title}
+            title={link.title}
+            href={link.href}
+            {...(link.primary && {
+              className:
+                "bg-primary text-white dark:text-black hover:bg-primary",
+            })}
+          />
+        ))}
       </div>
     </div>
   );

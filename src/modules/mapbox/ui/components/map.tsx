@@ -17,6 +17,7 @@ import MapboxGeocoder, {
   type GeocoderOptions,
 } from "@mapbox/mapbox-gl-geocoder";
 import { useTheme } from "next-themes";
+import { siteConfig } from "@/site.config";
 // Styles
 import "mapbox-gl/dist/mapbox-gl.css";
 import "@mapbox/mapbox-gl-geocoder/dist/mapbox-gl-geocoder.css";
@@ -38,7 +39,7 @@ export interface MapboxProps {
   geoJsonData?: GeoJSON.FeatureCollection;
   onMarkerDragEnd?: (
     markerId: string,
-    lngLat: { lng: number; lat: number }
+    lngLat: { lng: number; lat: number },
   ) => void;
   onGeoJsonClick?: (feature: GeoJSON.Feature) => void;
   onMapClick?: () => void;
@@ -58,8 +59,8 @@ export interface MapboxProps {
 }
 
 const MAP_STYLES = {
-  light: "mapbox://styles/ecarry/cldmhu6tr000001n33ujbxf7j",
-  dark: "mapbox://styles/ecarry/clp8hcmd300km01qx78rt0xaw",
+  light: siteConfig.mapbox.lightStyle,
+  dark: siteConfig.mapbox.darkStyle,
 } as const;
 
 const Mapbox = forwardRef<MapRef, MapboxProps>(
@@ -86,7 +87,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       dragRotate = true,
       dragPan = true,
     }: MapboxProps,
-    ref
+    ref,
   ) => {
     const mapRef = useRef<MapRef>(null);
     const { theme } = useTheme();
@@ -100,7 +101,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
           (ref as React.MutableRefObject<MapRef | null>).current = node;
         }
       },
-      [ref]
+      [ref],
     );
 
     // Ensure markers is always an array
@@ -167,7 +168,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       (
         event: mapboxgl.MapMouseEvent & {
           features?: mapboxgl.GeoJSONFeature[];
-        }
+        },
       ) => {
         const feature = event.features?.[0];
         if (feature && onGeoJsonClick) {
@@ -179,7 +180,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
           onMapClick();
         }
       },
-      [onGeoJsonClick, onMapClick]
+      [onGeoJsonClick, onMapClick],
     );
 
     // Fly to location
@@ -259,7 +260,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
         )}
       </Map>
     );
-  }
+  },
 );
 
 Mapbox.displayName = "Mapbox";
