@@ -4,6 +4,16 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
+import { IMAGE_SIZE_LIMIT } from "@/constants";
+
+const ALLOWED_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/avif",
+] as const;
 
 /**
  * Generate a public URL for accessing uploaded photos
@@ -18,10 +28,10 @@ export const s3Router = createTRPCRouter({
     .input(
       z.object({
         filename: z.string(),
-        contentType: z.string(),
-        size: z.number(),
+        contentType: z.enum(ALLOWED_CONTENT_TYPES),
+        size: z.number().positive().max(IMAGE_SIZE_LIMIT),
         folder: z.string().optional(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       try {
@@ -63,7 +73,7 @@ export const s3Router = createTRPCRouter({
     .input(
       z.object({
         key: z.string(),
-      })
+      }),
     )
     .mutation(async ({ input }) => {
       try {
