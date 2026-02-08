@@ -5,6 +5,43 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.3.0] - 2025-07-08
+
+### Security
+
+- **S3 upload validation**: Server-side contentType whitelist restricts uploads to image formats only (jpeg, png, webp, heic, heif, avif) and enforces file size limit
+- **LIKE injection prevention**: Escape SQL wildcards (`%`, `_`, `\`) in photo search input
+- **Visibility enforcement**: Public pages (travel, cities) now only return photos with `visibility: "public"`
+- **Protected procedures**: `photos.getOne` and `photos.getMany` restricted to authenticated users
+
+### Added
+
+- **Vitest test framework**: Test setup with mocks for React cache, next/headers, S3 client, and auth session
+- **Photo procedure tests**: 16 test cases covering create, update, getOne, getMany, remove and edge cases
+- **Environment validation**: Zod-based server env validation — app fails fast with clear errors on missing config
+- **`.dockerignore`**: Reduces Docker build context by excluding node_modules, .next, .git, IDE files, etc.
+
+### Changed
+
+- **Database transactions**: `photos.create` and `photos.remove` wrapped in `db.transaction()` for data consistency
+- **ctx.db migration**: All tRPC routers now use `ctx.db` instead of direct `db` imports for better testability
+- **DB connection pool caching**: Cached on `globalThis` to prevent connection pool leaks during Next.js HMR
+- **Docker secrets externalized**: `docker-compose.yml` and `docker-compose.standalone.yml` use `${VAR:-default}` syntax, overridable via `.env`
+- **Error handling**: `photos.remove` re-throws `TRPCError` to preserve original error codes
+- **updatedAt timestamps**: Photo updates now correctly refresh the `updatedAt` field
+- **Remove procedure cleanup**: Merged duplicated city set update branches, S3 delete moved after DB commit
+
+### Fixed
+
+- Removed unused `select()` query after city set upsert in photo creation
+- Removed empty `else` block in photo creation procedure
+
+### Technical Details
+
+- 19 commits since v2.2.0
+- 37 files changed
+- +1,379 insertions, -676 deletions
+
 ## [2.2.0] - 2025-12-19
 
 ### Added
