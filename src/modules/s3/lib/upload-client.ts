@@ -1,5 +1,16 @@
 import { IMAGE_SIZE_LIMIT } from "@/constants";
 
+export const ALLOWED_CONTENT_TYPES = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/heic",
+  "image/heif",
+  "image/avif",
+] as const;
+
+export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
+
 /**
  * Client-side S3 upload helper.
  * This utility handles file validation and uploading to S3 using presigned URLs.
@@ -11,7 +22,7 @@ interface UploadToS3Options {
   onProgress?: (progress: number) => void;
   getUploadUrl: (input: {
     filename: string;
-    contentType: string;
+    contentType: AllowedContentType;
     folder: string;
   }) => Promise<{ uploadUrl: string; publicUrl: string }>;
 }
@@ -21,7 +32,10 @@ interface UploadToS3Result {
 }
 
 class UploadError extends Error {
-  constructor(message: string, public cause?: unknown) {
+  constructor(
+    message: string,
+    public cause?: unknown,
+  ) {
     super(message);
     this.name = "UploadError";
   }
@@ -49,13 +63,15 @@ export class S3Client {
     const MAX_FILE_SIZE = IMAGE_SIZE_LIMIT;
     if (file.size > MAX_FILE_SIZE) {
       throw new UploadError(
-        `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`
+        `File size exceeds ${MAX_FILE_SIZE / 1024 / 1024}MB limit`,
       );
     }
 
     // validate file type
-    if (!file.type.startsWith("image/")) {
-      throw new UploadError("Only image files are allowed");
+    if (!ALLOWED_CONTENT_TYPES.includes(file.type as AllowedContentType)) {
+      throw new UploadError(
+        `Unsupported file type: ${file.type}. Allowed: ${ALLOWED_CONTENT_TYPES.join(", ")}`,
+      );
     }
   }
 
@@ -68,7 +84,7 @@ export class S3Client {
   private async uploadWithProgress(
     file: File,
     uploadUrl: string,
-    onProgress?: (progress: number) => void
+    onProgress?: (progress: number) => void,
   ): Promise<void> {
     return new Promise((resolve, reject) => {
       const xhr = new XMLHttpRequest();
@@ -90,7 +106,7 @@ export class S3Client {
             new UploadError(`Upload failed with status ${xhr.status}`, {
               status: xhr.status,
               response: xhr.response,
-            })
+            }),
           );
         }
       };
@@ -133,7 +149,7 @@ export class S3Client {
 
       const { uploadUrl, publicUrl } = await getUploadUrl({
         filename: uniqueFilename,
-        contentType: file.type,
+        contentType: file.type as AllowedContentType,
         folder,
       });
 
@@ -146,7 +162,7 @@ export class S3Client {
       }
       throw new UploadError(
         "Failed to upload file",
-        error instanceof Error ? error : undefined
+        error instanceof Error ? error : undefined,
       );
     }
   }
