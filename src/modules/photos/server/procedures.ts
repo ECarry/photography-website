@@ -28,38 +28,40 @@ export const photosRouter = createTRPCRouter({
       const values = input;
 
       try {
-        const [insertedPhoto] = await ctx.db
-          .insert(photos)
-          .values(values)
-          .returning();
+        return await ctx.db.transaction(async (tx) => {
+          const [insertedPhoto] = await tx
+            .insert(photos)
+            .values(values)
+            .returning();
 
-        const cityName =
-          values.countryCode === "JP" || values.countryCode === "TW"
-            ? values.region
-            : values.city;
+          const cityName =
+            values.countryCode === "JP" || values.countryCode === "TW"
+              ? values.region
+              : values.city;
 
-        if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
-          await ctx.db
-            .insert(citySets)
-            .values({
-              country: insertedPhoto.country,
-              countryCode: insertedPhoto.countryCode,
-              city: cityName,
-              photoCount: 1,
-              coverPhotoId: insertedPhoto.id,
-            })
-            .onConflictDoUpdate({
-              target: [citySets.country, citySets.city],
-              set: {
+          if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
+            await tx
+              .insert(citySets)
+              .values({
+                country: insertedPhoto.country,
                 countryCode: insertedPhoto.countryCode,
-                photoCount: sql`${citySets.photoCount} + 1`,
-                coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${insertedPhoto.id})`,
-                updatedAt: new Date(),
-              },
-            });
-        }
+                city: cityName,
+                photoCount: 1,
+                coverPhotoId: insertedPhoto.id,
+              })
+              .onConflictDoUpdate({
+                target: [citySets.country, citySets.city],
+                set: {
+                  countryCode: insertedPhoto.countryCode,
+                  photoCount: sql`${citySets.photoCount} + 1`,
+                  coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${insertedPhoto.id})`,
+                  updatedAt: new Date(),
+                },
+              });
+          }
 
-        return insertedPhoto;
+          return insertedPhoto;
+        });
       } catch {
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
@@ -81,102 +83,89 @@ export const photosRouter = createTRPCRouter({
       }
 
       try {
-        const [photo] = await ctx.db
-          .select()
-          .from(photos)
-          .where(eq(photos.id, id));
-
-        if (!photo) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Photo not found",
-          });
-        }
-
-        // city set related
-        if (photo.country && photo.city) {
-          const [citySet] = await ctx.db
+        // All DB operations in a transaction for atomicity
+        const photo = await ctx.db.transaction(async (tx) => {
+          const [photo] = await tx
             .select()
-            .from(citySets)
-            .where(
-              and(
-                eq(citySets.country, photo.country),
-                eq(citySets.city, photo.city),
-              ),
-            );
+            .from(photos)
+            .where(eq(photos.id, id));
 
-          if (citySet) {
-            // if city set photo count is 1, delete the city set
-            if (citySet.photoCount === 1) {
-              await ctx.db.delete(citySets).where(eq(citySets.id, citySet.id));
-            } else if (citySet.coverPhotoId === photo.id) {
-              // if this is the cover photo, find a new cover photo
-              const [newCoverPhoto] = await ctx.db
-                .select()
-                .from(photos)
-                .where(
-                  and(
-                    eq(photos.country, photo.country),
-                    eq(photos.city, photo.city),
-                    sql`${photos.id} != ${photo.id}`,
-                  ),
-                );
-
-              // Update citySet with new cover photo or just decrease count
-              await ctx.db
-                .update(citySets)
-                .set({
-                  photoCount: sql`${citySets.photoCount} - 1`,
-                  ...(newCoverPhoto ? { coverPhotoId: newCoverPhoto.id } : {}),
-                  updatedAt: new Date(),
-                })
-                .where(
-                  and(
-                    eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city),
-                  ),
-                );
-            } else {
-              // not a cover photo, just update the count
-              await ctx.db
-                .update(citySets)
-                .set({
-                  photoCount: sql`${citySets.photoCount} - 1`,
-                  updatedAt: new Date(),
-                })
-                .where(
-                  and(
-                    eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city),
-                  ),
-                );
-            }
-          }
-        }
-
-        // delete cloudflare r2 file & database record
-        try {
-          // photo.url is stored as S3 key directly in database
-          const key = photo.url;
-
-          const command = new DeleteObjectCommand({
-            Bucket: process.env.S3_BUCKET_NAME,
-            Key: key,
-          });
-          await s3Client.send(command);
-
-          await ctx.db.delete(photos).where(eq(photos.id, id));
-        } catch (error) {
-          if (error instanceof Error) {
+          if (!photo) {
             throw new TRPCError({
-              code: "INTERNAL_SERVER_ERROR",
-              message: error.message,
+              code: "NOT_FOUND",
+              message: "Photo not found",
             });
           }
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: "Failed to delete photo",
+
+          // city set related
+          if (photo.country && photo.city) {
+            const [citySet] = await tx
+              .select()
+              .from(citySets)
+              .where(
+                and(
+                  eq(citySets.country, photo.country),
+                  eq(citySets.city, photo.city),
+                ),
+              );
+
+            if (citySet) {
+              if (citySet.photoCount === 1) {
+                // last photo in city — delete the city set
+                await tx.delete(citySets).where(eq(citySets.id, citySet.id));
+              } else {
+                // find new cover photo if current cover is being deleted
+                const newCoverPhotoId =
+                  citySet.coverPhotoId === photo.id
+                    ? (
+                        await tx
+                          .select({ id: photos.id })
+                          .from(photos)
+                          .where(
+                            and(
+                              eq(photos.country, photo.country),
+                              eq(photos.city, photo.city),
+                              sql`${photos.id} != ${photo.id}`,
+                            ),
+                          )
+                          .limit(1)
+                      )[0]?.id
+                    : undefined;
+
+                await tx
+                  .update(citySets)
+                  .set({
+                    photoCount: sql`${citySets.photoCount} - 1`,
+                    ...(newCoverPhotoId
+                      ? { coverPhotoId: newCoverPhotoId }
+                      : {}),
+                    updatedAt: new Date(),
+                  })
+                  .where(
+                    and(
+                      eq(citySets.country, photo.country),
+                      eq(citySets.city, photo.city),
+                    ),
+                  );
+              }
+            }
+          }
+
+          // delete photo record
+          await tx.delete(photos).where(eq(photos.id, id));
+
+          return photo;
+        });
+
+        // S3 delete after DB commit — orphan file is acceptable, inconsistent DB is not
+        try {
+          const command = new DeleteObjectCommand({
+            Bucket: process.env.S3_BUCKET_NAME,
+            Key: photo.url,
           });
+          await s3Client.send(command);
+        } catch (error) {
+          console.error("S3 delete failed (orphan file):", error);
         }
 
         return photo;
