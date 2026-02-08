@@ -28,41 +28,40 @@ export const photosRouter = createTRPCRouter({
       const values = input;
 
       try {
-        return await ctx.db.transaction(async (tx) => {
-          const [insertedPhoto] = await tx
-            .insert(photos)
-            .values(values)
-            .returning();
+        const [insertedPhoto] = await ctx.db
+          .insert(photos)
+          .values(values)
+          .returning();
 
-          const cityName =
-            values.countryCode === "JP" || values.countryCode === "TW"
-              ? values.region
-              : values.city;
+        const cityName =
+          values.countryCode === "JP" || values.countryCode === "TW"
+            ? values.region
+            : values.city;
 
-          if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
-            await tx
-              .insert(citySets)
-              .values({
-                country: insertedPhoto.country,
+        if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
+          await ctx.db
+            .insert(citySets)
+            .values({
+              country: insertedPhoto.country,
+              countryCode: insertedPhoto.countryCode,
+              city: cityName,
+              photoCount: 1,
+              coverPhotoId: insertedPhoto.id,
+            })
+            .onConflictDoUpdate({
+              target: [citySets.country, citySets.city],
+              set: {
                 countryCode: insertedPhoto.countryCode,
-                city: cityName,
-                photoCount: 1,
-                coverPhotoId: insertedPhoto.id,
-              })
-              .onConflictDoUpdate({
-                target: [citySets.country, citySets.city],
-                set: {
-                  countryCode: insertedPhoto.countryCode,
-                  photoCount: sql`${citySets.photoCount} + 1`,
-                  coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${insertedPhoto.id})`,
-                  updatedAt: new Date(),
-                },
-              });
-          }
+                photoCount: sql`${citySets.photoCount} + 1`,
+                coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${insertedPhoto.id})`,
+                updatedAt: new Date(),
+              },
+            });
+        }
 
-          return insertedPhoto;
-        });
-      } catch {
+        return insertedPhoto;
+      } catch (error) {
+        console.error("Photo creation error:", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create photo",
@@ -83,81 +82,74 @@ export const photosRouter = createTRPCRouter({
       }
 
       try {
-        // All DB operations in a transaction for atomicity
-        const photo = await ctx.db.transaction(async (tx) => {
-          const [photo] = await tx
+        const [photo] = await ctx.db
+          .select()
+          .from(photos)
+          .where(eq(photos.id, id));
+
+        if (!photo) {
+          throw new TRPCError({
+            code: "NOT_FOUND",
+            message: "Photo not found",
+          });
+        }
+
+        // city set related
+        if (photo.country && photo.city) {
+          const [citySet] = await ctx.db
             .select()
-            .from(photos)
-            .where(eq(photos.id, id));
+            .from(citySets)
+            .where(
+              and(
+                eq(citySets.country, photo.country),
+                eq(citySets.city, photo.city),
+              ),
+            );
 
-          if (!photo) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Photo not found",
-            });
-          }
+          if (citySet) {
+            if (citySet.photoCount === 1) {
+              // last photo in city — delete the city set
+              await ctx.db.delete(citySets).where(eq(citySets.id, citySet.id));
+            } else {
+              // find new cover photo if current cover is being deleted
+              const newCoverPhotoId =
+                citySet.coverPhotoId === photo.id
+                  ? (
+                      await ctx.db
+                        .select({ id: photos.id })
+                        .from(photos)
+                        .where(
+                          and(
+                            eq(photos.country, photo.country),
+                            eq(photos.city, photo.city),
+                            sql`${photos.id} != ${photo.id}`,
+                          ),
+                        )
+                        .limit(1)
+                    )[0]?.id
+                  : undefined;
 
-          // city set related
-          if (photo.country && photo.city) {
-            const [citySet] = await tx
-              .select()
-              .from(citySets)
-              .where(
-                and(
-                  eq(citySets.country, photo.country),
-                  eq(citySets.city, photo.city),
-                ),
-              );
-
-            if (citySet) {
-              if (citySet.photoCount === 1) {
-                // last photo in city — delete the city set
-                await tx.delete(citySets).where(eq(citySets.id, citySet.id));
-              } else {
-                // find new cover photo if current cover is being deleted
-                const newCoverPhotoId =
-                  citySet.coverPhotoId === photo.id
-                    ? (
-                        await tx
-                          .select({ id: photos.id })
-                          .from(photos)
-                          .where(
-                            and(
-                              eq(photos.country, photo.country),
-                              eq(photos.city, photo.city),
-                              sql`${photos.id} != ${photo.id}`,
-                            ),
-                          )
-                          .limit(1)
-                      )[0]?.id
-                    : undefined;
-
-                await tx
-                  .update(citySets)
-                  .set({
-                    photoCount: sql`${citySets.photoCount} - 1`,
-                    ...(newCoverPhotoId
-                      ? { coverPhotoId: newCoverPhotoId }
-                      : {}),
-                    updatedAt: new Date(),
-                  })
-                  .where(
-                    and(
-                      eq(citySets.country, photo.country),
-                      eq(citySets.city, photo.city),
-                    ),
-                  );
-              }
+              await ctx.db
+                .update(citySets)
+                .set({
+                  photoCount: sql`${citySets.photoCount} - 1`,
+                  ...(newCoverPhotoId ? { coverPhotoId: newCoverPhotoId } : {}),
+                  updatedAt: new Date(),
+                })
+                .where(
+                  and(
+                    eq(citySets.country, photo.country),
+                    eq(citySets.city, photo.city),
+                  ),
+                );
             }
           }
+        }
 
-          // delete photo record
-          await tx.delete(photos).where(eq(photos.id, id));
+        // delete photo record first, then S3
+        await ctx.db.delete(photos).where(eq(photos.id, id));
 
-          return photo;
-        });
-
-        // S3 delete after DB commit — orphan file is acceptable, inconsistent DB is not
+        // S3 delete after DB — orphan file is acceptable, inconsistent DB is not
         try {
           const command = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
