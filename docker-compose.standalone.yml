@@ -74,6 +74,9 @@ services:
         bun run db:push &&
         echo 'Building application (SSG)...' &&
         bun run build &&
+        echo 'Copying static assets...' &&
+        cp -r .next/static .next/standalone/.next/static &&
+        cp -r public .next/standalone/public &&
         echo 'Starting server...' &&
         bun .next/standalone/server.js
       "
