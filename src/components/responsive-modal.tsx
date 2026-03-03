@@ -38,14 +38,14 @@ export const ResponsiveModal = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange}>
-        {/* Added overflow-hidden and max-h to the Drawer */}
-        <DrawerContent className="max-h-[90vh] overflow-hidden flex flex-col">
-          <DrawerHeader className="border-b shrink-0 p-4">
+        {/* Added overflow-hidden and max-h to the drawer */}
+        <DrawerContent className="p-0 max-h-[95vh] overflow-hidden">
+          <DrawerHeader className="p-4 border-b">
             <DrawerTitle>{title}</DrawerTitle>
-            <DrawerDescription />
+            <DrawerDescription></DrawerDescription>
           </DrawerHeader>
-          {/* Internal scrollable wrapper for Mobile */}
-          <div className="flex-1 overflow-y-auto min-h-0 p-4">{children}</div>
+          {/* Internal wrapper to handle scrolling */}
+          <div className="overflow-y-auto p-4 flex-1">{children}</div>
         </DrawerContent>
       </Drawer>
     );
@@ -53,18 +53,23 @@ export const ResponsiveModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Change: We force !flex and !flex-col here. 
+         We also move padding p-6 from the dialog to an internal wrapper.
+      */}
       <DialogContent
         className={cn(
-          "p-0! max-h-[90vh]! flex! flex-col! !grid-none overflow-hidden",
+          "!p-0 !max-h-[90vh] !flex !flex-col !grid-none overflow-hidden",
           className,
         )}
       >
         <DialogHeader className="p-6 border-b shrink-0">
           <DialogTitle>{title}</DialogTitle>
-          <DialogDescription />
+          <DialogDescription></DialogDescription>
         </DialogHeader>
 
-        {/* Wrap the children in a scrollable flex-container */}
+        {/* THIS IS THE KEY: A wrapper that takes all remaining space
+           and forces scrolling.
+        */}
         <div className="flex-1 overflow-y-auto min-h-0 w-full p-6">
           {children}
         </div>
