@@ -13,6 +13,7 @@ const CreatePhotoModal = () => {
       onOpenChange={onClose}
       title="Create Photo"
       className="sm:max-w-3xl"
+      dismissible={false}
     >
       <MultiStepForm />
     </ResponsiveModal>

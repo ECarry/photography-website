@@ -23,6 +23,7 @@ interface ResponsiveModalProps {
   title: string;
   onOpenChange: (open: boolean) => void;
   className?: string;
+  dismissible?: boolean;
 }
 
 export const ResponsiveModal = ({
@@ -31,12 +32,13 @@ export const ResponsiveModal = ({
   title,
   onOpenChange,
   className,
+  dismissible = true,
 }: ResponsiveModalProps) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange}>
+      <Drawer open={open} onOpenChange={onOpenChange} dismissible={dismissible}>
         <DrawerContent className="p-4">
           <DrawerHeader>
             <DrawerTitle>{title}</DrawerTitle>
@@ -50,7 +52,24 @@ export const ResponsiveModal = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className={className}>
+      <DialogContent
+        className={className}
+        onEscapeKeyDown={(event) => {
+          if (!dismissible) {
+            event.preventDefault();
+          }
+        }}
+        onPointerDownOutside={(event) => {
+          if (!dismissible) {
+            event.preventDefault();
+          }
+        }}
+        onInteractOutside={(event) => {
+          if (!dismissible) {
+            event.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           <DialogDescription></DialogDescription>

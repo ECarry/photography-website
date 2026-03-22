@@ -2,19 +2,23 @@
 
 import BlurImage from "@/components/blur-image";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Button } from "@/components/ui/button";
 import { PhotoPreviewCard } from "@/modules/photos/ui/components/photo-preview-card";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 interface PhotographViewProps {
   id: string;
 }
 
 export const PhotographView = ({ id }: PhotographViewProps) => {
+  const router = useRouter();
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.home.getPhotoById.queryOptions({ id })
+    trpc.home.getPhotoById.queryOptions({ id }),
   );
 
   const imageInfo = {
@@ -25,6 +29,25 @@ export const PhotographView = ({ id }: PhotographViewProps) => {
 
   return (
     <div className="h-screen flex justify-center items-center relative overflow-hidden">
+      <div className="absolute top-4 left-4 z-10">
+        <Button
+          type="button"
+          variant="outline"
+          size="icon-sm"
+          aria-label="back"
+          onClick={() => {
+            if (window.history.length > 1) {
+              router.back();
+              return;
+            }
+
+            router.push("/");
+          }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </Button>
+      </div>
+
       <div className="absolute inset-0 -z-10">
         <BlurImage
           src={keyToUrl(data.url)}
