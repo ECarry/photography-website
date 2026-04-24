@@ -1,10 +1,11 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 import { TRPCReactProvider } from "@/trpc/client";
 import { NuqsAdapter } from "nuqs/adapters/next/app";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ThemeColorMeta } from "@/components/theme-color-meta";
 import { siteConfig } from "@/site.config";
 // Vercel Analytics
 import { SpeedInsights } from "@vercel/speed-insights/next";
@@ -21,6 +22,14 @@ export const metadata: Metadata = {
   description: siteConfig.metadata.description,
 };
 
+export const viewport: Viewport = {
+  viewportFit: "cover",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
+};
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -32,6 +41,7 @@ export default function RootLayout({
         <NuqsAdapter>
           <TRPCReactProvider>
             <ThemeProvider attribute="class">
+              <ThemeColorMeta />
               <Toaster />
               {children}
             </ThemeProvider>

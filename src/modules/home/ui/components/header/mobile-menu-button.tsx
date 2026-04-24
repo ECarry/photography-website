@@ -12,7 +12,8 @@ const MobileMenuButton = () => {
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed top-3 right-3 z-40 bg-background rounded-bl-[18px] lg:hidden cursor-pointer select-none"
+        className="fixed right-3 z-40 bg-background rounded-bl-[18px] lg:hidden cursor-pointer select-none"
+        style={{ top: "calc(env(safe-area-inset-top, 0px) + 12px)" }}
       >
         <div className="relative pb-3 px-4">
           <h1 className="text-sm font-light">Menu</h1>
