@@ -8,7 +8,7 @@ interface Props {
 
 /**
  * WordRotate component displays a vertical rotation of different words when user hover it
- * @preview ![img]() - https://p.ecarry.me/components/word-rotate
+ * @preview ![img]() - https://p.sera.me/components/word-rotate
  *
  * @param {Object} props - Component props
  * @param {string} props.label - first word

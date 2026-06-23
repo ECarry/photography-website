@@ -13,7 +13,7 @@ import type { ContactCardTitle } from "@/components/contact-card";
 
 export const siteConfig = {
   /** Site name used in metadata, logo, and branding */
-  name: "ECarry",
+  name: "Sera",
 
   /** Tagline shown alongside name (e.g. "Photo", "Photography") */
   tagline: "Photo",
@@ -22,7 +22,7 @@ export const siteConfig = {
   role: "Photographer",
 
   /** Short bio shown on the home page profile card */
-  bio: "I'm ECarry, a photographer dedicated to capturing authentic moments and telling stories through creative and emotional imagery, wherever my journey takes me.",
+  bio: "I'm Sera, a photographer dedicated to capturing authentic moments and telling stories through creative and emotional imagery, wherever my journey takes me.",
 
   /** Avatar image path (place your avatar in /public/avatar.jpg) */
   avatar: "/avatar.jpg",
@@ -33,10 +33,10 @@ export const siteConfig = {
   /** Site metadata for SEO */
   metadata: {
     title: {
-      template: "%s - ECarry Photography",
-      default: "ECarry Photography",
+      template: "%s - Sera Photography",
+      default: "Sera Photography",
     },
-    description: "ECarry Photography",
+    description: "Sera Photography",
   },
 
   /** Social links shown in profile card and footer */

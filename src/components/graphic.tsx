@@ -4,7 +4,7 @@ interface Props {
 
 /**
  * Graphic component displays a graphic.
- *@preview ![img](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAOpJREFUWEftl1sKhDAMRevOdGczK1NX5nDBQtFqk5rXgP0RQenpuWm0Q0ppS7Zj2adb92u+x+0yGAFh0m8F4KRCEyhDlAaaWWgAdYFkUkmgRyCSQCIgUkAo1E+zMBgPPIlswjZlzEV6tAdINKIjJRcIMDCjNjhA4vVSWxUVyAQGgBQg9ZhKUxQgld10VYQtILOoKI3RHOauhlxg/gbIzc6VIdNd1fp0uNqpGUIbcB1lH3K3czQUDsg9rtJQCDuhgULElQ3N2r+lnD4CMzjGiB5lOAC1Tv0C3RkMGdmocQLtrSMYCgfUuxiV936tgkQl5Ns2yQAAAABJRU5ErkJggg==) - https://p.ecarry.me/components/graphic
+ *@preview ![img](data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACQAAAAkCAYAAADhAJiYAAAAAXNSR0IArs4c6QAAAOpJREFUWEftl1sKhDAMRevOdGczK1NX5nDBQtFqk5rXgP0RQenpuWm0Q0ppS7Zj2adb92u+x+0yGAFh0m8F4KRCEyhDlAaaWWgAdYFkUkmgRyCSQCIgUkAo1E+zMBgPPIlswjZlzEV6tAdINKIjJRcIMDCjNjhA4vVSWxUVyAQGgBQg9ZhKUxQgld10VYQtILOoKI3RHOauhlxg/gbIzc6VIdNd1fp0uNqpGUIbcB1lH3K3czQUDsg9rtJQCDuhgULElQ3N2r+lnD4CMzjGiB5lOAC1Tv0C3RkMGdmocQLtrSMYCgfUuxiV936tgkQl5Ns2yQAAAABJRU5ErkJggg==) - https://p.sera.me/components/graphic
  *
  * @param {string} className - Optional className for the component.
  * @returns {JSX.Element} - The Graphic component.

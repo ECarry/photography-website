@@ -9,7 +9,7 @@ interface Props {
 
 /**
  * LinkRotate component displays a vertical rotation of link when user hover it
- * @preview ![img]() - https://p.ecarry.me/components/link-rotate
+ * @preview ![img]() - https://p.sera.me/components/link-rotate
  *
  * @param {Object} props - Component props
  * @param {string} props.link - Url string
