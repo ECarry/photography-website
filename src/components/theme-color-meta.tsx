@@ -15,13 +15,18 @@ export function ThemeColorMeta() {
     const color =
       resolvedTheme === "dark" ? THEME_COLORS.dark : THEME_COLORS.light;
 
-    const existing = document.querySelectorAll('meta[name="theme-color"]');
-    existing.forEach((el) => el.remove());
+    let meta = document.head.querySelector<HTMLMetaElement>(
+      'meta[name="theme-color"][data-managed="theme-color-meta"]'
+    );
 
-    const meta = document.createElement("meta");
-    meta.name = "theme-color";
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      meta.setAttribute("data-managed", "theme-color-meta");
+      document.head.appendChild(meta);
+    }
+
     meta.content = color;
-    document.head.appendChild(meta);
   }, [resolvedTheme]);
 
   return null;
