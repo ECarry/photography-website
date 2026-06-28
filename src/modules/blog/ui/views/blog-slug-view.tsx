@@ -9,10 +9,24 @@ import ContactCard from "@/components/contact-card";
 import Footer from "@/components/footer";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import RichTextViewer from "@/components/editor/rich-text-viewer";
+import { format } from "date-fns";
+import { siteConfig } from "@/site.config";
 
 export const BlogSlugView = ({ slug }: { slug: string }) => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(trpc.blog.getOne.queryOptions({ slug }));
+
+  const publishedLabel = format(new Date(data.createdAt), "MMMM yyyy");
+  const publishedDate = format(new Date(data.createdAt), "d MMM yyyy");
+  const contactHref =
+    siteConfig.socialLinks.find((link) => link.title === "Contact me")?.href ??
+    "";
+
+  const scrollToArticle = () => {
+    document
+      .getElementById("article-content")
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   return (
     <div className="flex flex-col gap-3 lg:gap-0 lg:flex-row w-full">
@@ -21,7 +35,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
         <div className="block w-full h-full relative rounded-xl overflow-hidden">
           <Image
             src={keyToUrl(data.coverImage) || "/placeholder.svg"}
-            alt="Image"
+            alt={data.title}
             fill
             quality={75}
             className="object-cover"
@@ -45,7 +59,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
         <div className="bg-muted rounded-xl p-10 md:p-12 md:h-[calc(100vh-24px)] flex flex-col">
           <div className="mb-10">
             <span className="bg-muted-hover rounded-sm py-1 px-2 text-xs text-text-muted font-light">
-              March 2024
+              {publishedLabel}
             </span>
           </div>
 
@@ -54,7 +68,11 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
             <h2 className="font-light">{data.description}</h2>
 
             <div className="mt-8">
-              <button className="bg-background hover:bg-muted duration-150 transition-all flex items-center gap-1 py-[10px] pr-3 pl-[14px] rounded-lg">
+              <button
+                type="button"
+                onClick={scrollToArticle}
+                className="bg-background hover:bg-muted duration-150 transition-all flex items-center gap-1 py-[10px] pr-3 pl-[14px] rounded-lg"
+              >
                 <span className="text-sm font-light">Read Article</span>{" "}
                 <ArrowDownIcon size={14} />
               </button>
@@ -65,7 +83,7 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
           <div className="bg-muted rounded-xl p-5 w-full flex justify-between">
             <p className="text-text-muted">Category</p>
-            <p>{data.tags}</p>
+            <p>{data.tags?.join(", ") || "Uncategorized"}</p>
           </div>
 
           <div className="bg-muted rounded-xl p-5 w-full flex justify-between">
@@ -75,19 +93,19 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
 
           <div className="bg-muted rounded-xl p-5 w-full flex justify-between">
             <p className="text-text-muted">Date</p>
-            <p>March 2024</p>
+            <p>{publishedDate}</p>
           </div>
         </div>
 
         {/* POST PREVIEW */}
-        <article className="bg-muted rounded-xl p-8 md:p-12">
+        <article id="article-content" className="bg-muted rounded-xl p-8 md:p-12 scroll-mt-3">
           <RichTextViewer content={data.content || ""} />
         </article>
 
         {/* CONTACT CARD  */}
         <ContactCard
           title="Contact me"
-          href="mailto:lianshiliang93@gmail.com"
+          href={contactHref}
           className="bg-primary text-white hover:text-black dark:text-black dark:hover:text-white h-14"
         />
 
