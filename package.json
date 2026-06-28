@@ -9,6 +9,7 @@
     "db:push": "bunx drizzle-kit push --config drizzle.config.ts",
     "db:studio": "bunx drizzle-kit studio",
     "seed:user": "bun tsx scripts/seed-user.ts",
+    "seed:demo-post": "bun tsx scripts/seed-demo-post.ts",
     "clean:photo-urls": "bun tsx scripts/clean-photo-urls-safe.ts",
     "rollback:photo-urls": "bun tsx scripts/rollback-photo-urls.ts",
     "lint": "eslint",

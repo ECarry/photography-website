@@ -12,12 +12,14 @@ import { ImageExtension } from "./extensions/image";
 import { YoutubeExtension } from "./extensions/youtube";
 import { MapboxExtension } from "./extensions/mapbox";
 import { FontSize } from "./extensions/font-size";
+import { cn } from "@/lib/utils";
 
 interface RichTextProps {
   content: string | Record<string, unknown>;
+  className?: string;
 }
 
-export default function RichTextViewer({ content }: RichTextProps) {
+export default function RichTextViewer({ content, className }: RichTextProps) {
   const editor = useEditor({
     extensions: [
       YoutubeExtension.configure({
@@ -71,5 +73,9 @@ export default function RichTextViewer({ content }: RichTextProps) {
   });
 
   if (!editor) return null;
-  return <EditorContent editor={editor} />;
+  return (
+    <div className={cn("prose-content", className)}>
+      <EditorContent editor={editor} />
+    </div>
+  );
 }

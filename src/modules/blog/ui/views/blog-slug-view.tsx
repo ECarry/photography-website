@@ -80,7 +80,9 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
         </div>
 
         {/* POST PREVIEW */}
-        <RichTextViewer content={data.content || ""} />
+        <article className="bg-muted rounded-xl p-8 md:p-12">
+          <RichTextViewer content={data.content || ""} />
+        </article>
 
         {/* CONTACT CARD  */}
         <ContactCard
