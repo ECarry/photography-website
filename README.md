@@ -474,7 +474,16 @@ If you find this project helpful, please give it a ⭐️ on GitHub!
 
 ## ⭐️ Star History
 
-[![Star History Chart](https://api.star-history.com/svg?repos=ECarry/photography-website&type=Date)](https://star-history.com/#ECarry/photography-website&Date)
+## Star History
+
+<a href="https://www.star-history.com/?repos=ECarry%2Fphotography-website&type=date&legend=top-left">
+ <picture>
+   <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=ECarry/photography-website&type=date&theme=dark&legend=top-left&sealed_token=YIvqTaYn4d5o7R2s00ixqF9v2FKtnLq-IxswDwy0zFh7I9pw4Mb2yUD2dXKXfWEdK_uqPMCl8UUr1L83AjjDSKujjr7h0ajgDIXl45NcGpwdrKjmaQ4MitYFm0U6YDAmo0TW88BYKbjTfDcrt2BbqfA2UQRXukwkVTP6P5OgIgItGcBtqwiFfpX1DCYg" />
+   <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=ECarry/photography-website&type=date&legend=top-left&sealed_token=YIvqTaYn4d5o7R2s00ixqF9v2FKtnLq-IxswDwy0zFh7I9pw4Mb2yUD2dXKXfWEdK_uqPMCl8UUr1L83AjjDSKujjr7h0ajgDIXl45NcGpwdrKjmaQ4MitYFm0U6YDAmo0TW88BYKbjTfDcrt2BbqfA2UQRXukwkVTP6P5OgIgItGcBtqwiFfpX1DCYg" />
+   <img alt="Star History Chart" src="https://api.star-history.com/chart?repos=ECarry/photography-website&type=date&legend=top-left&sealed_token=YIvqTaYn4d5o7R2s00ixqF9v2FKtnLq-IxswDwy0zFh7I9pw4Mb2yUD2dXKXfWEdK_uqPMCl8UUr1L83AjjDSKujjr7h0ajgDIXl45NcGpwdrKjmaQ4MitYFm0U6YDAmo0TW88BYKbjTfDcrt2BbqfA2UQRXukwkVTP6P5OgIgItGcBtqwiFfpX1DCYg" />
+ </picture>
+</a>
+
 
 ## 📄 License
 
