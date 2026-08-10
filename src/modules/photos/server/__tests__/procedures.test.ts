@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { createAuthedCaller, buildPhotoInput } from "@/test/helpers";
 import { db } from "@/db";
 import { photos, citySets } from "@/db/schema";
-import { eq, sql } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { getSession } from "@/modules/auth/lib/get-session";
 
 // Clean up test data before each test
