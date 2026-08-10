@@ -1,5 +1,8 @@
 import { defineConfig } from "vitest/config";
+import { loadEnv } from "vite";
 import path from "path";
+
+Object.assign(process.env, loadEnv("test", process.cwd(), ""));
 
 export default defineConfig({
   test: {
