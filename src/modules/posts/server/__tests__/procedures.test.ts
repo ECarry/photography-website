@@ -7,6 +7,22 @@ beforeEach(async () => {
   await db.delete(posts);
 });
 
+describe("posts.create", () => {
+  it("should reject duplicate slugs with a client error", async () => {
+    const caller = createAuthedCaller();
+    const post = {
+      title: "First Post",
+      slug: "duplicate-slug",
+    };
+
+    await caller.posts.create(post);
+
+    await expect(caller.posts.create({ ...post, title: "Second Post" })).rejects.toThrow(
+      "Post with this slug already exists",
+    );
+  });
+});
+
 describe("posts.getMany", () => {
   it("should escape LIKE wildcards in search", async () => {
     const caller = createAuthedCaller();

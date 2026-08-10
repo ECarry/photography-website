@@ -11,27 +11,32 @@ import {
 import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
 import { escapeLike } from "@/lib/escape-like";
 
+function isUniqueViolation(error: unknown): boolean {
+  if (typeof error !== "object" || error === null) return false;
+
+  if ("code" in error && error.code === "23505") return true;
+
+  return "cause" in error && isUniqueViolation(error.cause);
+}
+
 export const postsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(postsInsertSchema)
     .mutation(async ({ ctx, input }) => {
-      const values = input;
+      try {
+        const [newPost] = await ctx.db.insert(posts).values(input).returning();
 
-      const existingPost = await ctx.db
-        .select()
-        .from(posts)
-        .where(eq(posts.slug, values.slug));
+        return newPost;
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Post with this slug already exists",
+          });
+        }
 
-      if (existingPost.length > 0) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Post with this slug already exists",
-        });
+        throw error;
       }
-
-      const [newPost] = await ctx.db.insert(posts).values(values).returning();
-
-      return newPost;
     }),
   remove: protectedProcedure
     .input(z.object({ id: z.string() }))
