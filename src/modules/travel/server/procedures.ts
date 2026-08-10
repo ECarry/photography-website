@@ -6,34 +6,28 @@ import { TRPCError } from "@trpc/server";
 
 export const travelRouter = createTRPCRouter({
   getCitySets: baseProcedure.query(async ({ ctx }) => {
-    const data = await ctx.db.query.citySets.findMany({
-      with: {
-        coverPhoto: true,
-        photos: true,
-      },
-      orderBy: [desc(citySets.updatedAt)],
-    });
-
-    return data.flatMap((citySet) => {
-      const publicPhotos = citySet.photos.filter(
-        (photo) => photo.visibility === "public",
-      );
-      const coverPhoto =
-        citySet.coverPhoto.visibility === "public"
-          ? citySet.coverPhoto
-          : publicPhotos[0];
-
-      if (!coverPhoto) return [];
-
-      return [
-        {
-          ...citySet,
-          coverPhoto,
-          photos: publicPhotos,
-          photoCount: publicPhotos.length,
+    return ctx.db
+      .select({
+        id: citySets.id,
+        country: citySets.country,
+        countryCode: citySets.countryCode,
+        city: citySets.city,
+        coverPhotoId: citySets.coverPhotoId,
+        coverPhoto: {
+          url: photos.url,
+          title: photos.title,
+          blurData: photos.blurData,
         },
-      ];
-    });
+      })
+      .from(citySets)
+      .innerJoin(
+        photos,
+        and(
+          eq(photos.id, citySets.coverPhotoId),
+          eq(photos.visibility, "public"),
+        ),
+      )
+      .orderBy(desc(citySets.updatedAt));
   }),
   getOne: baseProcedure
     .input(

@@ -5,7 +5,7 @@ import Footer from "@/components/footer";
 import { CoverPhoto } from "../components/cover-photo";
 import { Introduction } from "../components/introduction";
 import { CityItem } from "../components/city-item";
-import { CitySetWithPhotos } from "@/db/schema";
+import type { PublicCitySet } from "../../types";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,7 +15,7 @@ export const TravelView = () => {
   const { data } = useSuspenseQuery(trpc.travel.getCitySets.queryOptions());
 
   // Initialize with first city directly, no useEffect needed
-  const [activeCity, setActiveCity] = useState<CitySetWithPhotos | null>(
+  const [activeCity, setActiveCity] = useState<PublicCitySet | null>(
     () => data?.[0] ?? null
   );
 

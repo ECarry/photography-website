@@ -1,11 +1,11 @@
 import Link from "next/link";
 import { PiArrowRight } from "react-icons/pi";
 import TextScroll from "./text-scroll";
-import { CitySetWithPhotos } from "@/db/schema";
+import type { PublicCitySet } from "../../types";
 
 interface CityItemProps {
-  city: CitySetWithPhotos;
-  onMouseEnter: (city: CitySetWithPhotos) => void;
+  city: PublicCitySet;
+  onMouseEnter: (city: PublicCitySet) => void;
 }
 
 export const CityItem = ({ city, onMouseEnter }: CityItemProps) => {

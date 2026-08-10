@@ -34,35 +34,31 @@ export const homeRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { limit } = input;
 
-      const data = await ctx.db.query.citySets.findMany({
-        with: {
-          coverPhoto: true,
-          photos: true,
-        },
-        orderBy: [desc(citySets.updatedAt)],
-        limit: limit,
-      });
-
-      return data.flatMap((citySet) => {
-        const publicPhotos = citySet.photos.filter(
-          (photo) => photo.visibility === "public",
-        );
-        const coverPhoto =
-          citySet.coverPhoto.visibility === "public"
-            ? citySet.coverPhoto
-            : publicPhotos[0];
-
-        if (!coverPhoto) return [];
-
-        const { photos, ...citySetWithoutPhotos } = citySet;
-        return [
-          {
-            ...citySetWithoutPhotos,
-            coverPhoto,
-            photoCount: publicPhotos.length,
+      const data = await ctx.db
+        .select({
+          id: citySets.id,
+          country: citySets.country,
+          countryCode: citySets.countryCode,
+          city: citySets.city,
+          coverPhotoId: citySets.coverPhotoId,
+          coverPhoto: {
+            url: photos.url,
+            title: photos.title,
+            blurData: photos.blurData,
           },
-        ];
-      });
+        })
+        .from(citySets)
+        .innerJoin(
+          photos,
+          and(
+            eq(photos.id, citySets.coverPhotoId),
+            eq(photos.visibility, "public"),
+          ),
+        )
+        .orderBy(desc(citySets.updatedAt))
+        .limit(limit);
+
+      return data;
     }),
   getPhotoById: baseProcedure
     .input(

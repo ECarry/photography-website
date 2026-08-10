@@ -3,13 +3,18 @@
 import { useRouter } from "next/navigation";
 import BlurImage from "@/components/blur-image";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { type Photo } from "@/db/schema";
 import VectorTopLeftAnimation from "./vector-top-left-animation";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 
+type CoverPhoto = {
+  url: string;
+  title: string;
+  blurData: string;
+};
+
 interface Props {
   title: string;
-  coverPhoto: Photo;
+  coverPhoto: CoverPhoto;
 }
 
 const CityCard = ({ title, coverPhoto }: Props) => {
