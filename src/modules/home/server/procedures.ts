@@ -43,7 +43,26 @@ export const homeRouter = createTRPCRouter({
         limit: limit,
       });
 
-      return data;
+      return data.flatMap((citySet) => {
+        const publicPhotos = citySet.photos.filter(
+          (photo) => photo.visibility === "public",
+        );
+        const coverPhoto =
+          citySet.coverPhoto.visibility === "public"
+            ? citySet.coverPhoto
+            : publicPhotos[0];
+
+        if (!coverPhoto) return [];
+
+        const { photos, ...citySetWithoutPhotos } = citySet;
+        return [
+          {
+            ...citySetWithoutPhotos,
+            coverPhoto,
+            photoCount: publicPhotos.length,
+          },
+        ];
+      });
     }),
   getPhotoById: baseProcedure
     .input(

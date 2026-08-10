@@ -14,7 +14,26 @@ export const travelRouter = createTRPCRouter({
       orderBy: [desc(citySets.updatedAt)],
     });
 
-    return data;
+    return data.flatMap((citySet) => {
+      const publicPhotos = citySet.photos.filter(
+        (photo) => photo.visibility === "public",
+      );
+      const coverPhoto =
+        citySet.coverPhoto.visibility === "public"
+          ? citySet.coverPhoto
+          : publicPhotos[0];
+
+      if (!coverPhoto) return [];
+
+      return [
+        {
+          ...citySet,
+          coverPhoto,
+          photos: publicPhotos,
+          photoCount: publicPhotos.length,
+        },
+      ];
+    });
   }),
   getOne: baseProcedure
     .input(
@@ -45,8 +64,21 @@ export const travelRouter = createTRPCRouter({
         .where(and(eq(photos.city, city), eq(photos.visibility, "public")))
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
+      if (cityPhotos.length === 0) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "City not found",
+        });
+      }
+
+      const publicCoverPhoto =
+        cityPhotos.find((photo) => photo.id === citySet.coverPhotoId) ??
+        cityPhotos[0];
+
       return {
         ...citySet,
+        coverPhotoId: publicCoverPhoto.id,
+        photoCount: cityPhotos.length,
         photos: cityPhotos,
       };
     }),

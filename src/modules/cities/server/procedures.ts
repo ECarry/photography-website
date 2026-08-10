@@ -10,7 +10,7 @@ import { TRPCError } from "@trpc/server";
 
 export const cityRouter = createTRPCRouter({
   // Get all city sets
-  getMany: baseProcedure.query(async ({ ctx }) => {
+  getMany: protectedProcedure.query(async ({ ctx }) => {
     const data = await ctx.db
       .select({
         id: citySets.id,
@@ -35,7 +35,7 @@ export const cityRouter = createTRPCRouter({
   }),
 
   // Get one city set with all photos
-  getOne: baseProcedure
+  getOne: protectedProcedure
     .input(
       z.object({
         city: z.string(),
