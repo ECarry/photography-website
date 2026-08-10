@@ -16,10 +16,7 @@ import {
 import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
-
-function escapeLike(str: string): string {
-  return str.replace(/[%_\\]/g, "\\$&");
-}
+import { escapeLike } from "@/lib/escape-like";
 
 function getCitySetName(photo: {
   city: string | null;

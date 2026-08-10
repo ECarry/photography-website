@@ -9,6 +9,7 @@ import {
   MIN_PAGE_SIZE,
 } from "@/constants";
 import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
+import { escapeLike } from "@/lib/escape-like";
 
 export const postsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -107,7 +108,9 @@ export const postsRouter = createTRPCRouter({
       const data = await ctx.db
         .select()
         .from(posts)
-        .where(search ? ilike(posts.title, `%${search}%`) : undefined)
+        .where(
+          search ? ilike(posts.title, `%${escapeLike(search)}%`) : undefined,
+        )
         .orderBy(desc(posts.createdAt), desc(posts.id))
         .limit(pageSize)
         .offset((page - 1) * pageSize);
@@ -117,7 +120,9 @@ export const postsRouter = createTRPCRouter({
           count: count(),
         })
         .from(posts)
-        .where(search ? ilike(posts.title, `%${search}%`) : undefined);
+        .where(
+          search ? ilike(posts.title, `%${escapeLike(search)}%`) : undefined,
+        );
 
       const totalPages = Math.ceil(total.count / pageSize);
 
