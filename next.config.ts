@@ -9,7 +9,9 @@ const s3Protocol = s3Url ? s3Url.protocol.replace(":", "") : "https";
 const useCloudflareLoader = siteConfig.imageLoader === "cloudflare";
 
 const nextConfig: NextConfig = {
-  output: "standalone",
+  ...(process.env.VERCEL !== "1" && {
+    output: "standalone",
+  }),
   /* config options here */
   reactCompiler: true,
   images: {
