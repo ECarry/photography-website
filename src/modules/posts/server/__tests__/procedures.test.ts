@@ -42,6 +42,24 @@ describe("posts.update", () => {
   });
 });
 
+describe("blog.getOne", () => {
+  it("should sanitize rendered HTML content", async () => {
+    const caller = createAuthedCaller();
+
+    const post = await caller.posts.create({
+      title: "Sanitized Post",
+      slug: "sanitized-post",
+      content: '<p>Safe</p><script>alert("xss")</script>',
+      visibility: "public",
+    });
+
+    const result = await caller.blog.getOne({ slug: post.slug });
+
+    expect(result.content).toContain("<p>Safe</p>");
+    expect(result.content).not.toContain("<script");
+  });
+});
+
 describe("posts.getMany", () => {
   it("should escape LIKE wildcards in search", async () => {
     const caller = createAuthedCaller();
