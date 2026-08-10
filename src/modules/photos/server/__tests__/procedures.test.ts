@@ -90,6 +90,27 @@ describe("photos.create", () => {
     expect(citySet.city).toBe("Tokyo");
   });
 
+  it("should remove the JP city set when its last photo is deleted", async () => {
+    const caller = createAuthedCaller();
+    const photo = await caller.photos.create(
+      buildPhotoInput({
+        country: "Japan",
+        countryCode: "JP",
+        city: "Shibuya",
+        region: "Tokyo",
+      }),
+    );
+
+    await caller.photos.remove({ id: photo.id });
+
+    const citySetsForTokyo = await db
+      .select()
+      .from(citySets)
+      .where(eq(citySets.city, "Tokyo"));
+
+    expect(citySetsForTokyo).toHaveLength(0);
+  });
+
   it("should not create city set when no location data", async () => {
     const caller = createAuthedCaller();
     const input = buildPhotoInput();

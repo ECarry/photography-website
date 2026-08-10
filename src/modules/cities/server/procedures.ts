@@ -1,7 +1,6 @@
 import { z } from "zod";
 import {
   createTRPCRouter,
-  baseProcedure,
   protectedProcedure,
 } from "@/trpc/init";
 import { citySets, photos } from "@/db/schema";

@@ -21,6 +21,16 @@ function escapeLike(str: string): string {
   return str.replace(/[%_\\]/g, "\\$&");
 }
 
+function getCitySetName(photo: {
+  city: string | null;
+  region: string | null;
+  countryCode: string | null;
+}) {
+  return photo.countryCode === "JP" || photo.countryCode === "TW"
+    ? photo.region
+    : photo.city;
+}
+
 export const photosRouter = createTRPCRouter({
   create: protectedProcedure
     .input(photosInsertSchema)
@@ -33,10 +43,7 @@ export const photosRouter = createTRPCRouter({
           .values(values)
           .returning();
 
-        const cityName =
-          values.countryCode === "JP" || values.countryCode === "TW"
-            ? values.region
-            : values.city;
+        const cityName = getCitySetName(insertedPhoto);
 
         if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
           await ctx.db
@@ -95,14 +102,20 @@ export const photosRouter = createTRPCRouter({
         }
 
         // city set related
-        if (photo.country && photo.city) {
+        const cityName = getCitySetName(photo);
+        const cityPhotoColumn =
+          photo.countryCode === "JP" || photo.countryCode === "TW"
+            ? photos.region
+            : photos.city;
+
+        if (photo.country && cityName) {
           const [citySet] = await ctx.db
             .select()
             .from(citySets)
             .where(
               and(
                 eq(citySets.country, photo.country),
-                eq(citySets.city, photo.city),
+                eq(citySets.city, cityName),
               ),
             );
 
@@ -121,7 +134,7 @@ export const photosRouter = createTRPCRouter({
                         .where(
                           and(
                             eq(photos.country, photo.country),
-                            eq(photos.city, photo.city),
+                            eq(cityPhotoColumn, cityName),
                             sql`${photos.id} != ${photo.id}`,
                           ),
                         )
@@ -139,7 +152,7 @@ export const photosRouter = createTRPCRouter({
                 .where(
                   and(
                     eq(citySets.country, photo.country),
-                    eq(citySets.city, photo.city),
+                    eq(citySets.city, cityName),
                   ),
                 );
             }
