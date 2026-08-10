@@ -2,6 +2,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { ALLOWED_IMAGE_EXTENSIONS } from "@/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -194,7 +195,7 @@ const FileUploader = ({
     noClick: true,
     noKeyboard: true,
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+      "image/*": [...ALLOWED_IMAGE_EXTENSIONS],
     },
   });
 

@@ -2,7 +2,7 @@ import { useDropzone } from "react-dropzone";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { UploadCloud } from "lucide-react";
-import { IMAGE_SIZE_LIMIT } from "@/constants";
+import { ALLOWED_IMAGE_EXTENSIONS, IMAGE_SIZE_LIMIT } from "@/constants";
 
 interface UploadZoneProps {
   isUploading: boolean;
@@ -23,7 +23,7 @@ export function UploadZone({
       }
     },
     accept: {
-      "image/*": [".png", ".jpg", ".jpeg", ".gif"],
+      "image/*": [...ALLOWED_IMAGE_EXTENSIONS],
     },
     multiple: false,
   });

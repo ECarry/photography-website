@@ -4,16 +4,10 @@ import { DeleteObjectCommand, PutObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
-import { IMAGE_SIZE_LIMIT } from "@/constants";
-
-const ALLOWED_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "image/avif",
-] as const;
+import {
+  ALLOWED_CONTENT_TYPES,
+  IMAGE_SIZE_LIMIT,
+} from "@/constants";
 
 /**
  * Generate a public URL for accessing uploaded photos

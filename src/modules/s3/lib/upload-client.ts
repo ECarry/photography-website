@@ -1,13 +1,7 @@
-import { IMAGE_SIZE_LIMIT } from "@/constants";
-
-export const ALLOWED_CONTENT_TYPES = [
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-  "image/heic",
-  "image/heif",
-  "image/avif",
-] as const;
+import {
+  ALLOWED_CONTENT_TYPES,
+  IMAGE_SIZE_LIMIT,
+} from "@/constants";
 
 export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
 
