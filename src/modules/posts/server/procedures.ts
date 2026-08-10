@@ -64,19 +64,30 @@ export const postsRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
-      const [updatedPost] = await ctx.db
-        .update(posts)
-        .set({
-          ...input,
-        })
-        .where(eq(posts.id, id))
-        .returning();
+      try {
+        const [updatedPost] = await ctx.db
+          .update(posts)
+          .set({
+            ...input,
+          })
+          .where(eq(posts.id, id))
+          .returning();
 
-      if (!updatedPost) {
-        throw new TRPCError({ code: "NOT_FOUND" });
+        if (!updatedPost) {
+          throw new TRPCError({ code: "NOT_FOUND" });
+        }
+
+        return updatedPost;
+      } catch (error) {
+        if (isUniqueViolation(error)) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message: "Post with this slug already exists",
+          });
+        }
+
+        throw error;
       }
-
-      return updatedPost;
     }),
   getOne: protectedProcedure
     .input(z.object({ slug: z.string() }))

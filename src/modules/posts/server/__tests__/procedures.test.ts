@@ -23,6 +23,25 @@ describe("posts.create", () => {
   });
 });
 
+describe("posts.update", () => {
+  it("should reject changing to an existing slug", async () => {
+    const caller = createAuthedCaller();
+    const firstPost = await caller.posts.create({
+      title: "First Post",
+      slug: "first-post",
+    });
+
+    await caller.posts.create({
+      title: "Second Post",
+      slug: "second-post",
+    });
+
+    await expect(
+      caller.posts.update({ id: firstPost.id, slug: "second-post" }),
+    ).rejects.toThrow("Post with this slug already exists");
+  });
+});
+
 describe("posts.getMany", () => {
   it("should escape LIKE wildcards in search", async () => {
     const caller = createAuthedCaller();
