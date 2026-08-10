@@ -120,9 +120,16 @@ export const photosRouter = createTRPCRouter({
             );
 
           if (citySet) {
-            if (citySet.photoCount === 1) {
+            if (citySet.photoCount <= 1) {
               // last photo in city — delete the city set
-              await ctx.db.delete(citySets).where(eq(citySets.id, citySet.id));
+              await ctx.db
+                .delete(citySets)
+                .where(
+                  and(
+                    eq(citySets.id, citySet.id),
+                    sql`${citySets.photoCount} <= 1`,
+                  ),
+                );
             } else {
               // find new cover photo if current cover is being deleted
               const newCoverPhotoId =
@@ -153,6 +160,7 @@ export const photosRouter = createTRPCRouter({
                   and(
                     eq(citySets.country, photo.country),
                     eq(citySets.city, cityName),
+                    sql`${citySets.photoCount} > 1`,
                   ),
                 );
             }
