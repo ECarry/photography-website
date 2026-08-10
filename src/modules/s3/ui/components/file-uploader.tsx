@@ -2,7 +2,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
@@ -38,6 +38,7 @@ const FileUploader = ({
   >([]);
   const [imageLoading, setImageLoading] = useState(true);
   const [deletedKey, setDeletedKey] = useState<string | null>(null);
+  const objectUrlsRef = useRef(new Set<string>());
 
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
@@ -132,6 +133,15 @@ const FileUploader = ({
           objectUrl: URL.createObjectURL(file),
         }));
 
+        objectUrlsRef.current.forEach((objectUrl) => {
+          URL.revokeObjectURL(objectUrl);
+        });
+        objectUrlsRef.current.clear();
+
+        newFiles.forEach((file) => {
+          if (file.objectUrl) objectUrlsRef.current.add(file.objectUrl);
+        });
+
         setFiles(newFiles);
 
         // when new file(s) selected, show image loading placeholder again
@@ -147,14 +157,15 @@ const FileUploader = ({
   );
 
   useEffect(() => {
+    const urls = objectUrlsRef.current;
+
     return () => {
-      files.forEach((f) => {
-        if (f.objectUrl) {
-          URL.revokeObjectURL(f.objectUrl);
-        }
+      urls.forEach((objectUrl) => {
+        URL.revokeObjectURL(objectUrl);
       });
+      urls.clear();
     };
-  }, [files]);
+  }, []);
 
   const onDropRejected = useCallback((fileRejections: FileRejection[]) => {
     if (fileRejections.length > 0) {
@@ -210,6 +221,7 @@ const FileUploader = ({
           const removed = prev.find((f) => f.key === key);
           if (removed?.objectUrl) {
             URL.revokeObjectURL(removed.objectUrl);
+            objectUrlsRef.current.delete(removed.objectUrl);
           }
           return remaining;
         });
