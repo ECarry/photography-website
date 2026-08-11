@@ -1,16 +1,81 @@
+"use client";
+
 import "./editor.css";
+import { EditorContent, useEditor } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import TextAlign from "@tiptap/extension-text-align";
+import { TextStyle } from "@tiptap/extension-text-style";
+import Underline from "@tiptap/extension-underline";
+import { Color } from "@tiptap/extension-color";
+import Highlight from "@tiptap/extension-highlight";
+import { ImageExtension } from "./extensions/image";
+import { YoutubeExtension } from "./extensions/youtube";
+import { MapboxExtension } from "./extensions/mapbox";
+import { FontSize } from "./extensions/font-size";
 import { cn } from "@/lib/utils";
 
 interface RichTextProps {
-  content: string;
+  content: string | Record<string, unknown>;
   className?: string;
 }
 
 export default function RichTextViewer({ content, className }: RichTextProps) {
+  const editor = useEditor({
+    extensions: [
+      YoutubeExtension.configure({
+        controls: false,
+        nocookie: true,
+      }),
+      StarterKit.configure({
+        orderedList: {
+          HTMLAttributes: {
+            class: "list-decimal",
+          },
+        },
+        bulletList: {
+          HTMLAttributes: {
+            class: "list-disc",
+          },
+        },
+        heading: {
+          levels: [1, 2, 3],
+          HTMLAttributes: {
+            class: "tiptap-heading",
+          },
+        },
+        codeBlock: {
+          HTMLAttributes: {
+            class: "bg-muted rounded-md p-4 font-mono text-sm",
+          },
+        },
+        blockquote: {
+          HTMLAttributes: {
+            class: "border-l-4 border-primary pl-4 italic",
+          },
+        },
+      }),
+      TextAlign.configure({
+        types: ["heading", "paragraph"],
+      }),
+      TextStyle,
+      FontSize,
+      Underline,
+      Color,
+      Highlight.configure({
+        multicolor: true,
+      }),
+      MapboxExtension,
+      ImageExtension,
+    ],
+    content: content,
+    editable: false,
+    immediatelyRender: false,
+  });
+
+  if (!editor) return null;
   return (
-    <div
-      className={cn("prose-content", className)}
-      dangerouslySetInnerHTML={{ __html: content }}
-    />
+    <div className={cn("prose-content", className)}>
+      <EditorContent editor={editor} />
+    </div>
   );
 }

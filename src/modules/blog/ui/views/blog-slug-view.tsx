@@ -8,16 +8,47 @@ import Image from "next/image";
 import ContactCard from "@/components/contact-card";
 import Footer from "@/components/footer";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
-import RichTextViewer from "@/components/editor/rich-text-viewer";
-import { format } from "date-fns";
+import dynamic from "next/dynamic";
+
+const RichTextViewer = dynamic(
+  () => import("@/components/editor/rich-text-viewer"),
+  { ssr: false },
+);
 import { siteConfig } from "@/site.config";
+
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+] as const;
+
+function formatBlogDate(value: Date | string) {
+  const date = new Date(value);
+  const month = MONTHS[date.getUTCMonth()];
+  const year = date.getUTCFullYear();
+
+  return {
+    monthYear: `${month} ${year}`,
+    date: `${date.getUTCDate()} ${month.slice(0, 3)} ${year}`,
+  };
+}
 
 export const BlogSlugView = ({ slug }: { slug: string }) => {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(trpc.blog.getOne.queryOptions({ slug }));
 
-  const publishedLabel = format(new Date(data.createdAt), "MMMM yyyy");
-  const publishedDate = format(new Date(data.createdAt), "d MMM yyyy");
+  const { monthYear: publishedLabel, date: publishedDate } = formatBlogDate(
+    data.createdAt,
+  );
   const contactHref =
     siteConfig.socialLinks.find((link) => link.title === "Contact me")?.href ??
     "";

@@ -17,6 +17,7 @@ import { TRPCError } from "@trpc/server";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
 import { escapeLike } from "@/lib/escape-like";
+import { logger } from "@/lib/logger";
 
 function getCitySetName(photo: {
   city: string | null;
@@ -65,7 +66,7 @@ export const photosRouter = createTRPCRouter({
 
         return insertedPhoto;
       } catch (error) {
-        console.error("Photo creation error:", error);
+        logger.error("Photo creation failed", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to create photo",
@@ -175,13 +176,16 @@ export const photosRouter = createTRPCRouter({
           });
           await s3Client.send(command);
         } catch (error) {
-          console.error("S3 delete failed (orphan file):", error);
+          logger.error("S3 photo deletion failed; orphan file may remain", error, {
+            photoId: photo.id,
+            key: photo.url,
+          });
         }
 
         return photo;
       } catch (error) {
         if (error instanceof TRPCError) throw error;
-        console.error("Photo deletion error:", error);
+        logger.error("Photo deletion failed", error, { photoId: id });
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to delete photo",

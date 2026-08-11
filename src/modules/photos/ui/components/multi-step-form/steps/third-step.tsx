@@ -10,6 +10,7 @@ import type { AddressData } from "@/modules/mapbox/hooks/use-get-address";
 import { Skeleton } from "@/components/ui/skeleton";
 import { formatGPSCoordinates } from "@/lib/utils";
 import { useGetAddress } from "@/modules/mapbox/hooks/use-get-address";
+import { logger } from "@/lib/logger";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -111,7 +112,7 @@ export function ThirdStep({
       const data = await response.json();
       setSearchResults(data.features || []);
     } catch (error) {
-      console.error("Search error:", error);
+      logger.error("Place search failed", error);
       setSearchResults([]);
     } finally {
       setIsSearching(false);

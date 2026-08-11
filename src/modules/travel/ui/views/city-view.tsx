@@ -19,6 +19,13 @@ export const CityView = ({ city }: Props) => {
   const { data } = useSuspenseQuery(trpc.travel.getOne.queryOptions({ city }));
 
   const coverPhoto = data.photos.find((item) => data.coverPhotoId === item.id);
+  const coverPhotoDate = coverPhoto?.dateTimeOriginal
+    ? new Date(coverPhoto.dateTimeOriginal)
+    : null;
+  const coverPhotoYear =
+    coverPhotoDate && !Number.isNaN(coverPhotoDate.getTime())
+      ? coverPhotoDate.getUTCFullYear()
+      : "-";
 
   return (
     <div className="size-full">
@@ -80,9 +87,7 @@ export const CityView = ({ city }: Props) => {
 
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">
                 <p className="text-xs text-text-muted">Year</p>
-                <p className="text-xs">
-                  {new Date(coverPhoto?.dateTimeOriginal || "").getFullYear()}
-                </p>
+                <p className="text-xs">{coverPhotoYear}</p>
               </div>
 
               <div className="w-full h-full p-3 lg:p-5 bg-muted rounded-xl flex justify-between items-center">

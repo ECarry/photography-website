@@ -31,7 +31,12 @@ import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
-import TiptapEditor from "@/components/editor";
+import dynamic from "next/dynamic";
+
+const TiptapEditor = dynamic(() => import("@/components/editor"), {
+  ssr: false,
+  loading: () => <div className="min-h-72 rounded-md border bg-muted" />,
+});
 
 const formSchema = postFormSchema;
 

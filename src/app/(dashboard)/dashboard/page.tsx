@@ -1,13 +1,8 @@
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { MapView } from "@/modules/dashboard/ui/views/map-view";
-import {
-  ChartAreaView,
-  ChartAreaLoading,
-} from "@/modules/dashboard/ui/views/chart-area-view";
+import { DashboardWidgets } from "@/modules/dashboard/ui/components/dashboard-widgets";
 import {
   SectionCardsView,
   SectionCardsLoading,
@@ -39,13 +34,7 @@ const page = async () => {
             <Suspense fallback={<SectionCardsLoading />}>
               <SectionCardsView />
             </Suspense>
-            <Suspense fallback={<ChartAreaLoading />}>
-              <ErrorBoundary fallback={<p>Error</p>}>
-                <ChartAreaView />
-              </ErrorBoundary>
-            </Suspense>
-
-            <MapView />
+            <DashboardWidgets />
           </HydrationBoundary>
         </div>
       </div>

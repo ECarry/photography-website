@@ -1,5 +1,6 @@
 import { ExifParserFactory } from "ts-exif-parser";
 import { encode } from "blurhash";
+import { logger } from "@/lib/logger";
 
 /**
  * Format exposure time to string (e.g., "1/1000")
@@ -238,7 +239,7 @@ export const getPhotoExif = async (file: File): Promise<TExifData | null> => {
 
     return exifData;
   } catch (error) {
-    console.error("Error reading EXIF data:", error);
+    logger.error("EXIF metadata parsing failed", error);
     return null;
   }
 };

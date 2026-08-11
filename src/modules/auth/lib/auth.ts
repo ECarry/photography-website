@@ -6,6 +6,7 @@ import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { nextCookies } from "better-auth/next-js";
 import { count } from "drizzle-orm";
+import { logger } from "@/lib/logger";
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -41,7 +42,7 @@ export const auth = betterAuth({
         }
       } catch (error) {
         if (!(error instanceof APIError)) {
-          console.error("DB Hook Error:", error);
+          logger.error("Auth database hook failed", error);
         }
         throw error;
       }

@@ -10,6 +10,7 @@ import {
 import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
+import { logger } from "@/lib/logger";
 
 interface UsePhotoUploadProps {
   folder?: string;
@@ -74,7 +75,7 @@ export function usePhotoUpload({
       setImageInfo(null);
       setUploadedImageUrl(null);
 
-      console.error("Upload error:", error);
+      logger.error("Photo upload failed", error);
       toast.error(
         error instanceof Error ? error.message : "Failed to upload photo"
       );

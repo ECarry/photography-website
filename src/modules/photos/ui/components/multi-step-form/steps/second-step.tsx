@@ -1,5 +1,6 @@
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft } from "lucide-react";
 import {
@@ -26,9 +27,12 @@ export function SecondStep({
   initialData,
   isSubmitting,
 }: MetadataStepProps) {
-  const form = useForm<SecondStepData>({
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    resolver: zodResolver(secondStepSchema) as any,
+  const form = useForm<
+    z.input<typeof secondStepSchema>,
+    undefined,
+    SecondStepData
+  >({
+    resolver: zodResolver(secondStepSchema),
     defaultValues: {
       title: initialData?.title || "",
       description: initialData?.description || "",

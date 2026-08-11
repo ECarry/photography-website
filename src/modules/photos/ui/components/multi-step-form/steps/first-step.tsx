@@ -15,6 +15,7 @@ import { PhotoUploader } from "../../photo-uploader";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { firstStepSchema, FirstStepData, UploadStepProps } from "../types";
 import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
+import { logger } from "@/lib/logger";
 
 export function FirstStep({
   url,
@@ -43,7 +44,7 @@ export function FirstStep({
       setIsCopied(true);
       setTimeout(() => setIsCopied(false), 2000);
     } catch (err) {
-      console.error("Failed to copy:", err);
+      logger.error("Photo URL copy failed", err);
     }
   };
 

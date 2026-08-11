@@ -1,5 +1,10 @@
 import type { NextConfig } from "next";
+import bundleAnalyzer from "@next/bundle-analyzer";
 import { siteConfig } from "./src/site.config";
+
+const withBundleAnalyzer = bundleAnalyzer({
+  enabled: process.env.ANALYZE === "true",
+});
 
 const s3PublicUrl = process.env.NEXT_PUBLIC_S3_PUBLIC_URL || "";
 const s3Url = s3PublicUrl ? new URL(s3PublicUrl) : null;
@@ -32,4 +37,4 @@ const nextConfig: NextConfig = {
   },
 };
 
-export default nextConfig;
+export default withBundleAnalyzer(nextConfig);
