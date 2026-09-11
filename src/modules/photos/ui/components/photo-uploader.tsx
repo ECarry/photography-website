@@ -15,7 +15,7 @@ interface PhotoUploaderProps {
 }
 
 export function PhotoUploader({ onUploadSuccess, folder }: PhotoUploaderProps) {
-  const { isUploading, handleUpload, uploadProgress } = usePhotoUpload({
+  const { isUploading, handleUpload, uploadProgress, uploadError } = usePhotoUpload({
     folder,
     onUploadSuccess,
   });
@@ -25,6 +25,7 @@ export function PhotoUploader({ onUploadSuccess, folder }: PhotoUploaderProps) {
       isUploading={isUploading}
       onUpload={handleUpload}
       uploadProgress={uploadProgress}
+      uploadError={uploadError}
     />
   );
 }

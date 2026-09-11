@@ -1,19 +1,19 @@
 "use client";
 
 import "./editor.css";
-import { useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { Separator } from "@/components/ui/separator";
 import { Color } from "@tiptap/extension-color";
 import Highlight from "@tiptap/extension-highlight";
 import Underline from "@tiptap/extension-underline";
-import { EditorContent, type Extension, useEditor } from "@tiptap/react";
+import { EditorContent, useEditor, useEditorState } from "@tiptap/react";
 import { BubbleMenu, FloatingMenu } from "@tiptap/react/menus";
 import StarterKit from "@tiptap/starter-kit";
 import { ImageExtension } from "./extensions/image";
 import { ImagePlaceholder } from "./extensions/image-placeholder";
 import { TextStyle } from "@tiptap/extension-text-style";
 import { FontSize } from "./extensions/font-size";
-import { Subscript, Superscript } from "lucide-react";
+import { ALLOWED_IMAGE_EXTENSIONS } from "@/constants";
 import { RedoToolbar } from "./toolbars/redo";
 import { BoldToolbar } from "./toolbars/bold";
 import { ItalicToolbar } from "./toolbars/italic";
@@ -45,11 +45,14 @@ import { HeadingToolbar } from "./toolbars/heading";
 interface TiptapEditorProps {
   content?: string;
   onChange?: (value: string) => void;
+  disabled?: boolean;
+  onUploadStateChange?: (uploading: boolean) => void;
 }
 
-const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
+const TiptapEditor = ({ content, onChange, disabled = false, onUploadStateChange }: TiptapEditorProps) => {
+  const uploadInFlight = useRef(false);
   const trpc = useTRPC();
-  const createPresignedUrl = useMutation(
+  const { mutateAsync: createPresignedUrl } = useMutation(
     trpc.s3.createPresignedUrl.mutationOptions()
   );
 
@@ -57,6 +60,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
     () =>
       [
         StarterKit.configure({
+          underline: false,
           orderedList: {
             HTMLAttributes: {
               class: "list-decimal",
@@ -89,8 +93,6 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         }),
         TextStyle,
         FontSize,
-        Subscript,
-        Superscript,
         Underline,
         Color,
         Highlight.configure({
@@ -104,19 +106,21 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         ImageExtension,
         ImagePlaceholder.configure({
           allowedMimeTypes: {
-            "image/*": [".png", ".jpg", ".jpeg", ".gif", ".webp"],
+            "image/*": [...ALLOWED_IMAGE_EXTENSIONS],
           },
           maxFiles: 1,
-          onDrop: async (files, editor) => {
+          onDrop: async (files, editor, getPos) => {
             const file = files[0];
-            if (!file) return;
+            if (!file || !editor.isEditable || uploadInFlight.current) return;
+            uploadInFlight.current = true;
+            onUploadStateChange?.(true);
 
             try {
               const { publicUrl } = await s3Client.upload({
                 file,
                 folder: "posts",
                 getUploadUrl: async ({ filename, contentType, folder }) => {
-                  const data = await createPresignedUrl.mutateAsync({
+                  const data = await createPresignedUrl({
                     filename,
                     contentType,
                     size: file.size,
@@ -130,7 +134,14 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
                 },
               });
 
-              editor.chain().focus().setImage({ src: publicUrl }).run();
+              if (editor.isDestroyed) return;
+              const position = getPos();
+              const placeholder = position === undefined ? null : editor.state.doc.nodeAt(position);
+              if (position === undefined || placeholder?.type.name !== "image-placeholder") return;
+              editor.chain().focus().insertContentAt(
+                { from: position, to: position + placeholder.nodeSize },
+                { type: "image", attrs: { src: publicUrl } },
+              ).run();
 
               toast.success("Image uploaded successfully");
             } catch (error) {
@@ -139,31 +150,52 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
                   ? error.message
                   : "Failed to upload image"
               );
+            } finally {
+              uploadInFlight.current = false;
+              onUploadStateChange?.(false);
             }
           },
         }),
-      ] as Extension[],
-    [createPresignedUrl]
+      ],
+    [createPresignedUrl, onUploadStateChange]
   );
 
   const editor = useEditor({
     extensions,
     content,
     immediatelyRender: false,
+    editorProps: {
+      attributes: { "aria-label": "Story content", role: "textbox", "aria-multiline": "true" },
+    },
     onUpdate({ editor }) {
       onChange?.(editor.getHTML());
     },
   });
 
+  const characterCount = useEditorState({
+    editor,
+    selector: ({ editor }) => editor?.getText().length ?? 0,
+  });
+
+  useEffect(() => {
+    editor?.setEditable(!disabled, false);
+  }, [editor, disabled]);
+
+  useEffect(() => {
+    if (editor && content !== undefined && editor.getHTML() !== content) {
+      editor.commands.setContent(content, { emitUpdate: false });
+    }
+  }, [editor, content]);
+
   if (!editor) {
-    return null;
+    return <div className="min-h-96 animate-pulse rounded-xl border bg-muted/30" />;
   }
 
   return (
-    <div className="border relative rounded-md pb-3">
-      <div className="flex w-full items-center py-2 px-2 justify-between border-b sticky top-0 left-0 bg-background z-10">
+    <div className="story-editor relative min-w-0 rounded-xl border bg-background shadow-sm">
+      <div className="sticky top-0 z-10 flex w-full items-center rounded-t-xl border-b bg-background/95 p-2 backdrop-blur">
         <ToolbarProvider editor={editor}>
-          <div className="flex items-center gap-2">
+          <div className="flex min-w-0 flex-wrap items-center gap-1">
             <UndoToolbar />
             <RedoToolbar />
             <Separator orientation="vertical" className="h-7" />
@@ -192,7 +224,7 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         onClick={() => {
           editor.chain().focus().run();
         }}
-        className="cursor-text min-h-72 bg-background relative pt-10"
+        className="relative min-h-96 cursor-text px-1 py-6 sm:px-4 sm:py-8"
       >
         <BubbleMenu editor={editor} className="z-50">
           <ToolbarProvider editor={editor}>
@@ -219,6 +251,10 @@ const TiptapEditor = ({ content, onChange }: TiptapEditorProps) => {
         </FloatingMenu>
 
         <EditorContent className="outline-none" editor={editor} />
+      </div>
+      <div className="flex flex-wrap justify-between gap-2 rounded-b-xl border-t bg-muted/20 px-4 py-3 text-xs text-muted-foreground">
+        <span>Tell the story behind the frame.</span>
+        <span className="tabular-nums">{characterCount ?? 0} characters</span>
       </div>
     </div>
   );

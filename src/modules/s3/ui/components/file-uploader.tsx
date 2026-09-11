@@ -2,7 +2,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { ALLOWED_IMAGE_EXTENSIONS } from "@/constants";
+import { ALLOWED_IMAGE_EXTENSIONS, IMAGE_SIZE_LIMIT } from "@/constants";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { FileRejection, useDropzone } from "react-dropzone";
 import { toast } from "sonner";
@@ -18,12 +18,18 @@ interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
   folder?: string;
   value?: string;
+  disabled?: boolean;
+  onUploadStateChange?: (uploading: boolean) => void;
+  onRemove?: () => void;
 }
 
 const FileUploader = ({
   onUploadSuccess,
   folder = "uploads",
   value,
+  disabled = false,
+  onUploadStateChange,
+  onRemove,
 }: FileUploaderProps) => {
   const [files, setFiles] = useState<
     Array<{
@@ -40,6 +46,7 @@ const FileUploader = ({
   const [imageLoading, setImageLoading] = useState(true);
   const [deletedKey, setDeletedKey] = useState<string | null>(null);
   const objectUrlsRef = useRef(new Set<string>());
+  const uploadInFlight = useRef(false);
 
   const trpc = useTRPC();
   const createPresignedUrl = useMutation(
@@ -50,8 +57,11 @@ const FileUploader = ({
 
   const uploadFile = useCallback(
     async (file: File, fileId: string) => {
+      if (uploadInFlight.current || disabled) return;
+      uploadInFlight.current = true;
+      onUploadStateChange?.(true);
       setFiles((prev) =>
-        prev.map((f) => (f.id === fileId ? { ...f, uploading: true } : f))
+        prev.map((f) => (f.id === fileId ? { ...f, uploading: true, progress: 0, error: false } : f))
       );
 
       try {
@@ -115,13 +125,17 @@ const FileUploader = ({
             error instanceof Error ? error.message : "Unknown error"
           }`
         );
+      } finally {
+        uploadInFlight.current = false;
+        onUploadStateChange?.(false);
       }
     },
-    [createPresignedUrl, onUploadSuccess, folder]
+    [createPresignedUrl, onUploadSuccess, folder, disabled, onUploadStateChange]
   );
 
   const onDrop = useCallback(
     (acceptedFiles: File[]) => {
+      if (uploadInFlight.current || disabled || deleteFile.isPending) return;
       // Do something with the files
       if (acceptedFiles.length > 0) {
         const newFiles = acceptedFiles.map((file) => ({
@@ -154,7 +168,7 @@ const FileUploader = ({
         });
       }
     },
-    [uploadFile]
+    [uploadFile, disabled, deleteFile.isPending]
   );
 
   useEffect(() => {
@@ -185,6 +199,10 @@ const FileUploader = ({
       if (fileInvalidType) {
         toast.error("File type is not supported");
       }
+
+      if (fileRejections.some((file) => file.errors.some((error) => error.code === "file-too-large"))) {
+        toast.error(`Choose an image smaller than ${IMAGE_SIZE_LIMIT / 1024 / 1024} MB`);
+      }
     }
   }, []);
 
@@ -192,6 +210,9 @@ const FileUploader = ({
     onDrop,
     onDropRejected,
     maxFiles: 1,
+    multiple: false,
+    maxSize: IMAGE_SIZE_LIMIT,
+    disabled: disabled || files.some((file) => file.uploading) || deleteFile.isPending,
     noClick: true,
     noKeyboard: true,
     accept: {
@@ -201,7 +222,8 @@ const FileUploader = ({
 
   const handleDeleteFile = useCallback(
     async (key: string | undefined) => {
-      if (!key) return;
+      if (!key || disabled || deleteFile.isPending || uploadInFlight.current) return;
+      if (!window.confirm("Permanently delete this image from storage? This cannot be undone.")) return;
 
       const fileToDelete = files.find((f) => f.key === key);
 
@@ -229,6 +251,7 @@ const FileUploader = ({
 
         // remember which key was deleted so we don't keep showing it via `value`
         setDeletedKey(key);
+        onUploadSuccess?.("");
 
         toast.success("File deleted successfully");
       } catch (error) {
@@ -241,7 +264,7 @@ const FileUploader = ({
         );
       }
     },
-    [deleteFile, files]
+    [deleteFile, files, disabled, onUploadSuccess]
   );
 
   const currentFile = files[0];
@@ -253,6 +276,20 @@ const FileUploader = ({
 
   const hasImage = !!displayImageUrl;
   const hasError = files.some((file) => file.error);
+  const isBusy = disabled || !!currentFile?.uploading || deleteFile.isPending;
+
+  const handleRemove = () => {
+    if (isBusy) return;
+    if (!onRemove) {
+      void handleDeleteFile(currentFile?.key || value);
+      return;
+    }
+    objectUrlsRef.current.forEach((url) => URL.revokeObjectURL(url));
+    objectUrlsRef.current.clear();
+    setFiles([]);
+    setDeletedKey(value || currentFile?.key || null);
+    onRemove();
+  };
 
   return (
     <div className="w-full max-w-2xl space-y-4">
@@ -270,7 +307,7 @@ const FileUploader = ({
         <input {...getInputProps()} className="sr-only" />
 
         {hasImage ? (
-          <div className="relative aspect-21/9 w-full">
+          <div className="relative aspect-video w-full">
             {imageLoading && (
               <div className="absolute inset-0 flex items-center justify-center bg-muted animate-pulse">
                 <div className="flex flex-col items-center gap-2 text-muted-foreground">
@@ -290,40 +327,6 @@ const FileUploader = ({
               onLoad={() => setImageLoading(false)}
               onError={() => setImageLoading(false)}
             />
-
-            <div className="absolute inset-0 bg-black/0 transition-all duration-200 group-hover:bg-black/40" />
-
-            {!currentFile?.uploading && (
-              <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 group-hover:opacity-100">
-                <div className="flex gap-2">
-                  <Button
-                    onClick={open}
-                    variant="secondary"
-                    size="sm"
-                    className="bg-white/90 text-gray-900 hover:bg-white"
-                    type="button"
-                  >
-                    <Upload className="mr-1 size-4" />
-                    Change Image
-                  </Button>
-                  {(value || currentFile?.key) && (
-                    <Button
-                      onClick={() =>
-                        value
-                          ? handleDeleteFile(value)
-                          : handleDeleteFile(currentFile?.key)
-                      }
-                      variant="destructive"
-                      size="sm"
-                      type="button"
-                    >
-                      <XIcon className="mr-1 size-4" />
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              </div>
-            )}
 
             {currentFile?.uploading && (
               <div className="absolute inset-0 flex items-center justify-center bg-black/40">
@@ -364,8 +367,7 @@ const FileUploader = ({
           </div>
         ) : (
           <div
-            className="flex aspect-21/9 w-full cursor-pointer flex-col items-center justify-center gap-4 p-8 text-center"
-            onClick={open}
+            className="flex min-h-48 w-full flex-col items-center justify-center gap-3 p-5 text-center"
           >
             <div className="rounded-full bg-primary/10 p-4">
               <CloudUpload className="size-8 text-primary" />
@@ -378,7 +380,7 @@ const FileUploader = ({
               </p>
             </div>
 
-            <Button variant="outline" size="sm" type="button">
+            <Button variant="outline" size="sm" type="button" onClick={open} disabled={isBusy}>
               <ImageIcon className="mr-1 size-4" />
               Browse Files
             </Button>
@@ -386,11 +388,27 @@ const FileUploader = ({
         )}
       </div>
 
+      {hasImage && (
+        <div className="flex flex-wrap gap-2">
+          <Button onClick={open} disabled={isBusy} variant="outline" size="sm" type="button">
+            <Upload className="size-3.5" /> Replace
+          </Button>
+          {(value || currentFile?.key) && (
+            <Button onClick={handleRemove} disabled={isBusy} variant="ghost" size="sm" type="button">
+              <XIcon className="size-3.5" /> Remove
+            </Button>
+          )}
+        </div>
+      )}
+      <p className="text-xs text-muted-foreground">JPG, PNG, WebP, AVIF, HEIC / HEIF · Max {IMAGE_SIZE_LIMIT / 1024 / 1024} MB</p>
       {hasError && (
         <Alert variant="destructive" className="mt-2">
           <AlertTitle>Upload failed</AlertTitle>
           <AlertDescription>
-            <p>Something went wrong while uploading. Please try again.</p>
+            <p>Your previous cover has not been changed. Retry or choose another image.</p>
+            <Button type="button" variant="outline" size="sm" disabled={isBusy} onClick={() => currentFile && uploadFile(currentFile.file, currentFile.id)}>
+              Retry upload
+            </Button>
           </AlertDescription>
         </Alert>
       )}

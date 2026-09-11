@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Feature, FeatureCollection, Point } from "geojson";
 
 export interface MapboxFeature extends Feature {
@@ -32,51 +32,30 @@ export interface MapboxReverseGeocodingResponse extends FeatureCollection {
 
 export type AddressData = MapboxReverseGeocodingResponse | null;
 
-type LocationState = {
-  data: MapboxReverseGeocodingResponse | null;
-  isLoading: boolean;
-  error: string | null;
-};
-
 interface UseGetLocationProps {
-  lat: number;
-  lng: number;
+  lat: number | null | undefined;
+  lng: number | null | undefined;
 }
 
 export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
-  const [state, setState] = useState<LocationState>({
-    data: null,
-    isLoading: false,
-    error: null,
+  const { data, isFetching, error } = useQuery({
+    queryKey: ["mapbox", "reverse-geocoding", lat, lng],
+    enabled: lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng),
+    queryFn: async ({ signal }): Promise<MapboxReverseGeocodingResponse> => {
+      const response = await fetch(
+        `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`,
+        { signal },
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      return response.json();
+    },
   });
 
-  useEffect(() => {
-    const fetchLocation = async () => {
-      setState((prev) => ({ ...prev, isLoading: true, error: null }));
-
-      try {
-        const response = await fetch(
-          `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`
-        );
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const data: MapboxReverseGeocodingResponse = await response.json();
-        setState({ data, isLoading: false, error: null });
-      } catch (error) {
-        setState({
-          data: null,
-          isLoading: false,
-          error:
-            error instanceof Error ? error.message : "Failed to fetch location",
-        });
-      }
-    };
-
-    fetchLocation();
-  }, [lat, lng]);
-
-  return state;
+  return {
+    data: data ?? null,
+    isLoading: isFetching,
+    error: error?.message ?? null,
+  };
 };

@@ -213,7 +213,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                 </div>
 
                 {/* Camera parameters */}
-                <div className="space-y-4 border-t pt-4">
+                <div className="@container min-w-0 space-y-5 rounded-xl border bg-muted/15 p-4 sm:p-5">
                   <div>
                     <h3 className="text-sm font-semibold">Camera Parameters</h3>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -222,7 +222,8 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     </p>
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Camera & lens</h4>
                     <FormField
                       control={form.control}
                       name="make"
@@ -269,7 +270,8 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     )}
                   />
 
-                  <div className="grid gap-4 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 border-t pt-5 @sm:grid-cols-2">
+                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Focal length</h4>
                     <FormField
                       control={form.control}
                       name="focalLength"
@@ -321,7 +323,8 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     />
                   </div>
 
-                  <div className="grid gap-4 md:grid-cols-4">
+                  <div className="grid grid-cols-1 items-start gap-4 border-t pt-5 @sm:grid-cols-2 @3xl:grid-cols-4">
+                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Exposure settings</h4>
                     <FormField
                       control={form.control}
                       name="fNumber"
@@ -378,7 +381,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       name="exposureCompensation"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>EV</FormLabel>
+                          <FormLabel>Compensation (EV)</FormLabel>
                           <FormControl>
                             <ExposureCompensationSelector
                               value={field.value}
@@ -486,6 +489,11 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="text-sm font-medium">Location</h2>
               </div>
+              <p className="mb-3 text-xs text-muted-foreground">
+                {currentLocation.lat == null || currentLocation.lng == null
+                  ? "No location set. Drag the temporary marker to choose one; it will not be saved until you move it."
+                  : "Drag the marker to adjust the location, then save your changes."}
+              </p>
               <div className="h-64 w-full rounded-md overflow-hidden border">
                 <Suspense
                   fallback={
@@ -519,8 +527,8 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     }}
                     onMarkerDragEnd={(markerId, lngLat) => {
                       setCurrentLocation({ lat: lngLat.lat, lng: lngLat.lng });
-                      form.setValue("latitude", lngLat.lat);
-                      form.setValue("longitude", lngLat.lng);
+                      form.setValue("latitude", lngLat.lat, { shouldDirty: true, shouldValidate: true });
+                      form.setValue("longitude", lngLat.lng, { shouldDirty: true, shouldValidate: true });
                     }}
                   />
                 </Suspense>

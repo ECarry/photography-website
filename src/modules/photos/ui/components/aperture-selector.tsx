@@ -43,12 +43,12 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="min-w-0 space-y-2">
       <Select
         value={isCustom ? "custom" : value?.toString()}
         onValueChange={handleSelectChange}
       >
-        <SelectTrigger>
+        <SelectTrigger className="w-full min-w-0 bg-background tabular-nums">
           <SelectValue placeholder="Select aperture">
             {isCustom ? "Custom" : value ? `f/${value}` : "Select aperture"}
           </SelectValue>
@@ -64,20 +64,22 @@ export function ApertureSelector({ value, onChange }: ApertureSelectorProps) {
       </Select>
 
       {isCustom && (
-        <div className="flex gap-2 items-center">
+        <div className="grid grid-cols-[auto_minmax(0,1fr)] items-center gap-2 rounded-lg border bg-muted/20 p-2">
           <span className="text-sm text-muted-foreground">f/</span>
           <Input
             type="number"
             step="0.1"
-            placeholder="Enter custom value"
+            placeholder="e.g., 2.3"
             value={value ?? ""}
             onChange={handleCustomChange}
-            className="flex-1"
+            aria-label="Custom aperture"
+            className="min-w-0 bg-background tabular-nums"
           />
           <Button
             type="button"
             variant="outline"
             size="sm"
+            className="col-span-2 w-full"
             onClick={() => setIsCustom(false)}
           >
             Cancel

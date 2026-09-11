@@ -104,6 +104,12 @@ export function FirstStep({
                 />
               </div>
 
+              <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+                <span className="rounded-md border bg-muted/30 px-2.5 py-1">{imageInfo.width} × {imageInfo.height} px</span>
+                <span className="rounded-md border bg-muted/30 px-2.5 py-1">Original quality</span>
+                <span className="rounded-md border bg-muted/30 px-2.5 py-1">Not published yet</span>
+              </div>
+
               {/* URL with copy button */}
               <div className="space-y-2">
                 <label className="text-sm font-medium">Image URL</label>

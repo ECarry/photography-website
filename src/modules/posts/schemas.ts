@@ -1,11 +1,13 @@
 import { z } from "zod";
 
 export const postFormSchema = z.object({
-  title: z.string().min(1, {
+  title: z.string().trim().min(1, {
     message: "Title is required",
   }),
-  slug: z.string().min(1, {
+  slug: z.string().trim().min(1, {
     message: "Slug is required",
+  }).regex(/^[\p{L}\p{N}_-]+$/u, {
+    message: "Use letters, numbers, hyphens or underscores, without spaces or slashes",
   }),
   content: z.string().optional(),
   visibility: z.enum(["public", "private"]),

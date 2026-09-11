@@ -2,7 +2,7 @@
 
 // External dependencies
 import * as mapboxgl from "mapbox-gl";
-import { useCallback, useEffect, useRef, forwardRef } from "react";
+import { useCallback, useEffect, useRef, useState, forwardRef } from "react";
 import Map, {
   GeolocateControl,
   Layer,
@@ -106,6 +106,14 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
 
     // Ensure markers is always an array
     const safeMarkers = Array.isArray(markers) ? markers : [];
+    const showTemporaryMarker = draggableMarker && safeMarkers.length === 0;
+    const [temporaryLocation, setTemporaryLocation] = useState({
+      longitude: initialViewState.longitude,
+      latitude: initialViewState.latitude,
+    });
+    const visibleMarkers: NonNullable<MapboxProps["markers"]> = showTemporaryMarker
+      ? [{ id: "location", ...temporaryLocation }]
+      : safeMarkers;
 
     // GeoJSON layer style for visited countries
     const layerStyle: LayerProps = {
@@ -208,6 +216,12 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
         interactiveLayerIds={geoJsonData ? ["data"] : undefined}
         onClick={onClick}
         onMove={(evt) => {
+          if (showTemporaryMarker) {
+            setTemporaryLocation({
+              longitude: evt.viewState.longitude,
+              latitude: evt.viewState.latitude,
+            });
+          }
           if (onMove) {
             onMove({
               zoom: evt.viewState.zoom,
@@ -230,7 +244,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
           />
         )}
         {/* Markers */}
-        {safeMarkers.map((marker) => (
+        {visibleMarkers.map((marker) => (
           <Marker
             key={marker.id}
             longitude={marker.longitude}

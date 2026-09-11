@@ -59,7 +59,8 @@ export const TagsInput = ({ value, onChange }: TagsInputProps) => {
         </Badge>
       ))}
       <input
-        className="flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
+        aria-label="Story tags"
+        className="min-w-0 flex-1 bg-transparent outline-none placeholder:text-muted-foreground"
         placeholder={
           value.length === 0 ? "Add tags and press Enter" : "Add more tags"
         }

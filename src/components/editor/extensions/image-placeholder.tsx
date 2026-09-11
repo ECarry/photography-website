@@ -23,11 +23,11 @@ import {
 	mergeAttributes,
 } from "@tiptap/react";
 import { Image as ImageIcon, Link, Upload } from "lucide-react";
-import { type FormEvent, useState } from "react";
+import { type FormEvent, useId, useRef, useState } from "react";
 
 export interface ImagePlaceholderOptions {
 	HTMLAttributes: Record<string, unknown>;
-	onDrop: (files: File[], editor: Editor) => void;
+	onDrop: (files: File[], editor: Editor, getPos: () => number | undefined) => void | Promise<void>;
 	onDropRejected?: (files: File[], editor: Editor) => void;
 	onEmbed: (url: string, editor: Editor) => void;
 	allowedMimeTypes?: Record<string, string[]>;
@@ -86,7 +86,10 @@ export const ImagePlaceholder = Node.create<ImagePlaceholderOptions>({
 });
 
 function ImagePlaceholderComponent(props: NodeViewProps) {
-	const { editor, extension, selected } = props;
+	const { editor, extension, selected, getPos } = props;
+	const inputId = useId();
+	const uploadInFlight = useRef(false);
+	const [isUploading, setIsUploading] = useState(false);
 
 	const [open, setOpen] = useState(false);
 	const [url, setUrl] = useState("");
@@ -150,20 +153,15 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
 		}
 	};
 
-	const handleAcceptedFiles = (acceptedFiles: File[]) => {
-		acceptedFiles.map((file) => {
-			const reader = new FileReader();
-
-			reader.onload = () => {
-				const src = reader.result as string;
-				editor.chain().focus().setImage({ src }).run();
-			};
-
-			reader.readAsDataURL(file);
-		});
-
-		if (extension.options.onDrop) {
-			extension.options.onDrop(acceptedFiles, editor);
+	const handleAcceptedFiles = async (acceptedFiles: File[]) => {
+		if (!editor.isEditable || uploadInFlight.current || acceptedFiles.length === 0) return;
+		uploadInFlight.current = true;
+		setIsUploading(true);
+		try {
+			await extension.options.onDrop(acceptedFiles, editor, getPos);
+		} finally {
+			uploadInFlight.current = false;
+			setIsUploading(false);
 		}
 	};
 
@@ -206,7 +204,7 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
 					</div>
 				</PopoverTrigger>
 				<PopoverContent
-					className="w-[450px] px-0 py-2"
+					className="w-[min(450px,calc(100vw-2rem))] px-0 py-2"
 					onPointerDownOutside={() => {
 						setOpen(false);
 					}}
@@ -247,14 +245,15 @@ function ImagePlaceholderComponent(props: NodeViewProps) {
 									multiple={extension.options.maxFiles !== 1}
 									onChange={handleFileInputChange}
 									className="hidden"
-									id="file-input"
+									id={inputId}
+									disabled={isUploading || !editor.isEditable}
 								/>
 								<label
-									htmlFor="file-input"
+									htmlFor={inputId}
 									className="flex h-28 w-full cursor-pointer flex-col items-center justify-center text-center"
 								>
 									<Upload className="mx-auto mb-2 h-6 w-6" />
-									Drag & drop or click to upload
+									<span role="status">{isUploading ? "Uploading image…" : "Drag & drop or click to upload"}</span>
 								</label>
 							</div>
 						</TabsContent>

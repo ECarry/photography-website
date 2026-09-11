@@ -8,24 +8,21 @@ interface StepIndicatorProps {
 
 export function StepIndicator({ steps, currentStep }: StepIndicatorProps) {
   return (
-    <div className="mb-8 flex justify-between">
-      {steps.map((s, i) => (
-        <div key={s.id} className="flex flex-col items-center">
-          <div
+    <ol aria-label="Photo upload steps" className="mb-6 grid grid-cols-4 gap-2 rounded-xl border bg-muted/20 p-3">
+      {steps.map((step, index) => (
+        <li key={step.id} aria-current={index === currentStep ? "step" : undefined} className="flex flex-col items-center gap-2 text-center">
+          <span
             className={cn(
-              "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold",
-              i < currentStep
-                ? "bg-primary text-primary-foreground"
-                : i === currentStep
-                ? "bg-primary text-primary-foreground ring-primary/30 ring-2"
-                : "bg-secondary text-secondary-foreground"
+              "flex size-8 items-center justify-center rounded-full text-xs font-semibold transition-colors",
+              index <= currentStep ? "bg-primary text-primary-foreground" : "border bg-background text-muted-foreground",
+              index === currentStep && "ring-4 ring-primary/10",
             )}
           >
-            {i < currentStep ? <CheckCircle2 className="h-4 w-4" /> : i + 1}
-          </div>
-          <span className="mt-1 hidden text-xs sm:block">{s.title}</span>
-        </div>
+            {index < currentStep ? <CheckCircle2 className="size-4" aria-label="Completed" /> : index + 1}
+          </span>
+          <span className={cn("text-xs", index === currentStep ? "font-semibold" : "text-muted-foreground")}>{step.title}</span>
+        </li>
       ))}
-    </div>
+    </ol>
   );
 }

@@ -1,7 +1,8 @@
 import dynamic from "next/dynamic";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useMemo, useState, useEffect, useCallback } from "react";
+import { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import type { MapRef } from "react-map-gl/mapbox";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, ArrowLeft, X, MapPin } from "lucide-react";
 import { Form, FormControl, FormItem, FormLabel } from "@/components/ui/form";
@@ -50,17 +51,19 @@ export function ThirdStep({
   onAddressUpdate,
 }: ThirdStepProps) {
   // Get initial coordinates from EXIF data or form data
-  const initialLongitude = initialData?.longitude ?? 0;
-  const initialLatitude = initialData?.latitude ?? 0;
+  const initialLongitude = initialData?.longitude;
+  const initialLatitude = initialData?.latitude;
+  const mapRef = useRef<MapRef>(null);
 
   // Manage current location state
   const [currentLocation, setCurrentLocation] = useState<{
-    lat: number;
-    lng: number;
+    lat: number | null;
+    lng: number | null;
   }>({
-    lat: initialLatitude || 0,
-    lng: initialLongitude || 0,
+    lat: initialLatitude ?? null,
+    lng: initialLongitude ?? null,
   });
+  const hasLocation = currentLocation.lat != null && currentLocation.lng != null;
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -70,8 +73,8 @@ export function ThirdStep({
   const form = useForm<ThirdStepData>({
     resolver: zodResolver(thirdStepSchema),
     defaultValues: {
-      latitude: initialData?.latitude ?? 0,
-      longitude: initialData?.longitude ?? 0,
+      latitude: initialLatitude,
+      longitude: initialLongitude,
       ...initialData,
     },
     mode: "onChange",
@@ -82,15 +85,13 @@ export function ThirdStep({
 
   // Get address from coordinates using the hook
   const { data: addressData } = useGetAddress({
-    lat: currentLocation.lat,
-    lng: currentLocation.lng,
+    lat: hasLocation ? currentLocation.lat : null,
+    lng: hasLocation ? currentLocation.lng : null,
   });
 
   // Update parent component when address data changes
   useEffect(() => {
-    if (addressData && onAddressUpdate) {
-      onAddressUpdate(addressData);
-    }
+    onAddressUpdate?.(addressData);
   }, [addressData, onAddressUpdate]);
 
   // Search for places
@@ -133,10 +134,19 @@ export function ThirdStep({
     return () => clearTimeout(debounceTimer);
   }, [searchQuery, handleSearch]);
 
+  const handleLocationChange = (lat: number, lng: number) => {
+    setCurrentLocation({ lat, lng });
+    form.setValue("latitude", lat, { shouldDirty: true, shouldValidate: true });
+    form.setValue("longitude", lng, { shouldDirty: true, shouldValidate: true });
+  };
+
   // Handle selecting a search result
   const handleSelectLocation = (result: SearchResult) => {
     const [lng, lat] = result.geometry.coordinates;
-    setCurrentLocation({ lat, lng });
+    handleLocationChange(lat, lng);
+    setSearchQuery("");
+    setSearchResults([]);
+    mapRef.current?.flyTo({ center: [lng, lat], zoom: 12, duration: 1000 });
   };
 
   const handleClearSearch = () => {
@@ -146,12 +156,12 @@ export function ThirdStep({
 
   // Memoize map values to reduce re-renders
   const mapValues = useMemo(() => {
-    const longitude = currentLocation.lng || initialLongitude;
-    const latitude = currentLocation.lat || initialLatitude;
+    const longitude = currentLocation.lng;
+    const latitude = currentLocation.lat;
 
     return {
       markers:
-        longitude === 0 && latitude === 0
+        longitude == null || latitude == null
           ? []
           : [
               {
@@ -161,24 +171,20 @@ export function ThirdStep({
               },
             ],
       viewState: {
-        longitude: longitude || -122.4, // Default to San Francisco
-        latitude: latitude || 37.8,
-        zoom: longitude === 0 && latitude === 0 ? 2 : 10,
+        longitude: longitude ?? -122.4, // Default to San Francisco
+        latitude: latitude ?? 37.8,
+        zoom: longitude == null || latitude == null ? 2 : 10,
       },
     };
-  }, [
-    currentLocation.lat,
-    currentLocation.lng,
-    initialLatitude,
-    initialLongitude,
-  ]);
+  }, [currentLocation.lat, currentLocation.lng]);
 
   const onSubmit = (data: ThirdStepData) => {
     // Include current location in submitted data
+    const hasCoordinates = data.latitude != null && data.longitude != null;
     onNext({
       ...data,
-      latitude: currentLocation.lat || initialLatitude,
-      longitude: currentLocation.lng || initialLongitude,
+      latitude: hasCoordinates ? data.latitude : undefined,
+      longitude: hasCoordinates ? data.longitude : undefined,
     });
   };
 
@@ -196,8 +202,9 @@ export function ThirdStep({
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
               <Button
+                type="button"
                 variant="outline"
-                aria-label="Search"
+                aria-label="Clear search"
                 onClick={handleClearSearch}
                 disabled={!searchQuery || isSearching}
               >
@@ -237,14 +244,12 @@ export function ThirdStep({
           <FormControl>
             <div className="h-[400px] w-full rounded-md border overflow-hidden">
               <MapboxComponent
+                ref={mapRef}
                 draggableMarker
                 markers={mapValues.markers}
                 initialViewState={mapValues.viewState}
-                onMarkerDragEnd={(markerId, lngLat) => {
-                  setCurrentLocation({
-                    lat: lngLat.lat,
-                    lng: lngLat.lng,
-                  });
+                onMarkerDragEnd={(_, lngLat) => {
+                  handleLocationChange(lngLat.lat, lngLat.lng);
                 }}
               />
             </div>
@@ -255,12 +260,12 @@ export function ThirdStep({
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
               <span className="text-xs">
-                {currentLocation.lat !== 0 && currentLocation.lng !== 0
+                {currentLocation.lat != null && currentLocation.lng != null
                   ? formatGPSCoordinates(
                       currentLocation.lat,
                       currentLocation.lng
                     )
-                  : "Drag the marker to set location"}
+                  : "Drag the marker to set a location, or continue without one. The temporary marker is not saved."}
               </span>
             </div>
             {addressData?.features?.[0] && (

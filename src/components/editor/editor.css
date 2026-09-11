@@ -1,4 +1,23 @@
 /* Tiptap Editor Styles */
+.story-editor .ProseMirror {
+  min-height: 22rem;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.story-editor .ProseMirror > * + * {
+  margin-top: 1em;
+}
+
+.story-editor .ProseMirror pre {
+  overflow-x: auto;
+}
+
+.story-editor .ProseMirror img {
+  max-width: 100%;
+  height: auto;
+}
+
 .ProseMirror {
   padding-left: 1rem;
   padding-right: 1rem;

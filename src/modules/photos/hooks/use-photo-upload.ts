@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { s3Client } from "@/modules/s3/lib/upload-client";
 import {
@@ -36,7 +36,14 @@ export function usePhotoUpload({
     trpc.s3.createPresignedUrl.mutationOptions()
   );
 
+  const uploadInFlight = useRef(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+
   const handleUpload = async (file: File) => {
+    if (uploadInFlight.current) return;
+    uploadInFlight.current = true;
+    setUploadProgress(0);
+    setUploadError(null);
     try {
       setIsUploading(true);
       const [exifData, imageInfo] = await Promise.all([
@@ -76,16 +83,18 @@ export function usePhotoUpload({
       setUploadedImageUrl(null);
 
       logger.error("Photo upload failed", error);
-      toast.error(
-        error instanceof Error ? error.message : "Failed to upload photo"
-      );
+      const message = error instanceof Error ? error.message : "Failed to upload photo";
+      setUploadError(message);
+      toast.error(message);
     } finally {
+      uploadInFlight.current = false;
       setIsUploading(false);
     }
   };
 
   return {
     isUploading,
+    uploadError,
     uploadProgress,
     uploadedImageUrl,
     exif,

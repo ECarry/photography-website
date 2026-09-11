@@ -125,7 +125,7 @@ export function SecondStep({
             />
 
             {/* Camera Parameters Section */}
-            <div className="space-y-4 border-t pt-4">
+            <div className="@container min-w-0 space-y-5 rounded-xl border bg-muted/15 p-4 sm:p-5">
               <div>
                 <h3 className="text-sm font-semibold">Camera Parameters</h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -135,7 +135,8 @@ export function SecondStep({
                 </p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
+                <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Camera & lens</h4>
                 <FormField
                   control={form.control}
                   name="make"
@@ -179,7 +180,8 @@ export function SecondStep({
                 )}
               />
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 gap-4 border-t pt-5 @sm:grid-cols-2">
+                <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Focal length</h4>
                 <FormField
                   control={form.control}
                   name="focalLength"
@@ -233,7 +235,8 @@ export function SecondStep({
                 />
               </div>
 
-              <div className="grid grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 items-start gap-4 border-t pt-5 @sm:grid-cols-2 @3xl:grid-cols-4">
+                <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Exposure settings</h4>
                 <FormField
                   control={form.control}
                   name="fNumber"
@@ -290,7 +293,7 @@ export function SecondStep({
                   name="exposureCompensation"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>EV</FormLabel>
+                      <FormLabel>Compensation (EV)</FormLabel>
                       <FormControl>
                         <ExposureCompensationSelector
                           value={field.value}

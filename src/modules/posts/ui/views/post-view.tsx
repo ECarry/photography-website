@@ -9,7 +9,7 @@ export const PostView = ({ slug }: { slug: string }) => {
   const { data } = useSuspenseQuery(trpc.posts.getOne.queryOptions({ slug }));
   return (
     <div className="px-4 md:px-8 py-4 md:py-6">
-      <PostForm post={data} />
+      <PostForm key={data.id} post={data} />
     </div>
   );
 };
