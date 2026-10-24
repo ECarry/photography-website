@@ -25,8 +25,8 @@ const page = async ({ searchParams }: Props) => {
   const filters = await loadSearchParams(searchParams);
 
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(
-    trpc.photos.getMany.queryOptions({ ...filters })
+  await queryClient.prefetchQuery(
+    trpc.photos.getMany.queryOptions({ ...filters }),
   );
 
   return (

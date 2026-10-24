@@ -1,5 +1,7 @@
 import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { Suspense } from "react";
+import { TRPCError } from "@trpc/server";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
@@ -12,15 +14,26 @@ type Props = {
   }>;
 };
 
+async function fetchPhotoOrNotFound(id: string) {
+  const queryClient = getQueryClient();
+
+  try {
+    const photo = await queryClient.fetchQuery(
+      trpc.photos.getOne.queryOptions({ id }),
+    );
+    if (!photo) notFound();
+    return photo;
+  } catch (error) {
+    if (error instanceof TRPCError && error.code === "NOT_FOUND") {
+      notFound();
+    }
+    throw error;
+  }
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = (await params).id;
-
-  const queryClient = getQueryClient();
-  const photo = await queryClient.fetchQuery(
-    trpc.photos.getOne.queryOptions({
-      id,
-    })
-  );
+  const photo = await fetchPhotoOrNotFound(id);
 
   return {
     title: photo.title,
@@ -29,14 +42,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 const Page = async ({ params }: Props) => {
   const { id } = await params;
+  await fetchPhotoOrNotFound(id);
 
   const queryClient = getQueryClient();
-  await queryClient.fetchQuery(
-    trpc.photos.getOne.queryOptions({
-      id,
-    })
-  );
-
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <ErrorBoundary fallback={<p>Something went wrong</p>}>

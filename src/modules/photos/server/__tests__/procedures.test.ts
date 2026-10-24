@@ -158,6 +158,76 @@ describe("photos.update", () => {
       }),
     ).rejects.toThrow("NOT_FOUND");
   });
+
+  it("should persist editable EXIF fields", async () => {
+    const caller = createAuthedCaller();
+    const photo = await caller.photos.create(buildPhotoInput());
+
+    const updated = await caller.photos.update({
+      id: photo.id,
+      make: "Camera Co.",
+      model: "Model X",
+      lensModel: "Prime 35mm",
+      focalLength: 35,
+      focalLength35mm: 35,
+      fNumber: 2.8,
+      iso: 400,
+      exposureTime: 0.01,
+      exposureCompensation: 0.5,
+    });
+
+    expect(updated).toMatchObject({
+      make: "Camera Co.",
+      model: "Model X",
+      lensModel: "Prime 35mm",
+      focalLength: 35,
+      focalLength35mm: 35,
+      fNumber: 2.8,
+      iso: 400,
+      exposureTime: 0.01,
+      exposureCompensation: 0.5,
+    });
+  });
+
+  it("should move a photo between city sets when its location changes", async () => {
+    const caller = createAuthedCaller();
+    const photo = await caller.photos.create(
+      buildPhotoInput({
+        country: "France",
+        countryCode: "FR",
+        city: "Paris",
+        region: "Ile-de-France",
+      }),
+    );
+
+    const updated = await caller.photos.update({
+      id: photo.id,
+      latitude: 42.36,
+      longitude: -71.06,
+      country: "United States",
+      countryCode: "US",
+      region: "Massachusetts",
+      city: "Boston",
+      district: null,
+      fullAddress: "Boston, MA, United States",
+      placeFormatted: "Boston, MA",
+    });
+
+    expect(updated.city).toBe("Boston");
+    expect(
+      await db.select().from(citySets).where(eq(citySets.city, "Paris")),
+    ).toHaveLength(0);
+    const [boston] = await db
+      .select()
+      .from(citySets)
+      .where(eq(citySets.city, "Boston"));
+    expect(boston).toMatchObject({
+      country: "United States",
+      countryCode: "US",
+      photoCount: 1,
+      coverPhotoId: photo.id,
+    });
+  });
 });
 
 describe("photos.getOne", () => {
@@ -169,6 +239,13 @@ describe("photos.getOne", () => {
 
     expect(photo).toBeDefined();
     expect(photo.id).toBe(created.id);
+  });
+
+  it("should return NOT_FOUND for a missing photo", async () => {
+    const caller = createAuthedCaller();
+    await expect(
+      caller.photos.getOne({ id: "00000000-0000-0000-0000-000000000000" }),
+    ).rejects.toThrow("NOT_FOUND");
   });
 });
 
@@ -214,6 +291,26 @@ describe("photos.getMany", () => {
 
     expect(result.items).toHaveLength(1);
     expect(result.items[0].title).toBe("100% Pure");
+  });
+
+  it("should reject non-positive page numbers", async () => {
+    const caller = createAuthedCaller();
+    await expect(caller.photos.getMany({ page: 0 })).rejects.toThrow();
+  });
+
+  it("should put undated photos after dated photos in descending order", async () => {
+    const caller = createAuthedCaller();
+    const dated = await caller.photos.create(
+      buildPhotoInput({ dateTimeOriginal: new Date("2024-01-01T00:00:00Z") }),
+    );
+    const undated = await caller.photos.create(buildPhotoInput());
+
+    const result = await caller.photos.getMany({ orderBy: "desc" });
+
+    expect(result.items.map((photo) => photo.id)).toEqual([
+      dated.id,
+      undated.id,
+    ]);
   });
 });
 

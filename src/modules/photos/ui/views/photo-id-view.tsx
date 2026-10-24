@@ -5,7 +5,11 @@ import dynamic from "next/dynamic";
 import { FramedPhoto } from "@/components/framed-photo";
 import { photosUpdateSchema } from "@/db/schema";
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useSuspenseQuery } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQueryClient,
+  useSuspenseQuery,
+} from "@tanstack/react-query";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -27,6 +31,8 @@ import { ApertureSelector } from "../components/aperture-selector";
 import { ShutterSpeedSelector } from "../components/shutter-speed-selector";
 import { ISOSelector } from "../components/iso-selector";
 import { ExposureCompensationSelector } from "../components/exposure-compensation-selector";
+import { toast } from "sonner";
+import { fetchAddressByCoordinates } from "@/modules/mapbox/hooks/use-get-address";
 
 interface PhotoIdViewProps {
   id: string;
@@ -58,6 +64,8 @@ const formSchema = photosUpdateSchema.extend({
 
 export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
+  const [isResolvingLocation, setIsResolvingLocation] = useState(false);
   const { data } = useSuspenseQuery(
     trpc.photos.getOne.queryOptions({
       id,
@@ -66,8 +74,30 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
 
   const updateMutation = useMutation(
     trpc.photos.update.mutationOptions({
-      onSuccess: () => {},
-      onError: () => {},
+      onSuccess: async (updatedPhoto) => {
+        setCurrentLocation({
+          lat: updatedPhoto.latitude ?? null,
+          lng: updatedPhoto.longitude ?? null,
+        });
+        queryClient.setQueryData(
+          trpc.photos.getOne.queryKey({ id: updatedPhoto.id }),
+          updatedPhoto,
+        );
+        await Promise.all([
+          queryClient.invalidateQueries(trpc.photos.getMany.queryOptions({})),
+          queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 9 }),
+          ),
+          queryClient.invalidateQueries(trpc.city.getMany.queryOptions()),
+          queryClient.invalidateQueries(
+            trpc.dashboard.getDashboardStats.queryOptions(),
+          ),
+        ]);
+        toast.success("Photo updated successfully");
+      },
+      onError: (error) => {
+        toast.error(error.message || "Failed to update photo");
+      },
     })
   );
 
@@ -101,10 +131,71 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
     },
   });
 
-  const isSubmitting = updateMutation.isPending;
+  const isSubmitting = updateMutation.isPending || isResolvingLocation;
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    updateMutation.mutate({ ...values, id: data.id });
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    const latitude = values.latitude ?? null;
+    const longitude = values.longitude ?? null;
+    const coordinatesChanged =
+      latitude !== (data.latitude ?? null) ||
+      longitude !== (data.longitude ?? null);
+
+    let locationFields = {};
+    if (coordinatesChanged) {
+      if (latitude == null || longitude == null) {
+        locationFields = {
+          country: null,
+          countryCode: null,
+          region: null,
+          city: null,
+          district: null,
+          fullAddress: null,
+          placeFormatted: null,
+        };
+      } else {
+        setIsResolvingLocation(true);
+        try {
+          const address = await fetchAddressByCoordinates({
+            lat: latitude,
+            lng: longitude,
+          });
+          const properties = address.features[0]?.properties;
+          const context = properties?.context;
+          const countryCode = context?.country?.country_code ?? null;
+          const region = context?.region?.name ?? null;
+
+          locationFields = {
+            country: context?.country?.name ?? null,
+            countryCode,
+            region,
+            city:
+              countryCode === "JP" || countryCode === "TW"
+                ? region
+                : (context?.place?.name ?? null),
+            district: context?.locality?.name ?? null,
+            fullAddress: properties?.full_address ?? null,
+            placeFormatted: properties?.place_formatted ?? null,
+          };
+        } catch (error) {
+          toast.error(
+            error instanceof Error
+              ? `Could not resolve this location: ${error.message}`
+              : "Could not resolve this location",
+          );
+          return;
+        } finally {
+          setIsResolvingLocation(false);
+        }
+      }
+    }
+
+    updateMutation.mutate({
+      ...values,
+      latitude,
+      longitude,
+      ...locationFields,
+      id: data.id,
+    });
   }
 
   const takenAt = data.dateTimeOriginal

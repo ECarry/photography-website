@@ -36,3 +36,31 @@ describe.each(selectors)("$name layout", ({ Component, value }) => {
     expect(onChange).not.toHaveBeenCalled();
   });
 });
+
+describe("ShutterSpeedSelector EXIF values", () => {
+  it("recognizes a common 1/180s exposure value", () => {
+    const html = renderToStaticMarkup(
+      React.createElement(ShutterSpeedSelector, {
+        value: 1 / 180,
+        onChange: vi.fn(),
+      }),
+    );
+
+    expect(html).toContain("1/180");
+    expect(html).not.toContain('aria-label="Custom shutter speed in seconds"');
+  });
+
+  it("rounds custom numeric display without changing the stored value", () => {
+    const onChange = vi.fn();
+    const exposureTime = 0.0054321987;
+    const html = renderToStaticMarkup(
+      React.createElement(ShutterSpeedSelector, {
+        value: exposureTime,
+        onChange,
+      }),
+    );
+
+    expect(html).toContain('value="0.005432"');
+    expect(onChange).not.toHaveBeenCalled();
+  });
+});

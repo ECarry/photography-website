@@ -37,20 +37,27 @@ interface UseGetLocationProps {
   lng: number | null | undefined;
 }
 
+export const fetchAddressByCoordinates = async ({
+  lat,
+  lng,
+  signal,
+}: UseGetLocationProps & { signal?: AbortSignal }): Promise<MapboxReverseGeocodingResponse> => {
+  const response = await fetch(
+    `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`,
+    { signal },
+  );
+  if (!response.ok) {
+    throw new Error(`HTTP error! status: ${response.status}`);
+  }
+  return response.json();
+};
+
 export const useGetAddress = ({ lat, lng }: UseGetLocationProps) => {
   const { data, isFetching, error } = useQuery({
     queryKey: ["mapbox", "reverse-geocoding", lat, lng],
     enabled: lat != null && lng != null && Number.isFinite(lat) && Number.isFinite(lng),
-    queryFn: async ({ signal }): Promise<MapboxReverseGeocodingResponse> => {
-      const response = await fetch(
-        `https://api.mapbox.com/search/geocode/v6/reverse?longitude=${lng}&latitude=${lat}&language=en&access_token=${process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}`,
-        { signal },
-      );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      return response.json();
-    },
+    queryFn: ({ signal }) =>
+      fetchAddressByCoordinates({ lat: lat!, lng: lng!, signal }),
   });
 
   return {

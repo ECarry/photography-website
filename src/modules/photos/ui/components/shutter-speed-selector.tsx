@@ -30,6 +30,7 @@ const STANDARD_SHUTTER_SPEEDS = [
   { value: 1 / 320, label: "1/320" },
   { value: 1 / 250, label: "1/250" },
   { value: 1 / 200, label: "1/200" },
+  { value: 1 / 180, label: "1/180" },
   { value: 1 / 160, label: "1/160" },
   { value: 1 / 125, label: "1/125" },
   { value: 1 / 100, label: "1/100" },
@@ -82,6 +83,10 @@ function formatShutterSpeed(seconds: number): string {
     const denominator = Math.round(1 / seconds);
     return `1/${denominator}`;
   }
+}
+
+function formatCustomSeconds(seconds: number): string {
+  return Number(seconds.toPrecision(4)).toString();
 }
 
 function findClosestShutterSpeed(value: number): typeof STANDARD_SHUTTER_SPEEDS[0] | null {
@@ -155,9 +160,9 @@ export function ShutterSpeedSelector({
         <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2 rounded-lg border bg-muted/20 p-2">
           <Input
             type="number"
-            step="0.0001"
+            step="any"
             placeholder="e.g., 0.0125"
-            value={value ?? ""}
+            value={value == null ? "" : formatCustomSeconds(value)}
             onChange={handleCustomChange}
             aria-label="Custom shutter speed in seconds"
             className="min-w-0 bg-background tabular-nums"
