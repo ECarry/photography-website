@@ -57,7 +57,7 @@ export const cityRouter = createTRPCRouter({
       const cityPhotos = await ctx.db
         .select()
         .from(photos)
-        .where(and(eq(photos.city, city), eq(photos.visibility, "public")))
+        .where(eq(photos.city, city))
         .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
       return {
@@ -108,6 +108,13 @@ export const cityRouter = createTRPCRouter({
         throw new TRPCError({
           code: "BAD_REQUEST",
           message: "Photo does not belong to this city",
+        });
+      }
+
+      if (photo.visibility !== "public") {
+        throw new TRPCError({
+          code: "BAD_REQUEST",
+          message: "Only public photos can be used as a city cover",
         });
       }
 

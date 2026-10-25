@@ -228,6 +228,24 @@ describe("photos.update", () => {
       coverPhotoId: photo.id,
     });
   });
+
+  it("should not make a public city cover private", async () => {
+    const caller = createAuthedCaller();
+    const photo = await caller.photos.create(
+      buildPhotoInput({
+        country: "France",
+        countryCode: "FR",
+        city: "Paris",
+        visibility: "public",
+      }),
+    );
+
+    await expect(
+      caller.photos.update({ id: photo.id, visibility: "private" }),
+    ).rejects.toThrow(
+      "Choose another public cover photo before making this photo private",
+    );
+  });
 });
 
 describe("photos.getOne", () => {
@@ -403,6 +421,68 @@ describe("dashboard.getDashboardStats", () => {
     expect(stats.thisYearCountries).toBe(1);
     expect(stats.lastYearCountries).toBe(1);
     expect(stats.countriesPercentChange).toBe(0);
+  });
+});
+
+describe("city.getOne", () => {
+  it("returns private as well as public photos to the dashboard", async () => {
+    const caller = createAuthedCaller();
+    const cityLocation = {
+      country: "Japan",
+      countryCode: "JP",
+      city: "Tokyo",
+      region: "Tokyo",
+    };
+
+    await caller.photos.create(
+      buildPhotoInput({
+        ...cityLocation,
+        visibility: "public",
+      }),
+    );
+    await caller.photos.create(
+      buildPhotoInput({
+        ...cityLocation,
+        visibility: "private",
+      }),
+    );
+
+    const result = await caller.city.getOne({ city: "Tokyo" });
+
+    expect(result?.photos).toHaveLength(2);
+  });
+});
+
+describe("city.updateCoverPhoto", () => {
+  it("rejects private photos as city covers", async () => {
+    const caller = createAuthedCaller();
+    await caller.photos.create(
+      buildPhotoInput({
+        country: "France",
+        countryCode: "FR",
+        city: "Paris",
+        visibility: "public",
+      }),
+    );
+    const privatePhoto = await caller.photos.create(
+      buildPhotoInput({
+        country: "France",
+        countryCode: "FR",
+        city: "Paris",
+        visibility: "private",
+      }),
+    );
+    const [citySet] = await db
+      .select()
+      .from(citySets)
+      .where(eq(citySets.city, "Paris"));
+
+    await expect(
+      caller.city.updateCoverPhoto({
+        cityId: citySet.id,
+        photoId: privatePhoto.id,
+      }),
+    ).rejects.toThrow("Only public photos can be used as a city cover");
   });
 });
 

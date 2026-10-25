@@ -379,6 +379,25 @@ export const photosRouter = createTRPCRouter({
         throw new TRPCError({ code: "NOT_FOUND" });
       }
 
+      if (
+        input.visibility === "private" &&
+        previousPhoto.visibility === "public"
+      ) {
+        const [coveringCity] = await ctx.db
+          .select({ id: citySets.id })
+          .from(citySets)
+          .where(eq(citySets.coverPhotoId, id))
+          .limit(1);
+
+        if (coveringCity) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "Choose another public cover photo before making this photo private",
+          });
+        }
+      }
+
       const coordinatesChanged =
         (input.latitude !== undefined &&
           input.latitude !== previousPhoto.latitude) ||
@@ -438,6 +457,27 @@ export const photosRouter = createTRPCRouter({
     )
     .mutation(async ({ ctx, input }) => {
       const { ids, visibility, isFavorite } = input;
+      if (visibility === "private") {
+        const coveredPhotos = await ctx.db
+          .select({ id: citySets.coverPhotoId })
+          .from(citySets)
+          .innerJoin(photos, eq(photos.id, citySets.coverPhotoId))
+          .where(
+            and(
+              inArray(citySets.coverPhotoId, ids),
+              eq(photos.visibility, "public"),
+            ),
+          );
+
+        if (coveredPhotos.length > 0) {
+          throw new TRPCError({
+            code: "BAD_REQUEST",
+            message:
+              "Choose another public cover photo before making it private",
+          });
+        }
+      }
+
       const updated = await ctx.db
         .update(photos)
         .set({

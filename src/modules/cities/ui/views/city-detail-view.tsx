@@ -7,14 +7,15 @@ import {
   ArrowLeft,
   MapPin,
   Image as ImageIcon,
-  Star,
   Heart,
-  StarOff,
+  ImagePlus,
+  Check,
+  Eye,
+  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
-import { format } from "date-fns";
 import {
   useSuspenseQuery,
   useMutation,
@@ -33,6 +34,7 @@ import {
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
 import { FramedPhoto } from "@/components/framed-photo";
+import { formatPhotoDate } from "@/modules/cities/format-photo-date";
 
 const cityDescriptionSchema = z.object({
   description: z.string().optional(),
@@ -59,7 +61,140 @@ export function CityDetailView({ city }: CityDetailViewProps) {
   });
 
   const updateCoverPhoto = useMutation(
-    trpc.city.updateCoverPhoto.mutationOptions()
+    trpc.city.updateCoverPhoto.mutationOptions({
+      onMutate: async ({ cityId, photoId }) => {
+        const detailQuery = trpc.city.getOne.queryOptions({ city });
+        const listQuery = trpc.city.getMany.queryOptions();
+
+        await Promise.all([
+          queryClient.cancelQueries(detailQuery),
+          queryClient.cancelQueries(listQuery),
+        ]);
+
+        const previousCity = queryClient.getQueryData(detailQuery.queryKey);
+        const previousCities = queryClient.getQueryData(listQuery.queryKey);
+        const coverPhoto = previousCity?.photos.find(
+          (photo) => photo.id === photoId,
+        );
+
+        if (previousCity) {
+          queryClient.setQueryData(detailQuery.queryKey, {
+            ...previousCity,
+            coverPhotoId: photoId,
+          });
+        }
+
+        if (previousCities) {
+          queryClient.setQueryData(
+            listQuery.queryKey,
+            previousCities.map((citySet) =>
+              citySet.id === cityId
+                ? {
+                    ...citySet,
+                    coverPhotoId: photoId,
+                    ...(coverPhoto
+                      ? {
+                          coverPhotoUrl: coverPhoto.url,
+                          coverPhotoBlurData: coverPhoto.blurData,
+                          coverPhotoTitle: coverPhoto.title,
+                        }
+                      : {}),
+                  }
+                : citySet,
+            ),
+          );
+        }
+
+        return { previousCity, previousCities };
+      },
+      onError: (error, _variables, context) => {
+        const detailQuery = trpc.city.getOne.queryOptions({ city });
+        const listQuery = trpc.city.getMany.queryOptions();
+
+        if (context?.previousCity !== undefined) {
+          queryClient.setQueryData(detailQuery.queryKey, context.previousCity);
+        }
+        if (context?.previousCities !== undefined) {
+          queryClient.setQueryData(listQuery.queryKey, context.previousCities);
+        }
+        toast.error(error.message || "Failed to update city cover photo");
+      },
+      onSuccess: () => {
+        toast.success("City cover photo updated");
+      },
+      onSettled: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries(
+            trpc.city.getOne.queryOptions({ city }),
+          ),
+          queryClient.invalidateQueries(trpc.city.getMany.queryOptions()),
+          queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 12 }),
+          ),
+          queryClient.invalidateQueries(trpc.travel.getCitySets.queryOptions()),
+        ]);
+      },
+    }),
+  );
+
+  const updatePhoto = useMutation(
+    trpc.photos.update.mutationOptions({
+      onMutate: async (variables) => {
+        const detailQuery = trpc.city.getOne.queryOptions({ city });
+        await queryClient.cancelQueries(detailQuery);
+
+        const previousCity = queryClient.getQueryData(detailQuery.queryKey);
+        if (previousCity) {
+          const { id, ...changes } = variables;
+          queryClient.setQueryData(detailQuery.queryKey, {
+            ...previousCity,
+            photos: previousCity.photos.map((photo) =>
+              photo.id === id ? { ...photo, ...changes } : photo,
+            ),
+          });
+        }
+
+        return { previousCity };
+      },
+      onError: (error, _variables, context) => {
+        const detailQuery = trpc.city.getOne.queryOptions({ city });
+        if (context?.previousCity !== undefined) {
+          queryClient.setQueryData(detailQuery.queryKey, context.previousCity);
+        }
+        toast.error(error.message || "Failed to update photo");
+      },
+      onSuccess: (_photo, variables) => {
+        if (variables.visibility !== undefined) {
+          toast.success(
+            variables.visibility === "public"
+              ? "Photo is now public"
+              : "Photo is now private",
+          );
+        } else if (variables.isFavorite !== undefined) {
+          toast.success(
+            variables.isFavorite
+              ? "Added to favorites"
+              : "Removed from favorites",
+          );
+        }
+      },
+      onSettled: async () => {
+        await Promise.all([
+          queryClient.invalidateQueries(
+            trpc.city.getOne.queryOptions({ city }),
+          ),
+          queryClient.invalidateQueries(trpc.city.getMany.queryOptions()),
+          queryClient.invalidateQueries(trpc.photos.getMany.queryOptions({})),
+          queryClient.invalidateQueries(
+            trpc.home.getManyLikePhotos.queryOptions({ limit: 10 }),
+          ),
+          queryClient.invalidateQueries(
+            trpc.home.getCitySets.queryOptions({ limit: 12 }),
+          ),
+          queryClient.invalidateQueries(trpc.travel.getCitySets.queryOptions()),
+        ]);
+      },
+    }),
   );
 
   const updateDescription = useMutation(
@@ -89,28 +224,11 @@ export function CityDetailView({ city }: CityDetailViewProps) {
     }
   }, [cityData?.description, form]);
 
-  const handleSetCover = async (photoId: string) => {
-    if (!cityData) return;
-
-    updateCoverPhoto.mutate(
-      {
-        cityId: cityData.id,
-        photoId: photoId,
-      },
-      {
-        onSuccess: async () => {
-          // Invalidate both queries to refresh data
-          await queryClient.invalidateQueries(
-            trpc.city.getOne.queryOptions({ city })
-          );
-          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
-          toast.success("Cover photo updated successfully");
-        },
-        onError: (error) => {
-          toast.error(error.message || "Failed to update cover photo");
-        },
-      }
-    );
+  const handleSetCover = (photoId: string) => {
+    if (!cityData || cityData.coverPhotoId === photoId) return;
+    const photo = cityData.photos.find((item) => item.id === photoId);
+    if (photo?.visibility !== "public") return;
+    updateCoverPhoto.mutate({ cityId: cityData.id, photoId });
   };
 
   if (!cityData) {
@@ -223,39 +341,126 @@ export function CityDetailView({ city }: CityDetailViewProps) {
         </div>
       </div>
       <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-6">
-        {cityData.photos.map((photo) => (
-          <div key={photo.id} className="space-y-4">
-            <div className="relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-20">
-              <FramedPhoto
-                src={photo.url}
-                alt={cityData.city}
-                blurhash={photo.blurData!}
-                width={photo.width}
-                height={photo.height}
-              />
-              <div className="absolute bottom-3 right-3 flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="icon"
-                  onClick={() => handleSetCover(photo.id)}
-                >
-                  {photo.id === cityData.coverPhotoId ? <Star /> : <StarOff />}
-                </Button>
-                <Button variant="outline" size="icon">
-                  <Heart />
-                </Button>
+        {cityData.photos.map((photo) => {
+          const isCoverPhoto = photo.id === cityData.coverPhotoId;
+          const isPublicPhoto = photo.visibility === "public";
+          const coverButtonLabel = isCoverPhoto
+            ? isPublicPhoto
+              ? "Current public city cover photo"
+              : "Current cover is private; choose a public photo"
+            : isPublicPhoto
+              ? "Set as city cover photo"
+              : "Private photos cannot be city covers";
+
+          return (
+            <div key={photo.id} className="space-y-4">
+              <div className="relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-20">
+                <FramedPhoto
+                  src={photo.url}
+                  alt={cityData.city}
+                  blurhash={photo.blurData!}
+                  width={photo.width}
+                  height={photo.height}
+                />
+                <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                  <Button
+                    variant={isCoverPhoto ? "default" : "outline"}
+                    size="icon"
+                    onClick={() => handleSetCover(photo.id)}
+                    disabled={updateCoverPhoto.isPending || !isPublicPhoto}
+                    aria-label={coverButtonLabel}
+                    aria-pressed={isCoverPhoto}
+                    title={coverButtonLabel}
+                  >
+                    <span className="relative flex size-5 items-center justify-center">
+                      {isCoverPhoto ? (
+                        <>
+                          <ImageIcon className="size-5" />
+                          <Check className="absolute -right-1 -top-1 size-3 rounded-full bg-background text-primary" />
+                        </>
+                      ) : (
+                        <ImagePlus className="size-5" />
+                      )}
+                    </span>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={
+                      updatePhoto.isPending ||
+                      (isCoverPhoto && photo.visibility === "public")
+                    }
+                    onClick={() =>
+                      updatePhoto.mutate({
+                        id: photo.id,
+                        visibility:
+                          photo.visibility === "public" ? "private" : "public",
+                      })
+                    }
+                    aria-label={
+                      isCoverPhoto && photo.visibility === "public"
+                        ? "Choose another cover before making this photo private"
+                        : photo.visibility === "public"
+                          ? "Make photo private"
+                          : "Make photo public"
+                    }
+                    title={
+                      isCoverPhoto && photo.visibility === "public"
+                        ? "Choose another public cover before making this photo private"
+                        : photo.visibility === "public"
+                          ? "Make photo private"
+                          : "Make photo public"
+                    }
+                  >
+                    {photo.visibility === "public" ? (
+                      <Eye className="size-4" />
+                    ) : (
+                      <EyeOff className="size-4" />
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    disabled={updatePhoto.isPending}
+                    onClick={() =>
+                      updatePhoto.mutate({
+                        id: photo.id,
+                        isFavorite: !photo.isFavorite,
+                      })
+                    }
+                    aria-label={
+                      photo.isFavorite
+                        ? "Remove from favorites"
+                        : "Add to favorites"
+                    }
+                    aria-pressed={photo.isFavorite}
+                    title={
+                      photo.isFavorite
+                        ? "Remove from favorites"
+                        : "Add to favorites"
+                    }
+                  >
+                    <Heart
+                      className={
+                        photo.isFavorite
+                          ? "size-4 fill-current text-red-500"
+                          : "size-4"
+                      }
+                    />
+                  </Button>
+                </div>
+              </div>
+              <div className="flex flex-col w-full items-center justify-center">
+                <p className="text-sm font-medium">{photo.title}</p>
+                <p className="text-xs text-muted-foreground">
+                  {photo.dateTimeOriginal
+                    ? formatPhotoDate(photo.dateTimeOriginal)
+                    : ""}
+                </p>
               </div>
             </div>
-            <div className="flex flex-col w-full items-center justify-center">
-              <p className="text-sm font-medium">{photo.title}</p>
-              <p className="text-xs text-muted-foreground">
-                {photo.dateTimeOriginal
-                  ? format(photo.dateTimeOriginal, "d MMM yyyy")
-                  : ""}
-              </p>
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
