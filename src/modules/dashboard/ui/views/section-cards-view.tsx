@@ -1,38 +1,46 @@
 "use client";
 
+import { useEffect } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTRPC } from "@/trpc/client";
 
-function formatPercentChange(value: number) {
-  return `${value > 0 ? "+" : ""}${value}% vs last year`;
+function formatPercentChange(value: number | null | undefined) {
+  const safeValue = value ?? 0;
+  return `${safeValue > 0 ? "+" : ""}${safeValue}% vs last year`;
 }
 
 export function SectionCardsView() {
   const trpc = useTRPC();
-  const { data: stats } = useSuspenseQuery(
+  const { data: stats, refetch } = useSuspenseQuery(
     trpc.dashboard.getDashboardStats.queryOptions(),
   );
+
+  useEffect(() => {
+    if (stats.thisYearCountries == null || stats.thisYearCities == null) {
+      void refetch();
+    }
+  }, [refetch, stats.thisYearCities, stats.thisYearCountries]);
 
   const metrics = [
     {
       label: "Total photos",
-      value: stats.totalPhotos,
+      value: stats.totalPhotos ?? 0,
       detail: `${formatPercentChange(stats.thisYearPercentChange)} · all dates included`,
     },
     {
       label: "Photos this year",
-      value: stats.thisYearPhotos,
+      value: stats.thisYearPhotos ?? 0,
       detail: formatPercentChange(stats.thisYearPercentChange),
     },
     {
       label: "Countries this year",
-      value: stats.thisYearCountries,
+      value: stats.thisYearCountries ?? 0,
       detail: formatPercentChange(stats.countriesPercentChange),
     },
     {
       label: "Cities this year",
-      value: stats.thisYearCities,
+      value: stats.thisYearCities ?? 0,
       detail: formatPercentChange(stats.citiesPercentChange),
     },
   ];
