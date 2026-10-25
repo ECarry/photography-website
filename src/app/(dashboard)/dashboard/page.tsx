@@ -3,6 +3,7 @@ import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { DashboardWidgets } from "@/modules/dashboard/ui/components/dashboard-widgets";
+import { DashboardOverviewHeader } from "@/modules/dashboard/ui/components/dashboard-overview-header";
 import {
   SectionCardsView,
   SectionCardsLoading,
@@ -10,26 +11,23 @@ import {
 
 const page = async () => {
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(
-    trpc.dashboard.getPhotosCountByMonth.queryOptions({ years: 3 })
-  );
-  void queryClient.prefetchQuery(
-    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions()
-  );
-  void queryClient.prefetchQuery(
-    trpc.dashboard.getDashboardStats.queryOptions()
-  );
+  await Promise.all([
+    queryClient.prefetchQuery(
+      trpc.dashboard.getPhotosCountByMonth.queryOptions({ years: 3 }),
+    ),
+    queryClient.prefetchQuery(
+      trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions(),
+    ),
+    queryClient.prefetchQuery(
+      trpc.dashboard.getDashboardStats.queryOptions(),
+    ),
+  ]);
 
   return (
-    <div className="py-4 px-4 md:px-8 flex flex-col">
-      <div>
-        <h1 className="text-2xl font-bold">Overview</h1>
-        <p className="text-muted-foreground ">
-          See your photos, travel history, and more.
-        </p>
-      </div>
-      <div className="@container/main flex flex-1 flex-col">
-        <div className="flex flex-col gap-4 py-4 md:gap-6 md:py-6">
+    <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="mx-auto flex w-full max-w-[1400px] flex-col px-4 py-7 md:px-6 md:py-8 xl:px-8">
+        <DashboardOverviewHeader />
+        <div className="mt-6 flex flex-col gap-4 md:mt-8 md:gap-5">
           <HydrationBoundary state={dehydrate(queryClient)}>
             <Suspense fallback={<SectionCardsLoading />}>
               <SectionCardsView />
@@ -38,7 +36,7 @@ const page = async () => {
           </HydrationBoundary>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

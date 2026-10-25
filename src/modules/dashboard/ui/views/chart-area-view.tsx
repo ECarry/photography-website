@@ -35,9 +35,18 @@ export const description = "Monthly photo count chart";
 const chartConfig = {
   photos: {
     label: "Photos",
-    color: "var(--primary)",
+    theme: {
+      light: "#171717",
+      dark: "#FAFAFA",
+    },
   },
 } satisfies ChartConfig;
+
+const monthFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
 
 export function ChartAreaView() {
   const trpc = useTRPC();
@@ -87,31 +96,21 @@ export function ChartAreaView() {
       item.count > max.count ? item : max
     );
     return {
-      month: new Date(peak.month + "-01").toLocaleDateString("en-US", {
-        month: "long",
-        year: "numeric",
-      }),
+      month: monthFormatter.format(new Date(`${peak.month}-01T00:00:00Z`)),
       count: peak.count,
     };
   }, [photosCountByMonth]);
 
   return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardTitle>Photo Activity</CardTitle>
-        <CardDescription>
-          <span className="hidden @[540px]/card:block">
-            {totalPhotos.toLocaleString()} photos taken in the last {years} year
-            {years > 1 ? "s" : ""}
-            {peakMonth && (
-              <span className="ml-2 text-muted-foreground">
-                • Peak: {peakMonth.month} ({peakMonth.count} photos)
-              </span>
-            )}
-          </span>
-          <span className="@[540px]/card:hidden">
-            {totalPhotos.toLocaleString()} photos • Last {years}y
-          </span>
+    <Card className="@container/card rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+      <CardHeader className="grid-cols-[1fr_auto] px-5 pt-5 sm:px-6 sm:pt-6">
+        <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+          Photo activity
+        </CardTitle>
+        <CardDescription className="text-xs text-[#8F8F8F]">
+          {totalPhotos.toLocaleString()} photos in the last {years}{" "}
+          {years === 1 ? "year" : "years"}
+          {peakMonth && ` · Peak ${peakMonth.month} (${peakMonth.count})`}
         </CardDescription>
         <CardAction>
           <ToggleGroup
@@ -119,7 +118,7 @@ export function ChartAreaView() {
             value={timeRange}
             onValueChange={setTimeRange}
             variant="outline"
-            className="hidden *:data-[slot=toggle-group-item]:px-4! @[767px]/card:flex"
+            className="hidden *:data-[slot=toggle-group-item]:px-3! @[767px]/card:flex"
           >
             <ToggleGroupItem value="1y">1 Year</ToggleGroupItem>
             <ToggleGroupItem value="3y">3 Years</ToggleGroupItem>
@@ -127,59 +126,50 @@ export function ChartAreaView() {
           </ToggleGroup>
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger
-              className="flex w-40 **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
+              className="flex w-32 rounded-md shadow-[0_0_0_1px_rgba(0,0,0,0.08)] **:data-[slot=select-value]:block **:data-[slot=select-value]:truncate @[767px]/card:hidden"
               size="sm"
-              aria-label="Select a value"
+              aria-label="Select chart range"
             >
-              <SelectValue placeholder="3 Years" />
+              <SelectValue placeholder="3 years" />
             </SelectTrigger>
-            <SelectContent className="rounded-xl">
-              <SelectItem value="1y" className="rounded-lg">
-                1 Year
-              </SelectItem>
-              <SelectItem value="3y" className="rounded-lg">
-                3 Years
-              </SelectItem>
-              <SelectItem value="5y" className="rounded-lg">
-                5 Years
-              </SelectItem>
+            <SelectContent className="rounded-lg">
+              <SelectItem value="1y">1 year</SelectItem>
+              <SelectItem value="3y">3 years</SelectItem>
+              <SelectItem value="5y">5 years</SelectItem>
             </SelectContent>
           </Select>
         </CardAction>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
+      <CardContent className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
         <ChartContainer
           config={chartConfig}
-          className="aspect-auto h-[250px] w-full"
+          className="h-[280px] w-full"
         >
           <AreaChart data={chartData}>
-            <defs>
-              <linearGradient id="fillPhotos" x1="0" y1="0" x2="0" y2="1">
-                <stop
-                  offset="5%"
-                  stopColor="var(--color-photos)"
-                  stopOpacity={0.8}
-                />
-                <stop
-                  offset="95%"
-                  stopColor="var(--color-photos)"
-                  stopOpacity={0.1}
-                />
-              </linearGradient>
-            </defs>
-            <CartesianGrid vertical={false} />
+            <CartesianGrid
+              vertical={false}
+              stroke="#EBEBEB"
+              strokeDasharray="0"
+            />
             <XAxis
               dataKey="date"
               tickLine={false}
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
+              tick={{ fill: "#8F8F8F", fontSize: 12 }}
               tickFormatter={(value) => {
-                const date = new Date(value);
-                return date.toLocaleDateString("en-US", {
-                  month: "short",
-                  year: years > 1 ? "2-digit" : undefined,
-                });
+                const date = new Date(`${String(value).slice(0, 7)}-01T00:00:00Z`);
+                return years > 1
+                  ? new Intl.DateTimeFormat("en-US", {
+                      month: "short",
+                      year: "2-digit",
+                      timeZone: "UTC",
+                    }).format(date)
+                  : new Intl.DateTimeFormat("en-US", {
+                      month: "short",
+                      timeZone: "UTC",
+                    }).format(date);
               }}
             />
             <ChartTooltip
@@ -188,10 +178,9 @@ export function ChartAreaView() {
               content={
                 <ChartTooltipContent
                   labelFormatter={(value) => {
-                    return new Date(value).toLocaleDateString("en-US", {
-                      month: "long",
-                      year: "numeric",
-                    });
+                    return monthFormatter.format(
+                      new Date(`${String(value).slice(0, 7)}-01T00:00:00Z`),
+                    );
                   }}
                   formatter={(value) => [
                     `${value} photo${value !== 1 ? "s" : ""}`,
@@ -203,9 +192,11 @@ export function ChartAreaView() {
             />
             <Area
               dataKey="photos"
-              type="natural"
-              fill="url(#fillPhotos)"
+              type="monotone"
+              fill="var(--color-photos)"
+              fillOpacity={0.08}
               stroke="var(--color-photos)"
+              strokeWidth={2}
             />
           </AreaChart>
         </ChartContainer>
@@ -216,10 +207,12 @@ export function ChartAreaView() {
 
 export const ChartAreaLoading = () => {
   return (
-    <Card className="@container/card">
-      <CardHeader>
-        <CardTitle>Photo Activity</CardTitle>
-        <CardDescription>
+    <Card className="@container/card h-full rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+      <CardHeader className="px-5 pt-5 sm:px-6 sm:pt-6">
+        <CardTitle className="text-[14px] font-medium tracking-[-0.28px]">
+          Photo activity
+        </CardTitle>
+        <CardDescription className="text-xs">
           <Skeleton className="h-4 w-24" />
         </CardDescription>
         <CardAction>
@@ -256,8 +249,8 @@ export const ChartAreaLoading = () => {
           </Select>
         </CardAction>
       </CardHeader>
-      <CardContent className="px-2 pt-4 sm:px-6 sm:pt-6">
-        <div className="w-full h-[250px] bg-muted rounded-lg animate-pulse" />
+      <CardContent className="px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+        <Skeleton className="h-[280px] w-full rounded-md" />
       </CardContent>
     </Card>
   );

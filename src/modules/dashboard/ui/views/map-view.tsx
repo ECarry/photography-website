@@ -1,144 +1,105 @@
 "use client";
 
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { useTRPC } from "@/trpc/client";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Mapbox from "@/modules/mapbox/ui/components/map";
-import { useMemo } from "react";
+import { useTRPC } from "@/trpc/client";
 
-import { TrendingUp } from "lucide-react";
-import { Bar, BarChart, XAxis, YAxis } from "recharts";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
-  ChartConfig,
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from "@/components/ui/chart";
+const numberFormatter = new Intl.NumberFormat("en-US");
 
-export const MapView = () => {
+export function MapView() {
   const trpc = useTRPC();
   const { data } = useSuspenseQuery(
-    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions()
+    trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions(),
   );
-
-  const chartConfig = {
-    photoCount: {
-      label: "Photos",
-      color: "hsl(var(--chart-1))",
-    },
-  } satisfies ChartConfig;
-
-  // Use real data from database
-  const countriesData = useMemo(() => data?.countries || [], [data]);
-
-  // Prepare chart data for the bar chart using countryCode from database
-  const chartData = countriesData
-    .slice(0, 10) // Show top 10 countries
-    .map((country) => ({
-      country: country.country || "Unknown",
-      countryShort: country.countryCode || "N/A",
-      photoCount: country.photoCount,
-    }));
+  const countries = data.countries;
+  const maxPhotoCount = countries[0]?.photoCount ?? 0;
+  const totalPhotos = countries.reduce(
+    (total, country) => total + country.photoCount,
+    0,
+  );
 
   return (
-    <div className="w-full h-[600px] grid grid-cols-1 lg:grid-cols-3 gap-4">
-      <div className="lg:col-span-2 rounded-xl overflow-hidden relative h-[400px] lg:h-full">
-        {false && (
-          <div className="absolute inset-0 bg-background/50 backdrop-blur-sm flex items-center justify-center z-10">
-            <div className="text-sm text-muted-foreground">
-              Loading world map data...
-            </div>
-          </div>
-        )}
-        <Mapbox
-          id="dashboardMap"
-          showControls={false}
-          scrollZoom={false}
-          doubleClickZoom={false}
-          boxZoom={false}
-          initialViewState={{
-            longitude: 0,
-            latitude: 20,
-            zoom: 0,
-          }}
-          geoJsonData={data?.geoJson || undefined}
-        />
-      </div>
+    <Card className="rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+      <CardHeader className="grid-cols-[1fr_auto] px-5 pt-5 sm:px-6 sm:pt-6">
+        <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+          Travel footprint
+        </CardTitle>
+        <CardDescription className="text-xs text-[#8F8F8F]">
+          Your collection by country
+        </CardDescription>
+        <div className="col-start-2 row-span-2 row-start-1 text-right">
+          <p className="text-[20px] font-semibold leading-6 tracking-[-0.6px] tabular-nums text-[#171717] dark:text-[#FAFAFA]">
+            {numberFormatter.format(countries.length)}
+          </p>
+          <p className="mt-1 text-xs text-[#8F8F8F]">countries</p>
+        </div>
+      </CardHeader>
+      <CardContent className="grid gap-5 px-5 pb-5 pt-4 sm:px-6 sm:pb-6">
+        <div className="h-[220px] overflow-hidden rounded-md shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+          <Mapbox
+            id="dashboardMap"
+            showControls={false}
+            scrollZoom={false}
+            doubleClickZoom={false}
+            boxZoom={false}
+            dragRotate={false}
+            initialViewState={{
+              longitude: 0,
+              latitude: 20,
+              zoom: 0,
+            }}
+            geoJsonData={data.geoJson}
+          />
+        </div>
 
-      {/* Country Statistics Chart */}
-      <div className="lg:col-span-1 h-full">
-        {countriesData && countriesData.length > 0 && (
-          <Card className="h-full flex flex-col p-4">
-            <CardHeader className="shrink-0 p-0 pb-3">
-              <CardTitle className="text-lg">Countries by Photos</CardTitle>
-              <CardDescription className="text-sm">
-                Top {chartData.length} countries with most photos
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="flex-1 flex flex-col p-0 min-h-0">
-              <ChartContainer config={chartConfig} className="flex-1 min-h-0">
-                <BarChart
-                  accessibilityLayer
-                  data={chartData}
-                  layout="vertical"
-                  margin={{
-                    left: -15,
-                    top: 5,
-                    bottom: 5,
-                  }}
-                >
-                  <XAxis type="number" dataKey="photoCount" hide />
-                  <YAxis
-                    dataKey="countryShort"
-                    type="category"
-                    tickLine={false}
-                    tickMargin={10}
-                    axisLine={false}
-                    width={50}
-                  />
-                  <ChartTooltip
-                    cursor={false}
-                    content={
-                      <ChartTooltipContent
-                        hideLabel
-                        labelFormatter={(label, payload) => {
-                          const data = payload?.[0]?.payload;
-                          return data?.country || label;
-                        }}
-                      />
-                    }
-                  />
-                  <Bar
-                    dataKey="photoCount"
-                    fill="var(--color-photoCount)"
-                    radius={5}
-                  />
-                </BarChart>
-              </ChartContainer>
-            </CardContent>
-            <CardFooter className="shrink-0 flex-col items-start gap-1 text-sm p-0 pt-3">
-              <div className="flex gap-2 leading-none font-medium">
-                {countriesData.length} countries visited{" "}
-                <TrendingUp className="h-4 w-4" />
-              </div>
-              <div className="text-muted-foreground leading-none">
-                Total:{" "}
-                {countriesData
-                  .reduce((sum, c) => sum + c.photoCount, 0)
-                  .toLocaleString()}{" "}
-                photos
-              </div>
-            </CardFooter>
-          </Card>
+        {countries.length > 0 ? (
+          <section aria-label="Countries ranked by photos" className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-medium tracking-[-0.24px] text-[#4D4D4D] dark:text-[#B3B3B3]">
+                Most photographed
+              </h3>
+              <span className="text-xs tabular-nums text-[#8F8F8F]">
+                {numberFormatter.format(totalPhotos)} photos
+              </span>
+            </div>
+            <ol className="h-[148px] space-y-3 overflow-y-auto pr-2">
+              {countries.map((country, index) => (
+                <li key={`${country.countryCode}-${country.country}`} className="space-y-1.5">
+                  <div className="flex items-center justify-between gap-3 text-xs">
+                    <span className="min-w-0 truncate text-[#171717] dark:text-[#FAFAFA]">
+                      <span className="mr-2 font-mono text-[#8F8F8F]">
+                        {String(index + 1).padStart(2, "0")}
+                      </span>
+                      {country.country || country.countryCode}
+                    </span>
+                    <span className="shrink-0 tabular-nums text-[#4D4D4D] dark:text-[#B3B3B3]">
+                      {numberFormatter.format(country.photoCount)}
+                    </span>
+                  </div>
+                  <div
+                    aria-hidden="true"
+                    className="h-1 overflow-hidden rounded-full bg-[#F2F2F2] dark:bg-[#303030]"
+                  >
+                    <div
+                      className="h-full rounded-full bg-[#171717] dark:bg-[#FAFAFA]"
+                      style={{
+                        width: `${maxPhotoCount
+                          ? (country.photoCount / maxPhotoCount) * 100
+                          : 0}%`,
+                      }}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ol>
+          </section>
+        ) : (
+          <p className="py-3 text-sm text-[#8F8F8F]">
+            Add location data to your photos to see your travel footprint.
+          </p>
         )}
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
-};
+}
