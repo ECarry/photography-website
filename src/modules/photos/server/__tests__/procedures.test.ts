@@ -312,6 +312,98 @@ describe("photos.getMany", () => {
       undated.id,
     ]);
   });
+
+  it("should filter by visibility, favorite, city, and description search", async () => {
+    const caller = createAuthedCaller();
+    await caller.photos.create(
+      buildPhotoInput({
+        title: "Evening",
+        description: "Misty mountain at dusk",
+        visibility: "public",
+        isFavorite: true,
+        city: "Kyoto",
+      }),
+    );
+    await caller.photos.create(
+      buildPhotoInput({
+        title: "Evening",
+        description: "Misty mountain at dusk",
+        visibility: "private",
+        isFavorite: true,
+        city: "Kyoto",
+      }),
+    );
+
+    const result = await caller.photos.getMany({
+      visibility: "public",
+      favorite: "favorites",
+      city: "Kyoto",
+      search: "mountain",
+    });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0].visibility).toBe("public");
+  });
+});
+
+describe("photos.bulkUpdate", () => {
+  it("updates the requested fields on selected photos", async () => {
+    const caller = createAuthedCaller();
+    const first = await caller.photos.create(buildPhotoInput());
+    const second = await caller.photos.create(buildPhotoInput());
+
+    const result = await caller.photos.bulkUpdate({
+      ids: [first.id, second.id],
+      visibility: "public",
+      isFavorite: true,
+    });
+
+    expect(result.updatedCount).toBe(2);
+    const updatedFirst = await caller.photos.getOne({ id: first.id });
+    const updatedSecond = await caller.photos.getOne({ id: second.id });
+    expect(updatedFirst).toMatchObject({
+      visibility: "public",
+      isFavorite: true,
+    });
+    expect(updatedSecond).toMatchObject({
+      visibility: "public",
+      isFavorite: true,
+    });
+  });
+});
+
+describe("dashboard.getDashboardStats", () => {
+  it("counts undated photos and compares yearly country visits consistently", async () => {
+    const caller = createAuthedCaller();
+    const currentYear = new Date().getFullYear();
+
+    await caller.photos.create(buildPhotoInput({ title: "Undated 1" }));
+    await caller.photos.create(buildPhotoInput({ title: "Undated 2" }));
+    await caller.photos.create(
+      buildPhotoInput({
+        title: "This year",
+        country: "France",
+        countryCode: "FR",
+        dateTimeOriginal: new Date(currentYear, 5, 1),
+      }),
+    );
+    await caller.photos.create(
+      buildPhotoInput({
+        title: "Last year",
+        country: "Japan",
+        countryCode: "JP",
+        dateTimeOriginal: new Date(currentYear - 1, 5, 1),
+      }),
+    );
+
+    const stats = await caller.dashboard.getDashboardStats();
+
+    expect(stats.totalPhotos).toBe(4);
+    expect(stats.thisYearPhotos).toBe(1);
+    expect(stats.thisYearCountries).toBe(1);
+    expect(stats.lastYearCountries).toBe(1);
+    expect(stats.countriesPercentChange).toBe(0);
+  });
 });
 
 describe("photos.remove", () => {
@@ -323,8 +415,9 @@ describe("photos.remove", () => {
     expect(deleted.id).toBe(photo.id);
 
     // Verify it's gone
-    const found = await caller.photos.getOne({ id: photo.id });
-    expect(found).toBeUndefined();
+    await expect(caller.photos.getOne({ id: photo.id })).rejects.toThrow(
+      "NOT_FOUND",
+    );
   });
 
   it("should delete city set when last photo is removed", async () => {

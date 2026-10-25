@@ -39,9 +39,6 @@ export function FavoriteToggle({ photoId, initialValue }: FavoriteToggleProps) {
           await queryClient.invalidateQueries(
             trpc.photos.getMany.queryOptions({})
           );
-          toast.success(
-            newValue ? "Added to favorites" : "Removed from favorites"
-          );
         },
         onError: (error) => {
           // Revert on error

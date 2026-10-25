@@ -55,8 +55,11 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     accessorKey: "city",
     header: "City",
     cell: ({ row }) => {
-      const location = row.original.city + ", " + row.original.countryCode;
-      return <span>{location}</span>;
+      const city = row.original.city ?? row.original.region;
+      const location = [city, row.original.countryCode]
+        .filter(Boolean)
+        .join(", ");
+      return <span>{location || "—"}</span>;
     },
   },
   {
@@ -65,6 +68,7 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     cell: ({ row }) => {
       return (
         <FavoriteToggle
+          key={`${row.original.id}-${row.original.isFavorite}`}
           photoId={row.original.id}
           initialValue={row.original.isFavorite}
         />
@@ -77,6 +81,7 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
     cell: ({ row }) => {
       return (
         <VisibilityToggle
+          key={`${row.original.id}-${row.original.visibility}`}
           photoId={row.original.id}
           initialValue={row.original.visibility}
         />

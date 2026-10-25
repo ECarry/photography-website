@@ -94,9 +94,9 @@ export function SectionCardsView() {
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Countries Visited</CardDescription>
+          <CardDescription>Countries This Year</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.totalCountries}
+            {stats.thisYearCountries}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">
@@ -129,9 +129,9 @@ export function SectionCardsView() {
       </Card>
       <Card className="@container/card">
         <CardHeader>
-          <CardDescription>Total Cities</CardDescription>
+          <CardDescription>Cities This Year</CardDescription>
           <CardTitle className="text-2xl font-semibold tabular-nums @[250px]/card:text-3xl">
-            {stats.totalCities}
+            {stats.thisYearCities}
           </CardTitle>
           <CardAction>
             <Badge variant="outline">

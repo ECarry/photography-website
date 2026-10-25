@@ -1,9 +1,11 @@
 import {
+  ALLOWED_UPLOAD_FOLDERS,
   ALLOWED_CONTENT_TYPES,
   IMAGE_SIZE_LIMIT,
 } from "@/constants";
 
 export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
+export type AllowedUploadFolder = (typeof ALLOWED_UPLOAD_FOLDERS)[number];
 
 /**
  * Client-side S3 upload helper.
@@ -12,12 +14,12 @@ export type AllowedContentType = (typeof ALLOWED_CONTENT_TYPES)[number];
  */
 interface UploadToS3Options {
   file: File;
-  folder: string;
+  folder: AllowedUploadFolder;
   onProgress?: (progress: number) => void;
   getUploadUrl: (input: {
     filename: string;
     contentType: AllowedContentType;
-    folder: string;
+    folder: AllowedUploadFolder;
   }) => Promise<{ uploadUrl: string; publicUrl: string }>;
 }
 

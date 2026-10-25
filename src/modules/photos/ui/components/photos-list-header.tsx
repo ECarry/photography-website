@@ -13,19 +13,40 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export const PhotosListHeader = () => {
   const modal = useModal();
   const [filters, setFilters] = usePhotosFilters();
 
-  const isAnyFilterModified = !!filters.search;
+  const isAnyFilterModified =
+    !!filters.search ||
+    !!filters.city ||
+    filters.visibility !== "all" ||
+    filters.favorite !== "all" ||
+    filters.orderBy !== "desc";
 
   const onClearFilters = () => {
     setFilters({
       search: "",
       page: DEFAULT_PAGE,
+      orderBy: "desc",
+      visibility: "all",
+      favorite: "all",
+      city: "",
     });
   };
+
+  const updateFilter = (
+    values: Partial<typeof filters>,
+  ) => setFilters({ ...values, page: DEFAULT_PAGE });
 
   return (
     <>
@@ -41,6 +62,43 @@ export const PhotosListHeader = () => {
           <ScrollArea>
             <div className="flex items-center gap-x-2 p-1">
               <PhotosSearchFilter />
+              <Input
+                aria-label="Filter by city"
+                placeholder="City"
+                value={filters.city}
+                className="h-9 w-[120px]"
+                onChange={(event) => updateFilter({ city: event.target.value })}
+              />
+              <Select
+                value={filters.visibility}
+                onValueChange={(visibility: typeof filters.visibility) =>
+                  updateFilter({ visibility })
+                }
+              >
+                <SelectTrigger className="h-9 w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any visibility</SelectItem>
+                  <SelectItem value="public">Public</SelectItem>
+                  <SelectItem value="private">Private</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={filters.favorite}
+                onValueChange={(favorite: typeof filters.favorite) =>
+                  updateFilter({ favorite })
+                }
+              >
+                <SelectTrigger className="h-9 w-[130px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Any favorite</SelectItem>
+                  <SelectItem value="favorites">Favorites</SelectItem>
+                  <SelectItem value="not-favorites">Not favorites</SelectItem>
+                </SelectContent>
+              </Select>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm">

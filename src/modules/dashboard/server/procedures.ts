@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { photos, citySets } from "@/db/schema";
-import { sql, and, gte } from "drizzle-orm";
+import { sql } from "drizzle-orm";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
@@ -154,122 +154,92 @@ export const dashboardRouter = createTRPCRouter({
   }),
 
   getDashboardStats: protectedProcedure.query(async ({ ctx }) => {
-    // Get total photo count
-    const totalPhotosResult = await ctx.db
-      .select({ count: sql<number>`COUNT(*)::int` })
-      .from(photos)
-      .where(sql`${photos.dateTimeOriginal} IS NOT NULL`);
-
-    const totalPhotos = totalPhotosResult[0]?.count ?? 0;
-
-    // Get current year photo count
     const currentYear = new Date().getFullYear();
     const yearStart = new Date(currentYear, 0, 1);
-    const thisYearPhotosResult = await ctx.db
-      .select({ count: sql<number>`COUNT(*)::int` })
-      .from(photos)
-      .where(
-        and(
-          gte(photos.dateTimeOriginal, yearStart),
-          sql`${photos.dateTimeOriginal} IS NOT NULL`,
-        ),
-      );
-
-    const thisYearPhotos = thisYearPhotosResult[0]?.count ?? 0;
-
-    // Get last year photo count
+    const nextYearStart = new Date(currentYear + 1, 0, 1);
     const lastYearStart = new Date(currentYear - 1, 0, 1);
-    const lastYearEnd = new Date(currentYear, 0, 1);
-    const lastYearPhotosResult = await ctx.db
-      .select({ count: sql<number>`COUNT(*)::int` })
-      .from(photos)
-      .where(
-        and(
-          gte(photos.dateTimeOriginal, lastYearStart),
-          sql`${photos.dateTimeOriginal} < ${lastYearEnd}`,
-          sql`${photos.dateTimeOriginal} IS NOT NULL`,
-        ),
-      );
 
-    const lastYearPhotos = lastYearPhotosResult[0]?.count ?? 0;
+    const [photoStatsResult, cityStatsResult] = await Promise.all([
+      ctx.db
+        .select({
+          totalPhotos: sql<number>`COUNT(*)::int`,
+          thisYearPhotos: sql<number>`COUNT(*) FILTER (
+            WHERE ${photos.dateTimeOriginal} >= ${yearStart}
+              AND ${photos.dateTimeOriginal} < ${nextYearStart}
+          )::int`,
+          lastYearPhotos: sql<number>`COUNT(*) FILTER (
+            WHERE ${photos.dateTimeOriginal} >= ${lastYearStart}
+              AND ${photos.dateTimeOriginal} < ${yearStart}
+          )::int`,
+          totalCountries: sql<number>`COUNT(DISTINCT ${photos.countryCode}) FILTER (
+            WHERE ${photos.countryCode} IS NOT NULL
+          )::int`,
+          thisYearCountries: sql<number>`COUNT(DISTINCT ${photos.countryCode}) FILTER (
+            WHERE ${photos.countryCode} IS NOT NULL
+              AND ${photos.dateTimeOriginal} >= ${yearStart}
+              AND ${photos.dateTimeOriginal} < ${nextYearStart}
+          )::int`,
+          lastYearCountries: sql<number>`COUNT(DISTINCT ${photos.countryCode}) FILTER (
+            WHERE ${photos.countryCode} IS NOT NULL
+              AND ${photos.dateTimeOriginal} >= ${lastYearStart}
+              AND ${photos.dateTimeOriginal} < ${yearStart}
+          )::int`,
+        })
+        .from(photos),
+      ctx.db
+        .select({
+          totalCities: sql<number>`COUNT(*)::int`,
+          thisYearCities: sql<number>`COUNT(*) FILTER (
+            WHERE ${citySets.createdAt} >= ${yearStart}
+              AND ${citySets.createdAt} < ${nextYearStart}
+          )::int`,
+          lastYearCities: sql<number>`COUNT(*) FILTER (
+            WHERE ${citySets.createdAt} >= ${lastYearStart}
+              AND ${citySets.createdAt} < ${yearStart}
+          )::int`,
+        })
+        .from(citySets),
+    ]);
 
-    // Calculate year-over-year percentage change for photos
-    const thisYearPercentChange =
-      lastYearPhotos === 0
-        ? thisYearPhotos > 0
+    const photoStats = photoStatsResult[0];
+    const cityStats = cityStatsResult[0];
+    const percentChange = (current: number, previous: number) =>
+      previous === 0
+        ? current > 0
           ? 100
           : 0
-        : Math.round(
-            ((thisYearPhotos - lastYearPhotos) / lastYearPhotos) * 100,
-          );
+        : Math.round(((current - previous) / previous) * 100);
 
-    // Get total countries visited
-    const countriesResult = await ctx.db
-      .selectDistinct({ country: photos.country })
-      .from(photos)
-      .where(sql`${photos.country} IS NOT NULL`);
-
-    const totalCountries = countriesResult.length;
-
-    // Get last year countries visited
-    const lastYearCountriesResult = await ctx.db
-      .selectDistinct({ country: photos.country })
-      .from(photos)
-      .where(
-        and(
-          gte(photos.dateTimeOriginal, lastYearStart),
-          sql`${photos.dateTimeOriginal} < ${lastYearEnd}`,
-          sql`${photos.country} IS NOT NULL`,
-        ),
-      );
-
-    const lastYearCountries = lastYearCountriesResult.length;
-
-    // Calculate year-over-year percentage change for countries
-    const countriesPercentChange =
-      lastYearCountries === 0
-        ? totalCountries > 0
-          ? 100
-          : 0
-        : Math.round(
-            ((totalCountries - lastYearCountries) / lastYearCountries) * 100,
-          );
-
-    // Get total cities
-    const citiesResult = await ctx.db
-      .selectDistinct({ city: citySets.city })
-      .from(citySets);
-
-    const totalCities = citiesResult.length;
-
-    // Get last year cities
-    const lastYearCitiesResult = await ctx.db
-      .selectDistinct({ city: citySets.city })
-      .from(citySets)
-      .where(
-        and(
-          gte(citySets.createdAt, lastYearStart),
-          sql`${citySets.createdAt} < ${lastYearEnd}`,
-        ),
-      );
-
-    const lastYearCities = lastYearCitiesResult.length;
-
-    // Calculate year-over-year percentage change for cities
-    const citiesPercentChange =
-      lastYearCities === 0
-        ? totalCities > 0
-          ? 100
-          : 0
-        : Math.round(((totalCities - lastYearCities) / lastYearCities) * 100);
+    const totalPhotos = photoStats?.totalPhotos ?? 0;
+    const thisYearPhotos = photoStats?.thisYearPhotos ?? 0;
+    const lastYearPhotos = photoStats?.lastYearPhotos ?? 0;
+    const totalCountries = photoStats?.totalCountries ?? 0;
+    const thisYearCountries = photoStats?.thisYearCountries ?? 0;
+    const lastYearCountries = photoStats?.lastYearCountries ?? 0;
+    const totalCities = cityStats?.totalCities ?? 0;
+    const thisYearCities = cityStats?.thisYearCities ?? 0;
+    const lastYearCities = cityStats?.lastYearCities ?? 0;
+    const thisYearPercentChange = percentChange(
+      thisYearPhotos,
+      lastYearPhotos,
+    );
+    const countriesPercentChange = percentChange(
+      thisYearCountries,
+      lastYearCountries,
+    );
+    const citiesPercentChange = percentChange(thisYearCities, lastYearCities);
 
     return {
       totalPhotos,
       thisYearPhotos,
       thisYearPercentChange,
       totalCountries,
+      thisYearCountries,
+      lastYearCountries,
       countriesPercentChange,
       totalCities,
+      thisYearCities,
+      lastYearCities,
       citiesPercentChange,
     };
   }),

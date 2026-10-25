@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
-import { and, eq, asc, sql, ilike, count } from "drizzle-orm";
+import { and, eq, asc, sql, ilike, count, inArray, or } from "drizzle-orm";
 import {
   DEFAULT_PAGE,
   DEFAULT_PAGE_SIZE,
@@ -14,17 +14,19 @@ import {
   photosInsertSchema,
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
+import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
 import { escapeLike } from "@/lib/escape-like";
 import { logger } from "@/lib/logger";
 
 type AppDatabase = typeof import("@/db").db;
+type DatabaseExecutor = Pick<AppDatabase, "select" | "insert" | "update" | "delete">;
 
 function getCitySetName(photo: {
-  city: string | null;
-  region: string | null;
-  countryCode: string | null;
+  city?: string | null;
+  region?: string | null;
+  countryCode?: string | null;
 }) {
   return photo.countryCode === "JP" || photo.countryCode === "TW"
     ? photo.region
@@ -32,7 +34,7 @@ function getCitySetName(photo: {
 }
 
 async function removePhotoFromCitySet(
-  database: AppDatabase,
+  database: DatabaseExecutor,
   photo: typeof photos.$inferSelect,
 ) {
   const cityName = getCitySetName(photo);
@@ -98,8 +100,52 @@ async function removePhotoFromCitySet(
     );
 }
 
+function buildPhotoRemovalBatch(
+  database: DatabaseExecutor,
+  photo: typeof photos.$inferSelect,
+) {
+  const cityName = getCitySetName(photo);
+  const hasCity = Boolean(photo.country && cityName);
+  const cityCondition = hasCity
+    ? sql`${citySets.country} = ${photo.country} AND ${citySets.city} = ${cityName}`
+    : sql`false`;
+  const photoCityColumn =
+    photo.countryCode === "JP" || photo.countryCode === "TW"
+      ? photos.region
+      : photos.city;
+  const replacementCoverPhoto = hasCity
+    ? sql`(
+        SELECT ${photos.id}
+        FROM ${photos}
+        WHERE ${photos.country} = ${photo.country}
+          AND ${photoCityColumn} = ${cityName}
+          AND ${photos.id} != ${photo.id}
+        LIMIT 1
+      )`
+    : sql`${citySets.coverPhotoId}`;
+
+  return [
+    database
+      .delete(citySets)
+      .where(sql`${cityCondition} AND ${citySets.photoCount} <= 1`),
+    database
+      .update(citySets)
+      .set({
+        photoCount: sql`${citySets.photoCount} - 1`,
+        coverPhotoId: sql`CASE
+          WHEN ${citySets.coverPhotoId} = ${photo.id}
+          THEN ${replacementCoverPhoto}
+          ELSE ${citySets.coverPhotoId}
+        END`,
+        updatedAt: new Date(),
+      })
+      .where(sql`${cityCondition} AND ${citySets.photoCount} > 1`),
+    database.delete(photos).where(eq(photos.id, photo.id)).returning(),
+  ] as const;
+}
+
 async function addPhotoToCitySet(
-  database: AppDatabase,
+  database: DatabaseExecutor,
   photo: typeof photos.$inferSelect,
 ) {
   const cityName = getCitySetName(photo);
@@ -126,7 +172,7 @@ async function addPhotoToCitySet(
 }
 
 async function syncPhotoCitySet(
-  database: AppDatabase,
+  database: DatabaseExecutor,
   previousPhoto: typeof photos.$inferSelect,
   updatedPhoto: typeof photos.$inferSelect,
 ) {
@@ -164,38 +210,60 @@ export const photosRouter = createTRPCRouter({
   create: protectedProcedure
     .input(photosInsertSchema)
     .mutation(async ({ ctx, input }) => {
-      const values = input;
+      const values = {
+        ...input,
+        id: input.id ?? crypto.randomUUID(),
+      };
 
       try {
-        const [insertedPhoto] = await ctx.db
+        if (process.env.DATABASE_PROVIDER === "local") {
+          return await ctx.db.transaction(async (transaction) => {
+            const [insertedPhoto] = await transaction
+              .insert(photos)
+              .values(values)
+              .returning();
+            await addPhotoToCitySet(transaction, insertedPhoto);
+            return insertedPhoto;
+          });
+        }
+
+        const insertQuery = ctx.db
           .insert(photos)
           .values(values)
           .returning();
+        const neonDatabase = ctx.db as NeonHttpDatabase<
+          typeof import("@/db/schema")
+        >;
+        const cityName = getCitySetName(values);
 
-        const cityName = getCitySetName(insertedPhoto);
-
-        if (insertedPhoto.country && cityName && insertedPhoto.countryCode) {
-          await ctx.db
+        if (values.country && values.countryCode && cityName) {
+          const citySetQuery = ctx.db
             .insert(citySets)
             .values({
-              country: insertedPhoto.country,
-              countryCode: insertedPhoto.countryCode,
+              country: values.country,
+              countryCode: values.countryCode,
               city: cityName,
               photoCount: 1,
-              coverPhotoId: insertedPhoto.id,
+              coverPhotoId: values.id,
             })
             .onConflictDoUpdate({
               target: [citySets.country, citySets.city],
               set: {
-                countryCode: insertedPhoto.countryCode,
+                countryCode: values.countryCode,
                 photoCount: sql`${citySets.photoCount} + 1`,
-                coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${insertedPhoto.id})`,
+                coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${values.id})`,
                 updatedAt: new Date(),
               },
             });
+          const [insertedPhotos] = await neonDatabase.batch([
+            insertQuery,
+            citySetQuery,
+          ]);
+          return insertedPhotos[0];
         }
 
-        return insertedPhoto;
+        const [insertedPhotos] = await neonDatabase.batch([insertQuery]);
+        return insertedPhotos[0];
       } catch (error) {
         logger.error("Photo creation failed", error);
         throw new TRPCError({
@@ -218,24 +286,58 @@ export const photosRouter = createTRPCRouter({
       }
 
       try {
-        const [photo] = await ctx.db
-          .select()
-          .from(photos)
-          .where(eq(photos.id, id));
+        let photo: typeof photos.$inferSelect;
+        if (process.env.DATABASE_PROVIDER === "local") {
+          photo = await ctx.db.transaction(async (transaction) => {
+            const [existingPhoto] = await transaction
+              .select()
+              .from(photos)
+              .where(eq(photos.id, id));
 
-        if (!photo) {
-          throw new TRPCError({
-            code: "NOT_FOUND",
-            message: "Photo not found",
+            if (!existingPhoto) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Photo not found",
+              });
+            }
+
+            await removePhotoFromCitySet(transaction, existingPhoto);
+            const [deletedPhoto] = await transaction
+              .delete(photos)
+              .where(eq(photos.id, id))
+              .returning();
+
+            if (!deletedPhoto) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Photo not found",
+              });
+            }
+            return deletedPhoto;
           });
+        } else {
+          const [existingPhoto] = await ctx.db
+            .select()
+            .from(photos)
+            .where(eq(photos.id, id));
+
+          if (!existingPhoto) {
+            throw new TRPCError({
+              code: "NOT_FOUND",
+              message: "Photo not found",
+            });
+          }
+
+          const neonDatabase = ctx.db as NeonHttpDatabase<
+            typeof import("@/db/schema")
+          >;
+          await neonDatabase.batch(
+            buildPhotoRemovalBatch(ctx.db, existingPhoto),
+          );
+          photo = existingPhoto;
         }
 
-        await removePhotoFromCitySet(ctx.db, photo);
-
-        // delete photo record first, then S3
-        await ctx.db.delete(photos).where(eq(photos.id, id));
-
-        // S3 delete after DB — orphan file is acceptable, inconsistent DB is not
+        // Delete the object only after the database changes commit.
         try {
           const command = new DeleteObjectCommand({
             Bucket: process.env.S3_BUCKET_NAME,
@@ -320,6 +422,34 @@ export const photosRouter = createTRPCRouter({
 
       return updatedPhoto;
     }),
+  bulkUpdate: protectedProcedure
+    .input(
+      z
+        .object({
+          ids: z.array(z.uuid()).min(1).max(100),
+          visibility: z.enum(["public", "private"]).optional(),
+          isFavorite: z.boolean().optional(),
+        })
+        .refine(
+          ({ visibility, isFavorite }) =>
+            visibility !== undefined || isFavorite !== undefined,
+          "At least one field must be updated",
+        ),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const { ids, visibility, isFavorite } = input;
+      const updated = await ctx.db
+        .update(photos)
+        .set({
+          ...(visibility !== undefined ? { visibility } : {}),
+          ...(isFavorite !== undefined ? { isFavorite } : {}),
+          updatedAt: new Date(),
+        })
+        .where(inArray(photos.id, ids))
+        .returning();
+
+      return { updatedCount: updated.length };
+    }),
   getOne: protectedProcedure
     .input(
       z.object({
@@ -354,17 +484,55 @@ export const photosRouter = createTRPCRouter({
           .max(MAX_PAGE_SIZE)
           .default(DEFAULT_PAGE_SIZE),
         search: z.string().nullish(),
+        visibility: z.enum(["all", "public", "private"]).default("all"),
+        favorite: z
+          .enum(["all", "favorites", "not-favorites"])
+          .default("all"),
+        city: z.string().trim().max(120).default(""),
       }),
     )
     .query(async ({ ctx, input }) => {
-      const { page, pageSize, search, orderBy } = input;
+      const { page, pageSize, search, orderBy, visibility, favorite, city } =
+        input;
+      const where = and(
+        search
+          ? or(
+              ilike(photos.title, `%${escapeLike(search)}%`),
+              ilike(photos.description, `%${escapeLike(search)}%`),
+              ilike(photos.city, `%${escapeLike(search)}%`),
+              ilike(photos.region, `%${escapeLike(search)}%`),
+              ilike(photos.country, `%${escapeLike(search)}%`),
+            )
+          : undefined,
+        visibility === "all"
+          ? undefined
+          : eq(photos.visibility, visibility),
+        favorite === "all"
+          ? undefined
+          : eq(photos.isFavorite, favorite === "favorites"),
+        city
+          ? or(
+              ilike(photos.city, `%${escapeLike(city)}%`),
+              ilike(photos.region, `%${escapeLike(city)}%`),
+            )
+          : undefined,
+      );
 
       const data = await ctx.db
-        .select()
+        .select({
+          id: photos.id,
+          url: photos.url,
+          title: photos.title,
+          blurData: photos.blurData,
+          dateTimeOriginal: photos.dateTimeOriginal,
+          city: photos.city,
+          region: photos.region,
+          countryCode: photos.countryCode,
+          isFavorite: photos.isFavorite,
+          visibility: photos.visibility,
+        })
         .from(photos)
-        .where(
-          search ? ilike(photos.title, `%${escapeLike(search)}%`) : undefined,
-        )
+        .where(where)
         .orderBy(
           orderBy === "asc"
             ? sql`${photos.dateTimeOriginal} ASC NULLS LAST`
@@ -379,9 +547,7 @@ export const photosRouter = createTRPCRouter({
           count: count(),
         })
         .from(photos)
-        .where(
-          search ? ilike(photos.title, `%${escapeLike(search)}%`) : undefined,
-        );
+        .where(where);
 
       const totalPages = Math.ceil(total.count / pageSize);
 

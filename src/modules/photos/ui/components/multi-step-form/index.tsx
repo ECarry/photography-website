@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { TExifData, TImageInfo } from "@/modules/photos/lib/utils";
@@ -16,6 +16,7 @@ import { SuccessScreen } from "./components/success-screen";
 import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { logger } from "@/lib/logger";
 
 // ============================================================================
 // TYPES
@@ -39,6 +40,32 @@ export default function MultiStepForm({
 
   const createPhoto = useMutation(trpc.photos.create.mutationOptions());
   const removeS3Object = useMutation(trpc.s3.deleteFile.mutationOptions());
+  const pendingUploadKeysRef = useRef(new Set<string>());
+  const removeS3ObjectRef = useRef(removeS3Object.mutateAsync);
+  const isMountedRef = useRef(false);
+  const isCreatingPhotoRef = useRef(false);
+
+  useEffect(() => {
+    removeS3ObjectRef.current = removeS3Object.mutateAsync;
+  }, [removeS3Object.mutateAsync]);
+
+  useEffect(
+    () => {
+      const pendingUploadKeys = pendingUploadKeysRef.current;
+      isMountedRef.current = true;
+      return () => {
+        isMountedRef.current = false;
+        if (isCreatingPhotoRef.current) return;
+
+        for (const key of pendingUploadKeys) {
+          void removeS3ObjectRef.current({ key }).catch((error) => {
+            logger.error("Abandoned photo upload cleanup failed", error, { key });
+          });
+        }
+      };
+    },
+    [],
+  );
   // ========================================
   // State Management
   // ========================================
@@ -70,6 +97,7 @@ export default function MultiStepForm({
     uploadedExif: TExifData | null,
     uploadedImageInfo: TImageInfo
   ) => {
+    pendingUploadKeysRef.current.add(uploadedUrl);
     setUrl(uploadedUrl);
     setExif(uploadedExif);
     setImageInfo(uploadedImageInfo);
@@ -77,7 +105,13 @@ export default function MultiStepForm({
 
   // Handle re-upload
   const handleReupload = (url: string) => {
-    removeS3Object.mutate({ key: url });
+    void removeS3Object.mutateAsync({ key: url }).then(
+      () => pendingUploadKeysRef.current.delete(url),
+      (error) => {
+        logger.error("Replaced photo upload cleanup failed", error, { key: url });
+        toast.error("Could not remove the previous uploaded photo");
+      },
+    );
     setUrl(null);
     setExif(null);
     setImageInfo(undefined);
@@ -147,35 +181,66 @@ export default function MultiStepForm({
 
       setIsSubmitting(true);
 
-      // Use tRPC mutation instead of callback
-      createPhoto.mutate(finalData, {
-        onSuccess: async () => {
-          // Invalidate queries to refetch photos list
-          await queryClient.invalidateQueries(
-            trpc.photos.getMany.queryOptions({})
-          );
-          await queryClient.invalidateQueries(
-            trpc.home.getManyLikePhotos.queryOptions({ limit: 10 })
-          );
-          await queryClient.invalidateQueries(
-            trpc.home.getCitySets.queryOptions({ limit: 9 })
-          );
-          await queryClient.invalidateQueries(trpc.city.getMany.queryOptions());
-
-          toast.success("Photo uploaded successfully!");
-          setIsComplete(true);
-          setIsSubmitting(false);
-
-          // Also call the optional callback if provided
-          if (onSubmit) {
-            onSubmit(finalData as PhotoFormData);
+      isCreatingPhotoRef.current = true;
+      void (async () => {
+        try {
+          await createPhoto.mutateAsync(finalData);
+        } catch (error) {
+          const uploadedKey = finalData.url;
+          if (uploadedKey) {
+            try {
+              await removeS3Object.mutateAsync({ key: uploadedKey });
+              pendingUploadKeysRef.current.delete(uploadedKey);
+              if (isMountedRef.current) {
+                setUrl(null);
+                setExif(null);
+                setImageInfo(undefined);
+                setStep(0);
+              }
+            } catch (cleanupError) {
+              logger.error("Failed photo creation cleanup failed", cleanupError, {
+                key: uploadedKey,
+              });
+              if (isMountedRef.current) {
+                toast.error("Could not clean up the uploaded photo");
+              }
+            }
           }
-        },
-        onError: (error) => {
-          toast.error(error.message);
-          setIsSubmitting(false);
-        },
-      });
+          isCreatingPhotoRef.current = false;
+          if (isMountedRef.current) {
+            toast.error(
+              error instanceof Error ? error.message : "Failed to create photo",
+            );
+            setIsSubmitting(false);
+          }
+          return;
+        }
+
+        isCreatingPhotoRef.current = false;
+        pendingUploadKeysRef.current.delete(finalData.url);
+        try {
+          await Promise.all([
+            queryClient.invalidateQueries(
+              trpc.photos.getMany.queryOptions({}),
+            ),
+            queryClient.invalidateQueries(
+              trpc.home.getManyLikePhotos.queryOptions({ limit: 10 }),
+            ),
+            queryClient.invalidateQueries(
+              trpc.home.getCitySets.queryOptions({ limit: 9 }),
+            ),
+            queryClient.invalidateQueries(trpc.city.getMany.queryOptions()),
+          ]);
+        } catch (error) {
+          logger.error("Photo queries refresh failed after creation", error);
+        }
+
+        if (!isMountedRef.current) return;
+        toast.success("Photo uploaded successfully!");
+        setIsComplete(true);
+        setIsSubmitting(false);
+        onSubmit?.(finalData as PhotoFormData);
+      })();
     }
   };
 

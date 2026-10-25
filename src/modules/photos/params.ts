@@ -14,6 +14,13 @@ export const filtersSearchParams = {
   orderBy: parseAsStringEnum(["asc", "desc"] as const)
     .withDefault("desc")
     .withOptions({ clearOnDefault: true }),
+  visibility: parseAsStringEnum(["all", "public", "private"] as const)
+    .withDefault("all")
+    .withOptions({ clearOnDefault: true }),
+  favorite: parseAsStringEnum(["all", "favorites", "not-favorites"] as const)
+    .withDefault("all")
+    .withOptions({ clearOnDefault: true }),
+  city: parseAsString.withDefault("").withOptions({ clearOnDefault: true }),
 };
 
 export const loadSearchParams = createLoader(filtersSearchParams);

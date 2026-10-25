@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { useTRPC } from "@/trpc/client";
 import { useMutation } from "@tanstack/react-query";
 import { s3Client } from "@/modules/s3/lib/upload-client";
+import type { AllowedUploadFolder } from "@/modules/s3/lib/upload-client";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -16,7 +17,7 @@ import { CloudUpload, ImageIcon, Upload, XIcon } from "lucide-react";
 
 interface FileUploaderProps {
   onUploadSuccess?: (key: string) => void;
-  folder?: string;
+  folder?: AllowedUploadFolder;
   value?: string;
   disabled?: boolean;
   onUploadStateChange?: (uploading: boolean) => void;

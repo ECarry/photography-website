@@ -11,9 +11,10 @@ import { DEFAULT_PHOTOS_UPLOAD_FOLDER } from "@/constants";
 import { useMutation } from "@tanstack/react-query";
 import { useTRPC } from "@/trpc/client";
 import { logger } from "@/lib/logger";
+import type { AllowedUploadFolder } from "@/modules/s3/lib/upload-client";
 
 interface UsePhotoUploadProps {
-  folder?: string;
+  folder?: AllowedUploadFolder;
   onUploadSuccess?: (
     url: string,
     exif: TExifData | null,

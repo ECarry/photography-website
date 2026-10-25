@@ -39,9 +39,6 @@ export function VisibilityToggle({
           await queryClient.invalidateQueries(
             trpc.photos.getMany.queryOptions({})
           );
-          toast.success(
-            `Photo is now ${newValue === "public" ? "public" : "private"}`
-          );
         },
         onError: (error) => {
           // Revert on error

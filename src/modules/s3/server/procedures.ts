@@ -5,9 +5,12 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  ALLOWED_UPLOAD_FOLDERS,
   ALLOWED_CONTENT_TYPES,
   IMAGE_SIZE_LIMIT,
 } from "@/constants";
+import { sanitizeUploadFilename } from "@/modules/s3/lib/sanitize-upload-filename";
+import { logger } from "@/lib/logger";
 
 /**
  * Generate a public URL for accessing uploaded photos
@@ -21,19 +24,17 @@ export const s3Router = createTRPCRouter({
   createPresignedUrl: protectedProcedure
     .input(
       z.object({
-        filename: z.string(),
+        filename: z.string().trim().min(1).max(255),
         contentType: z.enum(ALLOWED_CONTENT_TYPES),
         size: z.number().positive().max(IMAGE_SIZE_LIMIT),
-        folder: z.string().optional(),
+        folder: z.enum(ALLOWED_UPLOAD_FOLDERS).default("uploads"),
       }),
     )
     .mutation(async ({ input }) => {
       try {
         const { filename, contentType, size, folder } = input;
         const uuid = crypto.randomUUID();
-        const key = folder
-          ? `${folder}/${uuid}-${filename}`
-          : `${uuid}-${filename}`;
+        const key = `${folder}/${uuid}-${sanitizeUploadFilename(filename)}`;
 
         const command = new PutObjectCommand({
           Bucket: process.env.S3_BUCKET_NAME,
@@ -51,12 +52,7 @@ export const s3Router = createTRPCRouter({
           key,
         };
       } catch (error) {
-        if (error instanceof Error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: error.message,
-          });
-        }
+        logger.error("S3 presigned URL generation failed", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to generate upload URL",
@@ -78,12 +74,7 @@ export const s3Router = createTRPCRouter({
         });
         await s3Client.send(command);
       } catch (error) {
-        if (error instanceof Error) {
-          throw new TRPCError({
-            code: "INTERNAL_SERVER_ERROR",
-            message: error.message,
-          });
-        }
+        logger.error("S3 file deletion failed", error);
         throw new TRPCError({
           code: "INTERNAL_SERVER_ERROR",
           message: "Failed to delete file",
