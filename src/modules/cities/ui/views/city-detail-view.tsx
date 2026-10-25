@@ -7,11 +7,6 @@ import {
   ArrowLeft,
   MapPin,
   Image as ImageIcon,
-  Heart,
-  ImagePlus,
-  Check,
-  Eye,
-  EyeOff,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -33,8 +28,10 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Textarea } from "@/components/ui/textarea";
-import { FramedPhoto } from "@/components/framed-photo";
+import BlurImage from "@/components/blur-image";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { formatPhotoDate } from "@/modules/cities/format-photo-date";
+import { CityPhotoCard } from "../components/city-photo-card";
 
 const cityDescriptionSchema = z.object({
   description: z.string().optional(),
@@ -233,266 +230,285 @@ export function CityDetailView({ city }: CityDetailViewProps) {
 
   if (!cityData) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-6 max-w-md mx-auto px-4">
-          <div className="mx-auto w-24 h-24 bg-muted rounded-full flex items-center justify-center">
-            <MapPin className="h-10 w-10 text-muted-foreground" />
+      <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+        <div className="mx-auto flex min-h-[60vh] max-w-[1400px] flex-col items-center justify-center px-4 text-center">
+          <div className="flex size-14 items-center justify-center rounded-full bg-white text-[#8F8F8F] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+            <MapPin className="size-6" />
           </div>
-          <div className="space-y-2">
-            <h3 className="text-xl font-semibold">City not found</h3>
-            <p className="text-muted-foreground text-sm">
-              The city you&apos;re looking for doesn&apos;t exist or may have
-              been removed.
-            </p>
-          </div>
-          <Link href="/dashboard/cities">
-            <Button variant="outline" className="min-w-[140px]">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Cities
-            </Button>
-          </Link>
+          <h1 className="mt-5 text-xl font-semibold tracking-[-0.6px] text-[#171717] dark:text-[#FAFAFA]">
+            City not found
+          </h1>
+          <p className="mt-2 max-w-md text-sm text-[#8F8F8F]">
+            This city collection may have been removed.
+          </p>
+          <Button
+            asChild
+            variant="outline"
+            className="mt-5 h-9 rounded-md bg-white text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] dark:text-[#B3B3B3]"
+          >
+            <Link href="/dashboard/cities">
+              <ArrowLeft className="size-4" />
+              All cities
+            </Link>
+          </Button>
         </div>
-      </div>
+      </main>
     );
   }
 
+  const coverPhoto = cityData.photos.find(
+    (photo) => photo.id === cityData.coverPhotoId,
+  );
+  const publicPhotoCount = cityData.photos.filter(
+    (photo) => photo.visibility === "public",
+  ).length;
+
   return (
-    <div className="min-h-screen pb-8">
-      <div className="bg-background">
-        <div className="container mx-auto px-4 py-8">
-          {/* Back Navigation */}
-          <div className="mb-6">
-            <Link href="/dashboard/cities">
-              <Button variant="ghost" className="mb-4 -ml-4">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Cities
-              </Button>
-            </Link>
-          </div>
-          {/* Header Section */}
-          <div className="mb-8">
-            <div className="flex items-start justify-between mb-6">
-              <div>
-                <h1 className="text-4xl font-bold tracking-tight mb-2">
-                  {cityData.city}
-                </h1>
-                <div className="flex items-center gap-4 text-muted-foreground">
-                  <div className="flex items-center gap-2">
-                    <MapPin className="h-4 w-4" />
-                    <span className="text-sm">{cityData.country}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <ImageIcon className="h-4 w-4" />
-                    <span className="text-sm">
-                      {cityData.photoCount} photos
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
+    <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6 md:py-8 xl:px-8">
+        <Link
+          href="/dashboard/cities"
+          className="inline-flex h-8 items-center gap-2 rounded-md px-2 text-sm text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_#FAFAFA,0_0_0_4px_#0072F5] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
+        >
+          <ArrowLeft aria-hidden="true" className="size-4" />
+          All cities
+        </Link>
 
-            {/* Description Form Card */}
-            <div className="bg-card border rounded-lg p-6 shadow-sm">
-              <Form {...form}>
-                <form
-                  onSubmit={form.handleSubmit((values) => {
-                    updateDescription.mutate({
-                      cityId: cityData.id,
-                      description: values.description || "",
-                    });
-                  })}
-                  className="space-y-4"
-                >
-                  <FormField
-                    control={form.control}
-                    name="description"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="text-base font-medium">
-                          City Description
-                        </FormLabel>
-                        <FormControl>
-                          <Textarea
-                            {...field}
-                            placeholder="Add a description for this city..."
-                            className="min-h-[100px] resize-none"
-                            rows={4}
-                          />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                  <div className="flex justify-end">
-                    <Button
-                      type="submit"
-                      disabled={updateDescription.isPending}
-                      className="min-w-[100px]"
-                    >
-                      {updateDescription.isPending
-                        ? "Saving..."
-                        : "Save Description"}
-                    </Button>
-                  </div>
-                </form>
-              </Form>
+        <header className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <p className="text-xs font-medium tracking-[0.08em] text-[#8F8F8F]">
+              CITY COLLECTION
+            </p>
+            <h1 className="mt-2 text-[28px] font-semibold leading-9 tracking-[-1.12px] text-[#171717] dark:text-[#FAFAFA] sm:text-[32px] sm:leading-10 sm:tracking-[-1.28px]">
+              {cityData.city}
+            </h1>
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#4D4D4D] dark:text-[#B3B3B3]">
+              <span className="inline-flex items-center gap-1.5">
+                <MapPin aria-hidden="true" className="size-4 text-[#8F8F8F]" />
+                {cityData.country}
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <ImageIcon aria-hidden="true" className="size-4 text-[#8F8F8F]" />
+                {cityData.photoCount.toLocaleString()} photos
+              </span>
+              <span className="text-xs text-[#8F8F8F]">
+                {publicPhotoCount} public
+              </span>
             </div>
           </div>
-        </div>
-      </div>
-      <div className="w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-1 gap-y-6">
-        {cityData.photos.map((photo) => {
-          const isCoverPhoto = photo.id === cityData.coverPhotoId;
-          const isPublicPhoto = photo.visibility === "public";
-          const coverButtonLabel = isCoverPhoto
-            ? isPublicPhoto
-              ? "Current public city cover photo"
-              : "Current cover is private; choose a public photo"
-            : isPublicPhoto
-              ? "Set as city cover photo"
-              : "Private photos cannot be city covers";
+        </header>
 
-          return (
-            <div key={photo.id} className="space-y-4">
-              <div className="relative space-y-4 flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-20">
-                <FramedPhoto
-                  src={photo.url}
-                  alt={cityData.city}
-                  blurhash={photo.blurData!}
-                  width={photo.width}
-                  height={photo.height}
+        <div className="mt-7 grid gap-4 xl:grid-cols-[minmax(0,1.15fr)_minmax(300px,0.85fr)]">
+          <section className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6">
+            <div className="mb-4">
+              <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                About this place
+              </h2>
+              <p className="mt-1 text-xs text-[#8F8F8F]">
+                Add a short note to remember this destination.
+              </p>
+            </div>
+            <Form {...form}>
+              <form
+                onSubmit={form.handleSubmit((values) => {
+                  updateDescription.mutate({
+                    cityId: cityData.id,
+                    description: values.description || "",
+                  });
+                })}
+                className="space-y-3"
+              >
+                <FormField
+                  control={form.control}
+                  name="description"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="sr-only">City description</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          {...field}
+                          placeholder="Write a note about this city..."
+                          className="min-h-[112px] resize-y rounded-md border-0 bg-[#FAFAFA] px-3 py-2.5 text-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 focus-visible:shadow-[0_0_0_1px_#005FCC] dark:bg-[#0A0A0A]"
+                          rows={4}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
                 />
-                <div className="absolute bottom-3 right-3 flex items-center gap-2">
+                <div className="flex justify-end">
                   <Button
-                    variant={isCoverPhoto ? "default" : "outline"}
-                    size="icon"
-                    onClick={() => handleSetCover(photo.id)}
-                    disabled={updateCoverPhoto.isPending || !isPublicPhoto}
-                    aria-label={coverButtonLabel}
-                    aria-pressed={isCoverPhoto}
-                    title={coverButtonLabel}
+                    type="submit"
+                    disabled={updateDescription.isPending}
+                    className="h-9 rounded-md bg-[#0072F5] px-4 text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
                   >
-                    <span className="relative flex size-5 items-center justify-center">
-                      {isCoverPhoto ? (
-                        <>
-                          <ImageIcon className="size-5" />
-                          <Check className="absolute -right-1 -top-1 size-3 rounded-full bg-background text-primary" />
-                        </>
-                      ) : (
-                        <ImagePlus className="size-5" />
-                      )}
-                    </span>
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    disabled={
-                      updatePhoto.isPending ||
-                      (isCoverPhoto && photo.visibility === "public")
-                    }
-                    onClick={() =>
-                      updatePhoto.mutate({
-                        id: photo.id,
-                        visibility:
-                          photo.visibility === "public" ? "private" : "public",
-                      })
-                    }
-                    aria-label={
-                      isCoverPhoto && photo.visibility === "public"
-                        ? "Choose another cover before making this photo private"
-                        : photo.visibility === "public"
-                          ? "Make photo private"
-                          : "Make photo public"
-                    }
-                    title={
-                      isCoverPhoto && photo.visibility === "public"
-                        ? "Choose another public cover before making this photo private"
-                        : photo.visibility === "public"
-                          ? "Make photo private"
-                          : "Make photo public"
-                    }
-                  >
-                    {photo.visibility === "public" ? (
-                      <Eye className="size-4" />
-                    ) : (
-                      <EyeOff className="size-4" />
-                    )}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    disabled={updatePhoto.isPending}
-                    onClick={() =>
-                      updatePhoto.mutate({
-                        id: photo.id,
-                        isFavorite: !photo.isFavorite,
-                      })
-                    }
-                    aria-label={
-                      photo.isFavorite
-                        ? "Remove from favorites"
-                        : "Add to favorites"
-                    }
-                    aria-pressed={photo.isFavorite}
-                    title={
-                      photo.isFavorite
-                        ? "Remove from favorites"
-                        : "Add to favorites"
-                    }
-                  >
-                    <Heart
-                      className={
-                        photo.isFavorite
-                          ? "size-4 fill-current text-red-500"
-                          : "size-4"
-                      }
-                    />
+                    {updateDescription.isPending ? "Saving..." : "Save note"}
                   </Button>
                 </div>
-              </div>
-              <div className="flex flex-col w-full items-center justify-center">
-                <p className="text-sm font-medium">{photo.title}</p>
-                <p className="text-xs text-muted-foreground">
-                  {photo.dateTimeOriginal
-                    ? formatPhotoDate(photo.dateTimeOriginal)
-                    : ""}
+              </form>
+            </Form>
+          </section>
+
+          <section className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div>
+                <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                  City cover
+                </h2>
+                <p className="mt-1 text-xs text-[#8F8F8F]">
+                  The public image used across your collections.
                 </p>
               </div>
+              {coverPhoto && (
+                <span className="inline-flex items-center gap-1.5 text-xs text-[#4D4D4D] dark:text-[#B3B3B3]">
+                  <span
+                    aria-hidden="true"
+                    className={`size-2 rounded-full ${
+                      coverPhoto.visibility === "public"
+                        ? "bg-[#398E4A]"
+                        : "bg-[#8F8F8F]"
+                    }`}
+                  />
+                  {coverPhoto.visibility === "public" ? "Public" : "Private"}
+                </span>
+              )}
             </div>
-          );
-        })}
+            {coverPhoto ? (
+              <div className="grid grid-cols-[112px_minmax(0,1fr)] items-center gap-4">
+                <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-[#F2F2F2] dark:bg-[#262626]">
+                  <BlurImage
+                    src={keyToUrl(coverPhoto.url)}
+                    alt={coverPhoto.title || `${cityData.city} cover`}
+                    blurhash={coverPhoto.blurData}
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+                <div className="min-w-0">
+                  <p className="truncate text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                    {coverPhoto.title || "Untitled photo"}
+                  </p>
+                  <p className="mt-1 text-xs text-[#8F8F8F]">
+                    {coverPhoto.dateTimeOriginal
+                      ? formatPhotoDate(coverPhoto.dateTimeOriginal)
+                      : "Date not recorded"}
+                  </p>
+                  {coverPhoto.visibility !== "public" && (
+                    <p className="mt-2 text-xs text-[#8F8F8F]">
+                      This private cover is not visible on the homepage.
+                    </p>
+                  )}
+                </div>
+              </div>
+            ) : (
+              <p className="rounded-md bg-[#FAFAFA] px-3 py-4 text-sm text-[#8F8F8F] dark:bg-[#0A0A0A]">
+                No cover photo is selected.
+              </p>
+            )}
+          </section>
+        </div>
+
+        <section className="mt-8">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <h2 className="text-[20px] font-semibold tracking-[-0.6px] text-[#171717] dark:text-[#FAFAFA]">
+                Photos
+              </h2>
+              <p className="mt-1 text-sm text-[#8F8F8F]">
+                Set a public cover, update visibility, or mark favorites.
+              </p>
+            </div>
+            <span className="text-xs tabular-nums text-[#8F8F8F]">
+              {cityData.photos.length.toLocaleString()} photos
+            </span>
+          </div>
+          {cityData.photos.length > 0 ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+              {cityData.photos.map((photo) => (
+                <CityPhotoCard
+                  key={photo.id}
+                  photo={photo}
+                  city={cityData.city}
+                  isCoverPhoto={photo.id === cityData.coverPhotoId}
+                  isCoverMutationPending={updateCoverPhoto.isPending}
+                  isPhotoMutationPending={updatePhoto.isPending}
+                  onSetCover={handleSetCover}
+                  onToggleVisibility={(item) =>
+                    updatePhoto.mutate({
+                      id: item.id,
+                      visibility:
+                        item.visibility === "public" ? "private" : "public",
+                    })
+                  }
+                  onToggleFavorite={(item) =>
+                    updatePhoto.mutate({
+                      id: item.id,
+                      isFavorite: !item.isFavorite,
+                    })
+                  }
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-xl bg-white px-6 py-12 text-center shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+              <p className="text-sm text-[#8F8F8F]">
+                No photos are currently assigned to this city.
+              </p>
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </main>
   );
 }
 
 export function CityDetailLoadingView() {
   return (
-    <div className="space-y-6 px-4 md:px-8">
-      <div>
-        <Skeleton className="h-8 w-32 mb-2" />
-        <Skeleton className="h-10 w-64 mb-4" />
-        <Skeleton className="h-5 w-48" />
+    <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-7 md:px-6 md:py-8 xl:px-8">
+        <Skeleton className="h-4 w-24" />
+        <Skeleton className="mt-5 h-10 w-60" />
+        <Skeleton className="mt-3 h-4 w-64" />
+        <div className="mt-7 grid gap-4 xl:grid-cols-2">
+          <Skeleton className="h-[220px] rounded-xl" />
+          <Skeleton className="h-[220px] rounded-xl" />
+        </div>
+        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+          {Array.from({ length: 8 }, (_, index) => (
+            <div
+              key={index}
+              className="overflow-hidden rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]"
+            >
+              <Skeleton className="aspect-[4/3] w-full rounded-none" />
+              <div className="space-y-3 p-3">
+                <Skeleton className="h-4 w-2/3" />
+                <Skeleton className="h-4 w-1/3" />
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <Skeleton key={i} className="aspect-square w-full rounded-lg" />
-        ))}
-      </div>
-    </div>
+    </main>
   );
 }
 
 export function CityDetailErrorView() {
   return (
-    <div className="flex flex-col items-center justify-center py-16 text-center px-4 md:px-8">
-      <p className="text-destructive mb-2">Failed to load city details</p>
-      <Link href="/dashboard/cities">
-        <Button variant="outline" className="mt-4">
-          <ArrowLeft className="mr-2 h-4 w-4" />
-          Back to Cities
-        </Button>
-      </Link>
-    </div>
+    <main className="flex min-h-[60vh] flex-col items-center justify-center bg-[#FAFAFA] px-4 text-center dark:bg-[#0A0A0A]">
+      <p className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+        Failed to load city details
+      </p>
+      <p className="mt-1 text-sm text-[#8F8F8F]">Please try again.</p>
+      <Button
+        asChild
+        variant="outline"
+        className="mt-4 h-9 rounded-md bg-white text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] dark:text-[#B3B3B3]"
+      >
+        <Link href="/dashboard/cities">
+          <ArrowLeft className="size-4" />
+          All cities
+        </Link>
+      </Button>
+    </main>
   );
 }
