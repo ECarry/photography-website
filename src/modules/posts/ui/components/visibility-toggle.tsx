@@ -5,15 +5,14 @@ import { Switch } from "@/components/ui/switch";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { Eye, EyeOff } from "lucide-react";
 
 interface VisibilityToggleProps {
-  photoId: string;
+  postId: string;
   initialValue: "public" | "private";
 }
 
 export function VisibilityToggle({
-  photoId,
+  postId,
   initialValue,
 }: VisibilityToggleProps) {
   const [visibility, setVisibility] = useState(initialValue);
@@ -30,7 +29,7 @@ export function VisibilityToggle({
 
     updatePost.mutate(
       {
-        id: photoId,
+        id: postId,
         visibility: newValue,
       },
       {
@@ -38,9 +37,6 @@ export function VisibilityToggle({
           // Invalidate queries to refetch posts list
           await queryClient.invalidateQueries(
             trpc.posts.getMany.queryOptions({})
-          );
-          toast.success(
-            `Post is now ${newValue === "public" ? "public" : "private"}`
           );
         },
         onError: (error) => {
@@ -53,24 +49,22 @@ export function VisibilityToggle({
   };
 
   return (
-    <div
-      className="flex items-center gap-2"
-      onClick={(e) => e.stopPropagation()}
-    >
-      {visibility === "public" ? (
-        <Eye className="h-4 w-4 text-green-600" />
-      ) : (
-        <EyeOff className="h-4 w-4 text-muted-foreground" />
-      )}
+    <div className="flex items-center gap-2.5">
+      <span
+        aria-hidden="true"
+        className={`size-2 rounded-full ${
+          visibility === "public" ? "bg-[#398E4A]" : "bg-[#8F8F8F]"
+        }`}
+      />
+      <span className="min-w-[48px] text-xs text-[#4D4D4D] dark:text-[#B3B3B3]">
+        {visibility === "public" ? "Public" : "Private"}
+      </span>
       <Switch
         checked={visibility === "public"}
         onCheckedChange={handleToggle}
         disabled={updatePost.isPending}
         aria-label="Toggle visibility"
       />
-      <span className="text-sm text-muted-foreground min-w-[50px]">
-        {visibility === "public" ? "Public" : "Private"}
-      </span>
     </div>
   );
 }

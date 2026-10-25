@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
 import { postFormSchema } from "../../schemas";
 import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -29,7 +28,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { TagsInput } from "./tags-input";
-import { ArrowLeft, Check, FileText, Globe, Loader2, Lock, Save } from "lucide-react";
+import { ArrowLeft, Check, FileText, Loader2, Save } from "lucide-react";
 import { useTRPC } from "@/trpc/client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -38,7 +37,9 @@ import dynamic from "next/dynamic";
 
 const TiptapEditor = dynamic(() => import("@/components/editor"), {
   ssr: false,
-  loading: () => <div className="min-h-96 animate-pulse rounded-xl border bg-muted/30" />,
+  loading: () => (
+    <div className="min-h-96 animate-pulse rounded-md bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#262626]" />
+  ),
 });
 
 const formSchema = postFormSchema;
@@ -141,12 +142,12 @@ export const PostForm = ({ post }: PostFormProps) => {
   }
 
   return (
-    <div className="mx-auto w-full max-w-7xl space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4 border-b pb-6">
+    <div className="mx-auto w-full max-w-[1400px] space-y-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-3">
           <Button
             type="button"
-            variant="outline"
+            variant="ghost"
             size="icon"
             aria-label="Back to posts"
             disabled={isPending || isUploading}
@@ -155,24 +156,41 @@ export const PostForm = ({ post }: PostFormProps) => {
                 router.push("/dashboard/posts");
               }
             }}
+            className="size-9 rounded-md text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
           >
             <ArrowLeft className="size-4" />
           </Button>
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">{post ? "Edit story" : "New story"}</h1>
-            <p className="mt-1 text-sm text-muted-foreground">A space for the stories behind your photographs.</p>
+            <p className="text-xs font-medium tracking-[0.08em] text-[#8F8F8F]">
+              JOURNAL
+            </p>
+            <h1 className="mt-1 text-[28px] font-semibold leading-9 tracking-[-1.12px] text-[#171717] dark:text-[#FAFAFA] sm:text-[32px] sm:leading-10 sm:tracking-[-1.28px]">
+              {post ? "Edit story" : "New story"}
+            </h1>
+            <p className="mt-1 text-sm text-[#4D4D4D] dark:text-[#B3B3B3]">
+              A space for the stories behind your photographs.
+            </p>
           </div>
         </div>
-        <Badge variant="secondary" className="gap-1.5 px-3 py-1">
-          {visibility === "public" ? <Globe className="size-3.5" /> : <Lock className="size-3.5" />}
+        <span className="inline-flex items-center gap-2 text-xs text-[#4D4D4D] dark:text-[#B3B3B3]">
+          <span
+            aria-hidden="true"
+            className={`size-2 rounded-full ${
+              visibility === "public" ? "bg-[#398E4A]" : "bg-[#8F8F8F]"
+            }`}
+          />
           {visibility === "public" ? "Public on save" : "Private draft"}
-        </Badge>
+        </span>
       </div>
       <Form {...form}>
-        <form ref={formRef} onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          ref={formRef}
+          onSubmit={form.handleSubmit(onSubmit)}
+          className="[&_input]:border-0 [&_input]:bg-[#FAFAFA] [&_input]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)] [&_input]:focus-visible:ring-0 [&_textarea]:border-0 [&_textarea]:bg-[#FAFAFA] [&_textarea]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)] [&_textarea]:focus-visible:ring-0 dark:[&_input]:bg-[#0A0A0A] dark:[&_textarea]:bg-[#0A0A0A]"
+        >
           <fieldset disabled={isPending} className="grid min-w-0 grid-cols-1 items-start gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
             <div className="min-w-0 space-y-6">
-              <div className="rounded-xl border bg-card p-5 shadow-sm sm:p-6">
+              <div className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6">
                 <FormField
                   control={form.control}
                   name="title"
@@ -182,7 +200,7 @@ export const PostForm = ({ post }: PostFormProps) => {
                       <FormControl>
                         <Input
                           placeholder="Give your story a title…"
-                          className="h-auto border-0 bg-transparent px-0 py-3 text-2xl font-semibold shadow-none focus-visible:ring-0 md:text-3xl"
+                          className="h-auto border-0 bg-transparent px-0 py-3 text-[24px] font-semibold tracking-[-0.8px] shadow-none focus-visible:ring-0 md:text-[28px]"
                           {...field}
                           onChange={(event) => {
                             const slug = form.getValues("slug");
@@ -198,42 +216,61 @@ export const PostForm = ({ post }: PostFormProps) => {
                   )}
                 />
               </div>
-              <FormField
-                control={form.control}
-                name="content"
-                render={({ field }) => (
-                  <FormItem className="min-w-0 space-y-3">
-                    <div className="flex items-center justify-between gap-3">
-                      <FormLabel className="flex items-center gap-2"><FileText className="size-4" /> Story content</FormLabel>
-                      <span className="text-xs text-muted-foreground">Select text to format</span>
-                    </div>
-                    <TiptapEditor
-                      content={field.value || ""}
-                      onChange={field.onChange}
-                      disabled={isPending}
-                      onUploadStateChange={setContentUploading}
-                    />
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+              <div className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6 [&_.story-editor]:rounded-md [&_.story-editor]:border-0 [&_.story-editor]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)]">
+                <FormField
+                  control={form.control}
+                  name="content"
+                  render={({ field }) => (
+                    <FormItem className="min-w-0 space-y-3">
+                      <div className="flex items-center justify-between gap-3">
+                        <FormLabel className="flex items-center gap-2 text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                          <FileText className="size-4 text-[#8F8F8F]" />
+                          Story content
+                        </FormLabel>
+                        <span className="hidden text-xs text-[#8F8F8F] sm:inline">
+                          Select text to format
+                        </span>
+                      </div>
+                      <TiptapEditor
+                        content={field.value || ""}
+                        onChange={field.onChange}
+                        disabled={isPending}
+                        onUploadStateChange={setContentUploading}
+                      />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
             {/* Right Form Section */}
-            <aside className="min-w-0 space-y-5 xl:sticky xl:top-6">
-              <div className="space-y-5 rounded-xl border bg-card p-5 shadow-sm">
+            <aside className="min-w-0 space-y-4 xl:sticky xl:top-20">
+              <div className="space-y-5 rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
                 <div>
-                  <h2 className="font-semibold">Publishing</h2>
-                  <p className="mt-1 text-xs text-muted-foreground">Choose when your story is ready to be seen.</p>
+                  <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                    Publishing
+                  </h2>
+                  <p className="mt-1 text-xs text-[#8F8F8F]">
+                    Choose when your story is ready to be seen.
+                  </p>
                 </div>
                 <FormField
                   control={form.control}
                   name="visibility"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Visibility</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange} disabled={isPending}>
+                      <FormLabel className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]">
+                        Visibility
+                      </FormLabel>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                        disabled={isPending}
+                      >
                         <FormControl>
-                          <SelectTrigger className="w-full"><SelectValue /></SelectTrigger>
+                          <SelectTrigger className="h-10 w-full border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#0A0A0A]">
+                            <SelectValue />
+                          </SelectTrigger>
                         </FormControl>
                         <SelectContent>
                           <SelectItem value="private">Private · only you</SelectItem>
@@ -244,17 +281,23 @@ export const PostForm = ({ post }: PostFormProps) => {
                     </FormItem>
                   )}
                 />
-                <Button type="submit" className="w-full" disabled={isPending || isUploading}>
+                <Button
+                  type="submit"
+                  className="h-10 w-full rounded-md bg-[#0072F5] text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
+                  disabled={isPending || isUploading}
+                >
                   {isPending || isUploading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
                   {isPending ? "Saving…" : isUploading ? "Waiting for image upload…" : post ? "Save changes" : visibility === "private" ? "Save draft" : "Publish story"}
                 </Button>
-                <div role="status" className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                <div role="status" className="flex items-center justify-center gap-1.5 text-xs text-[#8F8F8F]">
                   {isDirty ? "Unsaved changes" : hasSaved ? <><Check className="size-3.5" /> All changes saved</> : post ? "No unsaved changes" : "Not saved yet"}
                   <span aria-hidden="true">·</span><span>⌘ / Ctrl + S</span>
                 </div>
               </div>
-              <div className="space-y-5 rounded-xl border bg-card p-5 shadow-sm">
-                <h2 className="font-semibold">Story details</h2>
+              <div className="space-y-5 rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+                <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                  Story details
+                </h2>
                 <FormField
                   control={form.control}
                   name="coverImage"
@@ -269,7 +312,9 @@ export const PostForm = ({ post }: PostFormProps) => {
                         folder="posts"
                         value={field.value}
                       />
-                      <FormDescription>The first impression of your story.</FormDescription>
+                      <FormDescription className="text-xs text-[#8F8F8F]">
+                        The first impression of your story.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -281,7 +326,9 @@ export const PostForm = ({ post }: PostFormProps) => {
                     <FormItem>
                       <FormLabel>Excerpt</FormLabel>
                       <FormControl><Textarea placeholder="A short introduction to your story…" className="min-h-24 resize-y" {...field} /></FormControl>
-                      <FormDescription>A brief summary for your readers.</FormDescription>
+                      <FormDescription className="text-xs text-[#8F8F8F]">
+                        A brief summary for your readers.
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -293,7 +340,10 @@ export const PostForm = ({ post }: PostFormProps) => {
                     <FormItem>
                       <FormLabel>URL slug</FormLabel>
                       <FormControl><Input placeholder="your-story-url" {...field} /></FormControl>
-                      <FormDescription className="break-all">/blog/{field.value || "your-story-url"}{post && " · Changing this will change the article link."}</FormDescription>
+                      <FormDescription className="break-all font-mono text-xs text-[#8F8F8F]">
+                        /blog/{field.value || "your-story-url"}
+                        {post && " · Changing this will change the article link."}
+                      </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}

@@ -2,7 +2,7 @@
 
 import { useState, Suspense } from "react";
 import dynamic from "next/dynamic";
-import { FramedPhoto } from "@/components/framed-photo";
+import BlurImage from "@/components/blur-image";
 import { photosUpdateSchema } from "@/db/schema";
 import { useTRPC } from "@/trpc/client";
 import {
@@ -13,6 +13,8 @@ import {
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
+import { ArrowLeft, Camera, MapPin } from "lucide-react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -25,7 +27,6 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
-import { format } from "date-fns";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApertureSelector } from "../components/aperture-selector";
 import { ShutterSpeedSelector } from "../components/shutter-speed-selector";
@@ -33,6 +34,8 @@ import { ISOSelector } from "../components/iso-selector";
 import { ExposureCompensationSelector } from "../components/exposure-compensation-selector";
 import { toast } from "sonner";
 import { fetchAddressByCoordinates } from "@/modules/mapbox/hooks/use-get-address";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
+import { formatPhotoDate } from "@/modules/cities/format-photo-date";
 
 interface PhotoIdViewProps {
   id: string;
@@ -43,7 +46,7 @@ const MapboxComponent = dynamic(
   {
     ssr: false,
     loading: () => (
-      <div className="h-64 w-full rounded-md border flex items-center justify-center bg-muted">
+      <div className="flex h-64 w-full items-center justify-center rounded-md bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#262626]">
         <Skeleton className="h-full w-full" />
       </div>
     ),
@@ -199,32 +202,66 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
   }
 
   const takenAt = data.dateTimeOriginal
-    ? format(new Date(data.dateTimeOriginal), "d MMM yyyy")
+    ? formatPhotoDate(data.dateTimeOriginal)
     : null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-6 flex items-baseline justify-between gap-4">
+    <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <div className="mx-auto w-full max-w-[1400px] px-4 py-6 md:px-6 md:py-8 xl:px-8">
+        <Link
+          href="/dashboard/photos"
+          className="inline-flex h-8 items-center gap-2 rounded-md px-2 text-sm text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_#FAFAFA,0_0_0_4px_#0072F5] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
+        >
+          <ArrowLeft className="size-4" />
+          All photos
+        </Link>
+        <header className="mt-5 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
-            <h1 className="text-2xl font-semibold tracking-tight">
+            <p className="text-xs font-medium tracking-[0.08em] text-[#8F8F8F]">
+              PHOTO EDITOR
+            </p>
+            <h1 className="mt-2 text-[28px] font-semibold leading-9 tracking-[-1.12px] text-[#171717] dark:text-[#FAFAFA] sm:text-[32px] sm:leading-10 sm:tracking-[-1.28px]">
               {data.title || "Untitled photo"}
             </h1>
-            {takenAt && (
-              <p className="text-sm text-muted-foreground">
-                Taken on {takenAt}
-              </p>
-            )}
+            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-[#4D4D4D] dark:text-[#B3B3B3]">
+              {takenAt && <span>Taken {takenAt}</span>}
+              <span className="inline-flex items-center gap-1.5 text-xs">
+                <span
+                  aria-hidden="true"
+                  className={`size-2 rounded-full ${
+                    data.visibility === "public" ? "bg-[#398E4A]" : "bg-[#8F8F8F]"
+                  }`}
+                />
+                {data.visibility === "public" ? "Public" : "Private"}
+              </span>
+            </div>
           </div>
-        </div>
+          <Button
+            type="submit"
+            form="photo-edit-form"
+            disabled={isSubmitting}
+            className="h-10 w-full rounded-md bg-[#0072F5] px-4 text-sm font-medium text-white shadow-none hover:bg-[#005FCC] focus-visible:ring-2 focus-visible:ring-[#0072F5] focus-visible:ring-offset-2 sm:w-auto"
+          >
+            {isSubmitting ? "Saving..." : "Save changes"}
+          </Button>
+        </header>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,2fr)_minmax(0,1.6fr)] items-start">
+        <div className="mt-7 grid items-start gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(320px,0.8fr)]">
           {/* Form on the left */}
-          <div className="bg-card border rounded-xl p-6 shadow-sm w-full">
+          <section className="w-full rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6">
+            <div className="mb-5">
+              <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                Photo details
+              </h2>
+              <p className="mt-1 text-xs text-[#8F8F8F]">
+                Update the description, camera data, and location.
+              </p>
+            </div>
             <Form {...form}>
               <form
+                id="photo-edit-form"
                 onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
+                className="space-y-6 [&_input]:border-0 [&_input]:bg-[#FAFAFA] [&_input]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)] [&_input]:focus-visible:ring-0 [&_textarea]:border-0 [&_textarea]:bg-[#FAFAFA] [&_textarea]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)] [&_textarea]:focus-visible:ring-0 dark:[&_input]:bg-[#0A0A0A] dark:[&_textarea]:bg-[#0A0A0A]"
               >
                 <FormField
                   control={form.control}
@@ -259,15 +296,15 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   )}
                 />
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-3 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="visibility"
                     render={({ field }) => (
-                      <FormItem className="flex flex-col justify-between gap-2">
+                      <FormItem className="flex items-center justify-between rounded-lg bg-[#FAFAFA] px-4 py-3 dark:bg-[#0A0A0A]">
                         <div className="flex items-center justify-between gap-4">
                           <FormLabel>Visibility</FormLabel>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <div className="flex items-center gap-2 text-sm text-[#4D4D4D] dark:text-[#B3B3B3]">
                             <span>
                               {field.value === "public" ? "Public" : "Private"}
                             </span>
@@ -290,7 +327,7 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     control={form.control}
                     name="isFavorite"
                     render={({ field }) => (
-                      <FormItem className="flex items-center justify-between gap-4">
+                      <FormItem className="flex items-center justify-between rounded-lg bg-[#FAFAFA] px-4 py-3 dark:bg-[#0A0A0A]">
                         <FormLabel>Favorite</FormLabel>
                         <FormControl>
                           <Switch
@@ -304,17 +341,17 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                 </div>
 
                 {/* Camera parameters */}
-                <div className="@container min-w-0 space-y-5 rounded-xl border bg-muted/15 p-4 sm:p-5">
+                <div className="@container min-w-0 space-y-5 rounded-lg bg-[#FAFAFA] p-4 dark:bg-[#0A0A0A] sm:p-5">
                   <div>
-                    <h3 className="text-sm font-semibold">Camera Parameters</h3>
-                    <p className="mt-1 text-xs text-muted-foreground">
-                      Auto-filled from EXIF when available. You can edit these
-                      values.
+                    <h3 className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                      Camera and lens
+                    </h3>
+                    <p className="mt-1 text-xs text-[#8F8F8F]">
+                      Auto-filled from EXIF when available.
                     </p>
                   </div>
 
                   <div className="grid grid-cols-1 gap-4 @sm:grid-cols-2">
-                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Camera & lens</h4>
                     <FormField
                       control={form.control}
                       name="make"
@@ -361,8 +398,10 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     )}
                   />
 
-                  <div className="grid grid-cols-1 gap-4 border-t pt-5 @sm:grid-cols-2">
-                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Focal length</h4>
+                  <div className="grid grid-cols-1 gap-4 pt-2 @sm:grid-cols-2">
+                    <h4 className="col-span-full text-xs font-medium tracking-wide text-[#8F8F8F]">
+                      Focal length
+                    </h4>
                     <FormField
                       control={form.control}
                       name="focalLength"
@@ -414,8 +453,10 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                     />
                   </div>
 
-                  <div className="grid grid-cols-1 items-start gap-4 border-t pt-5 @sm:grid-cols-2 @3xl:grid-cols-4">
-                    <h4 className="col-span-full text-xs font-semibold tracking-wide text-muted-foreground">Exposure settings</h4>
+                  <div className="grid grid-cols-1 items-start gap-4 pt-2 @sm:grid-cols-2 @3xl:grid-cols-4">
+                    <h4 className="col-span-full text-xs font-medium tracking-wide text-[#8F8F8F]">
+                      Exposure settings
+                    </h4>
                     <FormField
                       control={form.control}
                       name="fNumber"
@@ -486,7 +527,16 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   </div>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-2">
+                <section className="space-y-4 rounded-lg bg-[#FAFAFA] p-4 dark:bg-[#0A0A0A] sm:p-5">
+                  <div>
+                    <h3 className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                      Coordinates
+                    </h3>
+                    <p className="mt-1 text-xs text-[#8F8F8F]">
+                      Moving the map marker also updates these values.
+                    </p>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2">
                   <FormField
                     control={form.control}
                     name="latitude"
@@ -552,45 +602,69 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                       </FormItem>
                     )}
                   />
-                </div>
+                  </div>
+                </section>
 
-                <div className="flex justify-end pt-2">
-                  <Button type="submit" disabled={isSubmitting}>
+                <div className="sticky bottom-3 flex justify-end rounded-lg bg-white/95 p-2 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]/95">
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="h-9 rounded-md bg-[#0072F5] px-4 text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
+                  >
                     {isSubmitting ? "Saving..." : "Save changes"}
                   </Button>
                 </div>
               </form>
             </Form>
-          </div>
+          </section>
 
           {/* Photo + Map on the right */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-center bg-gray-50 dark:bg-muted rounded-xl p-6">
-              <FramedPhoto
-                src={data.url}
-                alt={data.title}
-                blurhash={data.blurData}
-                width={data.width}
-                height={data.height}
-                className="max-h-[50vh]"
-              />
-            </div>
-
-            <div className="bg-card border rounded-xl p-4 shadow-sm">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="text-sm font-medium">Location</h2>
+          <aside className="space-y-4">
+            <section className="rounded-xl bg-white p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-5">
+              <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2">
+                  <Camera className="size-4 text-[#8F8F8F]" />
+                  <h2 className="text-[14px] font-medium text-[#171717] dark:text-[#FAFAFA]">
+                    Preview
+                  </h2>
+                </div>
+                <span className="text-xs tabular-nums text-[#8F8F8F]">
+                  {data.width} × {data.height}
+                </span>
               </div>
-              <p className="mb-3 text-xs text-muted-foreground">
-                {currentLocation.lat == null || currentLocation.lng == null
-                  ? "No location set. Drag the temporary marker to choose one; it will not be saved until you move it."
-                  : "Drag the marker to adjust the location, then save your changes."}
+              <div className="relative aspect-[4/3] overflow-hidden rounded-md bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#262626]">
+                <BlurImage
+                  src={keyToUrl(data.url)}
+                  alt={data.title || "Photo preview"}
+                  blurhash={data.blurData}
+                  fill
+                  className="object-contain"
+                />
+              </div>
+              <p className="mt-3 truncate text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                {data.title || "Untitled photo"}
               </p>
-              <div className="h-64 w-full rounded-md overflow-hidden border">
+              <p className="mt-1 text-xs text-[#8F8F8F]">
+                {takenAt ? `Taken ${takenAt}` : "No capture date recorded"}
+              </p>
+            </section>
+
+            <section className="rounded-xl bg-white p-4 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-5">
+              <div className="mb-2 flex items-center gap-2">
+                <MapPin className="size-4 text-[#8F8F8F]" />
+                <h2 className="text-[14px] font-medium text-[#171717] dark:text-[#FAFAFA]">
+                  Location
+                </h2>
+              </div>
+              <p className="mb-3 text-xs leading-4 text-[#8F8F8F]">
+                {currentLocation.lat == null || currentLocation.lng == null
+                  ? "Drag the marker to choose a location. It will be saved with your changes."
+                  : "Drag the marker to adjust this photo’s location."}
+              </p>
+              <div className="h-[240px] w-full overflow-hidden rounded-md shadow-[0_0_0_1px_rgba(0,0,0,0.08)] sm:h-[280px]">
                 <Suspense
                   fallback={
-                    <div className="h-full w-full flex items-center justify-center bg-muted">
-                      <Skeleton className="h-full w-full" />
-                    </div>
+                    <Skeleton className="h-full w-full rounded-md" />
                   }
                 >
                   <MapboxComponent
@@ -624,10 +698,10 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   />
                 </Suspense>
               </div>
-            </div>
-          </div>
+            </section>
+          </aside>
         </div>
       </div>
-    </div>
+    </main>
   );
 };

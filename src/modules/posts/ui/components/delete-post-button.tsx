@@ -55,8 +55,9 @@ export function DeletePostButton({ postId, postTitle }: DeletePostButtonProps) {
           e.stopPropagation();
           handleDelete();
         }}
-        className="h-8 w-8 text-destructive hover:text-destructive hover:bg-destructive/10"
+        className="size-8 text-[#E5484D] hover:bg-[#FEF2F2] hover:text-[#B4232A] dark:hover:bg-[#351B1D]"
         title="Delete post"
+        aria-label={`Delete ${postTitle}`}
       >
         <Trash2 className="size-4" />
       </Button>

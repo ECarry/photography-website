@@ -25,12 +25,12 @@ const page = async ({ searchParams }: Props) => {
   const filters = await loadSearchParams(searchParams);
 
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(
-    trpc.posts.getMany.queryOptions({ ...filters })
+  await queryClient.prefetchQuery(
+    trpc.posts.getMany.queryOptions({ ...filters }),
   );
 
   return (
-    <>
+    <main className="min-h-full bg-[#FAFAFA] dark:bg-[#0A0A0A]">
       <PostsListHeader />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<LoadingStatus />}>
@@ -39,7 +39,7 @@ const page = async ({ searchParams }: Props) => {
           </ErrorBoundary>
         </Suspense>
       </HydrationBoundary>
-    </>
+    </main>
   );
 };
 
