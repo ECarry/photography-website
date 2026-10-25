@@ -21,14 +21,14 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
       const imageUrl = keyToUrl(url);
 
       return (
-        <div className="w-16 h-16 overflow-hidden">
+        <div className="relative size-12 overflow-hidden rounded-md bg-[#F2F2F2] dark:bg-[#262626]">
           <BlurImage
             src={imageUrl}
             alt={row.original.title}
-            width={64}
-            height={64}
+            width={48}
+            height={48}
             blurhash={row.original.blurData}
-            className="w-16 h-16 object-cover"
+            className="size-12 object-cover"
           />
         </div>
       );
@@ -37,6 +37,16 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
   {
     accessorKey: "title",
     header: "Title",
+    cell: ({ row }) => (
+      <div className="max-w-[280px] min-w-[160px]">
+        <p className="truncate text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+          {row.original.title || "Untitled photo"}
+        </p>
+        <p className="mt-1 truncate text-xs text-[#8F8F8F]">
+          {row.original.description || "No description"}
+        </p>
+      </div>
+    ),
   },
   {
     accessorKey: "dateTimeOriginal",
@@ -48,7 +58,14 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
       // Use date-fns for consistent formatting across SSR and client
       const formatted = format(new Date(takenAt), "MMM d, yyyy HH:mm");
 
-      return <span suppressHydrationWarning>{formatted}</span>;
+      return (
+        <span
+          suppressHydrationWarning
+          className="whitespace-nowrap text-xs tabular-nums text-[#4D4D4D] dark:text-[#B3B3B3]"
+        >
+          {formatted}
+        </span>
+      );
     },
   },
   {
@@ -59,7 +76,11 @@ export const columns: ColumnDef<photoGetMany[number]>[] = [
       const location = [city, row.original.countryCode]
         .filter(Boolean)
         .join(", ");
-      return <span>{location || "—"}</span>;
+      return (
+        <span className="text-xs text-[#4D4D4D] dark:text-[#B3B3B3]">
+          {location || "—"}
+        </span>
+      );
     },
   },
   {

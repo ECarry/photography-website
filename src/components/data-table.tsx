@@ -9,6 +9,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 import {
   Table,
@@ -25,6 +26,12 @@ interface DataTableProps<TData, TValue> {
   selectable?: boolean;
   rowSelection?: RowSelectionState;
   onRowSelectionChange?: OnChangeFn<RowSelectionState>;
+  containerClassName?: string;
+  tableClassName?: string;
+  headerClassName?: string;
+  headClassName?: string;
+  rowClassName?: string;
+  cellClassName?: string;
 }
 
 export function DataTable<TData, TValue>({
@@ -33,6 +40,12 @@ export function DataTable<TData, TValue>({
   selectable = false,
   rowSelection = {},
   onRowSelectionChange,
+  containerClassName,
+  tableClassName,
+  headerClassName,
+  headClassName,
+  rowClassName,
+  cellClassName,
 }: DataTableProps<TData, TValue>) {
   const selectionColumn: ColumnDef<TData, TValue> = {
     id: "select",
@@ -78,14 +91,14 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
+    <div className={cn("rounded-md border", containerClassName)}>
+      <Table className={tableClassName}>
+        <TableHeader className={headerClassName}>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className={headClassName}>
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -104,9 +117,13 @@ export function DataTable<TData, TValue>({
               <TableRow
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
+                className={rowClassName}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id} className="text-sm p-3">
+                  <TableCell
+                    key={cell.id}
+                    className={cn("text-sm p-3", cellClassName)}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

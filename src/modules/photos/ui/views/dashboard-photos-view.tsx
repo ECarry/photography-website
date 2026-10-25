@@ -146,7 +146,7 @@ export const DashboardPhotosView = () => {
   );
 
   return (
-    <div className="px-4 md:px-8">
+    <main className="mx-auto w-full max-w-[1400px] px-4 pb-8 md:px-6 xl:px-8">
       {data.items.length === 0 ? (
         <EmptyStatus
           showUpload={!hasActiveFilters}
@@ -163,48 +163,61 @@ export const DashboardPhotosView = () => {
         />
       ) : (
         <>
+          <div className="mb-3 flex items-center justify-between gap-3">
+            <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+              Photo library
+            </h2>
+            <p className="text-xs tabular-nums text-[#8F8F8F]">
+              {data.total.toLocaleString()} results
+            </p>
+          </div>
           {selectedIds.length > 0 && (
-            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-md border bg-muted/30 p-3">
-              <span className="mr-2 text-sm font-medium">
+            <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-white p-3 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+              <span className="mr-2 text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
                 {selectedIds.length} selected
               </span>
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 disabled={bulkUpdate.isPending}
                 onClick={() => handleBulkUpdate({ visibility: "public" })}
+                className="text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
               >
                 Make public
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 disabled={bulkUpdate.isPending}
                 onClick={() => handleBulkUpdate({ visibility: "private" })}
+                className="text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
               >
                 Make private
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 disabled={bulkUpdate.isPending}
                 onClick={() => handleBulkUpdate({ isFavorite: true })}
+                className="text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
               >
                 Favorite
               </Button>
               <Button
                 size="sm"
-                variant="outline"
+                variant="ghost"
                 disabled={bulkUpdate.isPending}
                 onClick={() => handleBulkUpdate({ isFavorite: false })}
+                className="text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
               >
                 Unfavorite
               </Button>
               <Button
                 size="sm"
-                variant="destructive"
+                variant="ghost"
                 disabled={removePhoto.isPending}
                 onClick={handleBulkDelete}
+                className="text-[#E5484D] hover:bg-[#FEF2F2] hover:text-[#B4232A] dark:hover:bg-[#351B1D]"
               >
                 Delete
               </Button>
@@ -216,6 +229,12 @@ export const DashboardPhotosView = () => {
             selectable
             rowSelection={rowSelection}
             onRowSelectionChange={handleRowSelectionChange}
+            containerClassName="overflow-hidden rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]"
+            tableClassName="min-w-[980px]"
+            headerClassName="[&_tr]:border-b [&_tr]:border-[#EBEBEB] dark:[&_tr]:border-[#303030]"
+            headClassName="h-10 px-4 text-[11px] font-medium uppercase tracking-[0.07em] text-[#8F8F8F]"
+            rowClassName="border-b border-[#EBEBEB] transition-none hover:bg-[#FAFAFA] data-[state=selected]:bg-[#F2F7FF] dark:border-[#303030] dark:hover:bg-[#202020] dark:data-[state=selected]:bg-[#13233A]"
+            cellClassName="px-4 py-3"
           />
           <DataPagination
             page={filters.page}
@@ -226,7 +245,7 @@ export const DashboardPhotosView = () => {
           />
         </>
       )}
-    </div>
+    </main>
   );
 };
 
@@ -240,7 +259,7 @@ const EmptyStatus = ({
   const modal = useModal();
 
   return (
-    <Empty className="border border-dashed">
+    <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
       <EmptyHeader>
         <EmptyMedia variant="icon">
           <IconPhotoOff />
@@ -256,11 +275,20 @@ const EmptyStatus = ({
       </EmptyHeader>
       <EmptyContent>
         {showUpload ? (
-          <Button variant="outline" size="sm" onClick={modal.onOpen}>
-            Add Photos
+          <Button
+            size="sm"
+            onClick={modal.onOpen}
+            className="bg-[#0072F5] text-white hover:bg-[#005FCC]"
+          >
+            Add photo
           </Button>
         ) : (
-          <Button variant="outline" size="sm" onClick={onClear}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={onClear}
+            className="text-[#0072F5] hover:bg-[#EBEBEB]"
+          >
             Clear filters
           </Button>
         )}
@@ -273,8 +301,8 @@ export const ErrorStatus = () => {
   const { resetBoundary } = useErrorBoundary();
 
   return (
-    <div className="px-4 md:px-8">
-      <Empty className="border border-dashed">
+    <div className="mx-auto w-full max-w-[1400px] px-4 md:px-6 xl:px-8">
+      <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
         <EmptyHeader>
           <EmptyMedia variant="icon">
             <IconAlertTriangle />
@@ -283,7 +311,7 @@ export const ErrorStatus = () => {
           <EmptyDescription>Please try again later.</EmptyDescription>
         </EmptyHeader>
         <EmptyContent>
-          <Button variant="outline" size="sm" onClick={resetBoundary}>
+          <Button variant="ghost" size="sm" onClick={resetBoundary}>
             Try again
           </Button>
         </EmptyContent>
@@ -294,8 +322,8 @@ export const ErrorStatus = () => {
 
 export const LoadingStatus = () => {
   return (
-    <div className="px-4 md:px-8">
-      <div className="rounded-md border">
+    <div className="mx-auto w-full max-w-[1400px] px-4 md:px-6 xl:px-8">
+      <div className="overflow-hidden rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
         <Table>
           <TableHeader>
             <TableRow>
