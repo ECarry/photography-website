@@ -7,6 +7,7 @@ import { IconPhotoUp } from "@tabler/icons-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
+  SidebarGroupLabel,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -37,22 +38,30 @@ export function NavMain({
   }, null as (typeof items)[0] | null);
 
   return (
-    <>
-      <SidebarGroup>
-        <SidebarGroupContent className="flex flex-col gap-2">
+    <SidebarGroup className="px-2 py-3">
+      <SidebarGroupContent className="flex flex-col gap-6">
+        <div>
+          <SidebarGroupLabel className="h-7 px-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#8F8F8F]">
+            Create
+          </SidebarGroupLabel>
           <SidebarMenu>
-            <SidebarMenuItem className="flex items-center gap-2">
+            <SidebarMenuItem>
               <SidebarMenuButton
-                onClick={() => modal.onOpen()}
-                tooltip="Add Photo"
-                className="bg-primary text-primary-foreground hover:bg-primary/90 hover:text-primary-foreground active:bg-primary/90 active:text-primary-foreground min-w-8 duration-200 ease-linear"
+                onClick={modal.onOpen}
+                tooltip="Add photo"
+                className="h-9 rounded-md bg-white px-3 text-[14px] font-medium text-[#0072F5] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-none hover:bg-[#EBEBEB] hover:text-[#005FCC] dark:bg-[#171717] dark:text-[#52AEFF] dark:hover:bg-[#262626]"
               >
                 <IconPhotoUp />
-                <span>Add Photo</span>
+                <span>Add photo</span>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          <SidebarMenu>
+        </div>
+        <div>
+          <SidebarGroupLabel className="h-7 px-3 text-[11px] font-medium uppercase tracking-[0.08em] text-[#8F8F8F]">
+            Workspace
+          </SidebarGroupLabel>
+          <SidebarMenu className="gap-1">
             {items.map((item) => (
               <SidebarMenuItem key={item.title}>
                 <SidebarMenuButton
@@ -62,6 +71,7 @@ export function NavMain({
                       ? exactMatchItem.url === item.url
                       : bestMatchItem?.url === item.url
                   }
+                  className="h-9 rounded-md px-3 text-[14px] font-normal text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] data-[active=true]:bg-white data-[active=true]:font-medium data-[active=true]:text-[#171717] data-[active=true]:shadow-[0_0_0_1px_rgba(0,0,0,0.08)] data-[active=true]:[&>svg]:text-[#0072F5] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA] dark:data-[active=true]:bg-[#171717] dark:data-[active=true]:text-[#FAFAFA] dark:data-[active=true]:shadow-[0_0_0_1px_rgba(255,255,255,0.12)]"
                   asChild
                 >
                   <Link href={item.url as Route}>
@@ -72,8 +82,8 @@ export function NavMain({
               </SidebarMenuItem>
             ))}
           </SidebarMenu>
-        </SidebarGroupContent>
-      </SidebarGroup>
-    </>
+        </div>
+      </SidebarGroupContent>
+    </SidebarGroup>
   );
 }

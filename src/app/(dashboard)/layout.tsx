@@ -16,13 +16,16 @@ function Layout({ children }: { children: React.ReactNode }) {
     <SidebarProvider
       style={
         {
-          "--sidebar-width": "calc(var(--spacing) * 72)",
-          "--header-height": "calc(var(--spacing) * 12)",
+          "--sidebar-width": "240px",
+          "--header-height": "64px",
         } as React.CSSProperties
       }
     >
-      <DashboardSidebar variant="inset" />
-      <SidebarInset>
+      <DashboardSidebar
+        variant="sidebar"
+        className="border-r-0 shadow-[1px_0_0_rgba(0,0,0,0.08)] dark:shadow-[1px_0_0_rgba(255,255,255,0.08)]"
+      />
+      <SidebarInset className="bg-[#FAFAFA] dark:bg-[#0A0A0A]">
         <SiteHeader />
         {children}
         <CreatePhotoModal />

@@ -5,6 +5,7 @@ import { Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 // Hydration-safe hook to detect if component is mounted on client
 const emptySubscribe = () => () => {};
@@ -26,19 +27,20 @@ const addViewTransition = (callback: () => void) => {
 };
 
 // Dashboard page Theme Toggle
-export function ThemeToggle() {
+export function ThemeToggle({ className }: { className?: string }) {
   const { setTheme, theme } = useTheme();
 
   return (
     <Button
       variant="ghost"
       size="icon"
+      className={cn("size-9", className)}
       onClick={() =>
         addViewTransition(() => setTheme(theme === "light" ? "dark" : "light"))
       }
     >
-      <Sun className="h-6 w-[1.3rem] dark:hidden" color="#000" />
-      <Moon className="hidden h-5 w-5 dark:block" />
+      <Sun className="size-4 dark:hidden" />
+      <Moon className="hidden size-4 dark:block" />
       <span className="sr-only">Toggle theme</span>
     </Button>
   );

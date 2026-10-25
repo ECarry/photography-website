@@ -48,11 +48,11 @@ export function NavUser({ user }: Props) {
           <DropdownMenuTrigger asChild>
             <SidebarMenuButton
               size="lg"
-              className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+              className="h-12 rounded-md px-2 text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] data-[state=open]:bg-[#EBEBEB] data-[state=open]:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
             >
-              <Avatar className="h-8 w-8 rounded-lg grayscale">
+              <Avatar className="size-8 rounded-full shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:shadow-[0_0_0_1px_rgba(255,255,255,0.12)]">
                 <AvatarImage src={user.image || ""} alt={user.name} />
-                <AvatarFallback className="rounded-lg">
+                <AvatarFallback className="rounded-full">
                   {user.name?.slice(0, 2)}
                 </AvatarFallback>
               </Avatar>
@@ -66,14 +66,14 @@ export function NavUser({ user }: Props) {
             </SidebarMenuButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent
-            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg"
+            className="w-(--radix-dropdown-menu-trigger-width) min-w-56 rounded-lg border-0 bg-white text-[#171717] shadow-[0_0_0_1px_rgba(0,0,0,0.08),0_1px_1px_rgba(0,0,0,0.02),0_4px_8px_-4px_rgba(0,0,0,0.04)] dark:bg-[#171717] dark:text-[#FAFAFA]"
             side={isMobile ? "bottom" : "right"}
             align="end"
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
               <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-                <Avatar className="h-8 w-8 rounded-lg">
+                <Avatar className="size-8 rounded-full">
                   <AvatarImage src={user.image || ""} alt={user.name} />
                   <AvatarFallback className="rounded-lg">CN</AvatarFallback>
                 </Avatar>

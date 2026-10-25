@@ -1,5 +1,4 @@
 import { NavMain } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-main";
-import { NavSecondary } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-secondary";
 import { NavUser } from "@/modules/dashboard/ui/components/dashboard-sidebar/nav-user";
 import {
   Sidebar,
@@ -37,25 +36,6 @@ const data = {
       url: "/dashboard/posts",
       icon: "post",
     },
-    {
-      title: "Profile",
-      url: "/dashboard/profile",
-      icon: "user",
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "#",
-    },
-    {
-      title: "Get Help",
-      url: "#",
-    },
-    {
-      title: "Search",
-      url: "#",
-    },
   ],
 };
 
@@ -66,26 +46,27 @@ export const DashboardSidebar = async ({
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
-      <SidebarHeader>
+      <SidebarHeader className="px-4 py-4">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="data-[slot=sidebar-menu-button]:p-1.5!"
+              className="h-11 rounded-md px-2 hover:bg-transparent"
             >
-              <Link href="/">
-                <IconLivePhoto />
-                <span className="text-base font-semibold">Photography</span>
+              <Link href="/dashboard" className="gap-3">
+                <IconLivePhoto className="size-5 text-[#171717] dark:text-[#FAFAFA]" />
+                <span className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+                  Photography
+                </span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
+      <SidebarContent className="gap-0 px-2">
         <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-3">
         <NavUser user={session?.user as User} />
       </SidebarFooter>
     </Sidebar>

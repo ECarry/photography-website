@@ -1,7 +1,7 @@
 "use client";
 
 import React from "react";
-import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import {
   Breadcrumb,
@@ -16,55 +16,68 @@ import { ThemeToggle } from "@/components/theme-toggle";
 
 export function SiteHeader() {
   const pathname = usePathname();
+  const segments = pathname.split("/").filter(Boolean).slice(1);
+  const formatSegment = (segment: string) => {
+    const decoded = decodeURIComponent(segment);
+    return decoded.charAt(0).toUpperCase() + decoded.slice(1);
+  };
 
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
-      <div className="flex w-full items-center gap-1 px-4 lg:gap-2 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
-        <Separator
-          orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
-        />
-        <Breadcrumb>
-          <BreadcrumbList>
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center bg-[#FAFAFA] shadow-[0_1px_0_0_rgba(0,0,0,0.1)] dark:bg-[#0A0A0A]">
+      <div className="flex w-full items-center gap-4 px-4 md:px-6">
+        <SidebarTrigger className="size-9 rounded-md text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]" />
+        <Breadcrumb className="min-w-0">
+          <BreadcrumbList className="flex-nowrap gap-2 text-[13px]">
             <BreadcrumbItem>
-              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+              {segments.length === 0 ? (
+                <BreadcrumbPage className="font-medium text-[#171717] dark:text-[#FAFAFA]">
+                  Overview
+                </BreadcrumbPage>
+              ) : (
+                <BreadcrumbLink
+                  href="/dashboard"
+                  className="text-[#8F8F8F] hover:text-[#171717] dark:hover:text-[#FAFAFA]"
+                >
+                  Overview
+                </BreadcrumbLink>
+              )}
             </BreadcrumbItem>
-            {pathname
-              .split("/")
-              .filter(Boolean)
-              .slice(1)
-              .map((segment, index, segments) => {
-                // Skip 'dashboard' segment as we already have it as the first item
-                if (segment === "dashboard") return null;
+            {segments.map((segment, index) => {
+              const segmentPath = `/dashboard/${segments
+                .slice(0, index + 1)
+                .join("/")}`;
+              const label = formatSegment(segment);
 
-                const segmentPath = `/dashboard/${segments
-                  .slice(0, index + 1)
-                  .join("/")}`;
-                const decodedSegment = decodeURIComponent(segment);
-                const formattedSegment =
-                  decodedSegment.charAt(0).toUpperCase() +
-                  decodedSegment.slice(1);
-
-                return (
-                  <React.Fragment key={segmentPath}>
-                    <BreadcrumbSeparator />
-                    <BreadcrumbItem>
-                      {index === segments.length - 1 ? (
-                        <BreadcrumbPage>{formattedSegment}</BreadcrumbPage>
-                      ) : (
-                        <BreadcrumbLink href={segmentPath}>
-                          {formattedSegment}
-                        </BreadcrumbLink>
-                      )}
-                    </BreadcrumbItem>
-                  </React.Fragment>
-                );
-              })}
+              return (
+                <React.Fragment key={segmentPath}>
+                  <BreadcrumbSeparator className="text-[#8F8F8F]" />
+                  <BreadcrumbItem className="min-w-0">
+                    {index === segments.length - 1 ? (
+                      <BreadcrumbPage className="max-w-[180px] truncate font-medium text-[#171717] dark:text-[#FAFAFA]">
+                        {label}
+                      </BreadcrumbPage>
+                    ) : (
+                      <BreadcrumbLink
+                        href={segmentPath}
+                        className="max-w-[140px] truncate text-[#8F8F8F] hover:text-[#171717] dark:hover:text-[#FAFAFA]"
+                      >
+                        {label}
+                      </BreadcrumbLink>
+                    )}
+                  </BreadcrumbItem>
+                </React.Fragment>
+              );
+            })}
           </BreadcrumbList>
         </Breadcrumb>
-        <div className="ml-auto flex items-center gap-2">
-          <ThemeToggle />
+        <div className="ml-auto flex shrink-0 items-center gap-2">
+          <Link
+            href="/"
+            className="hidden h-9 items-center rounded-md px-3 text-sm text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] focus-visible:outline-none focus-visible:shadow-[0_0_0_2px_#FAFAFA,0_0_0_4px_#0072F5] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA] sm:inline-flex"
+          >
+            View site
+          </Link>
+          <ThemeToggle className="size-9 rounded-md text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] dark:text-[#B3B3B3] dark:hover:bg-[#262626]" />
         </div>
       </div>
     </header>
