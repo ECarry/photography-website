@@ -8,9 +8,7 @@ import { useRouter } from "next/navigation";
 // Internal dependencies - UI Components
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Globe, Clock, Dot, Monitor, Loader2 } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
+import { Globe, Clock, Monitor, Loader2, ShieldCheck } from "lucide-react";
 import { ProfileForm } from "@/modules/auth/ui/components/profile-form";
 
 // Types
@@ -29,29 +27,38 @@ const SecurityAccessCard = (props: {
 }) => {
   const router = useRouter();
   const [isTerminating, setIsTerminating] = useState<string>();
+  const sessions = props.activeSessions.filter((session) => session.userAgent);
 
   return (
-    <div className="space-y-8">
-      {/* Account Management */}
-      <div className="max-w-lg">
-        <ProfileForm />
-      </div>
-
-      {/* Active Sessions Section */}
-      <div className="space-y-4">
-        <div>
-          <h2 className="text-xl font-semibold tracking-tight mb-1">
-            Active Sessions
+    <div className="grid min-w-0 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+      <section className="min-w-0">
+        <div className="mb-3 flex items-center gap-2">
+          <ShieldCheck className="size-4 text-[#8F8F8F]" />
+          <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+            Account
           </h2>
-          <p className="text-sm text-muted-foreground">
-            Manage devices signed into your account
-          </p>
+        </div>
+        <ProfileForm />
+      </section>
+
+      <section className="min-w-0 rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6">
+        <div className="mb-5 flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+              Active sessions
+            </h2>
+            <p className="mt-1 text-xs text-[#8F8F8F]">
+              Devices currently signed in to your account.
+            </p>
+          </div>
+          <span className="shrink-0 text-xs tabular-nums text-[#8F8F8F]">
+            {sessions.length}
+          </span>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {props.activeSessions
-            .filter((session) => session.userAgent)
-            .map((session) => {
+        {sessions.length > 0 ? (
+          <div className="space-y-3">
+            {sessions.map((session) => {
               const parser = new UAParser(session.userAgent || "");
               const isCurrentSession = session.id === props.session?.session.id;
               const deviceType = parser.getDevice().type;
@@ -64,107 +71,97 @@ const SecurityAccessCard = (props: {
               const os = parser.getOS();
 
               return (
-                <Card
+                <article
                   key={session.id}
-                  className={`overflow-hidden transition-all duration-200 hover:shadow-sm min-w-[400px] ${
-                    isCurrentSession
-                      ? "ring-1 ring-primary/30 border-primary/40 bg-primary/5"
-                      : "border hover:border-primary/20"
-                  }`}
+                  className="flex min-w-0 items-start gap-3 rounded-lg bg-[#FAFAFA] p-3 dark:bg-[#0A0A0A] sm:items-center sm:p-4"
                 >
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3">
-                      {/* Device Icon */}
-                      <div
-                        className={`p-2 rounded-lg flex items-center justify-center ${
-                          isCurrentSession
-                            ? "bg-primary/10 text-primary"
-                            : "bg-muted text-muted-foreground"
-                        }`}
-                      >
-                        <DeviceIcon size={18} />
-                      </div>
-
-                      {/* Device Info */}
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1">
-                          <h3 className="font-medium text-sm truncate">
-                            {deviceDescription}
-                          </h3>
-                          {isCurrentSession && (
-                            <Badge
-                              variant="secondary"
-                              className="text-xs bg-green-100 text-green-700 border-green-200 px-1.5 py-0.5"
-                            >
-                              <Dot className="w-2 h-2 mr-0.5 fill-current" />
-                              Current
-                            </Badge>
-                          )}
-                        </div>
-
-                        <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                          {browser.name && (
-                            <div className="flex items-center gap-1">
-                              <Globe className="w-3 h-3" />
-                              <span className="truncate">
-                                {browser.name} {browser.version?.split(".")[0]}
-                              </span>
-                            </div>
-                          )}
-
-                          {os.name && (
-                            <div className="flex items-center gap-1">
-                              <Monitor className="w-3 h-3" />
-                              <span className="truncate">{os.name}</span>
-                            </div>
-                          )}
-
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3" />
-                            <span>{formatLastActive(session.createdAt)}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Action Button */}
-                      <Button
-                        variant={isCurrentSession ? "default" : "outline"}
-                        size="sm"
-                        className="h-8 px-3 text-xs min-w-[80px]"
-                        onClick={async () => {
-                          setIsTerminating(session.id);
-                          const res = await authClient.revokeSession({
-                            token: session.token,
-                          });
-
-                          if (res.error) {
-                            toast.error(res.error.message);
-                          } else {
-                            toast.success(
-                              isCurrentSession
-                                ? "Signed out successfully"
-                                : "Session terminated successfully"
-                            );
-                          }
-                          router.refresh();
-                          setIsTerminating(undefined);
-                        }}
-                      >
-                        {isTerminating === session.id ? (
-                          <Loader2 size={12} className="animate-spin" />
-                        ) : isCurrentSession ? (
-                          "Sign Out"
-                        ) : (
-                          "Terminate"
-                        )}
-                      </Button>
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-white text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] dark:text-[#B3B3B3]">
+                    <DeviceIcon className="size-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                      <h3 className="truncate text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
+                        {deviceDescription}
+                      </h3>
+                      {isCurrentSession && (
+                        <span className="inline-flex items-center gap-1.5 text-xs text-[#4D4D4D] dark:text-[#B3B3B3]">
+                          <span
+                            aria-hidden="true"
+                            className="size-2 rounded-full bg-[#398E4A]"
+                          />
+                          Current
+                        </span>
+                      )}
                     </div>
-                  </CardContent>
-                </Card>
+                    <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-[#8F8F8F]">
+                      {browser.name && (
+                        <span className="inline-flex items-center gap-1">
+                          <Globe className="size-3.5" />
+                          {browser.name} {browser.version?.split(".")[0]}
+                        </span>
+                      )}
+                      {os.name && (
+                        <span className="inline-flex items-center gap-1">
+                          <Monitor className="size-3.5" />
+                          {os.name}
+                        </span>
+                      )}
+                      <span className="inline-flex items-center gap-1">
+                        <Clock className="size-3.5" />
+                        {formatLastActive(session.createdAt)}
+                      </span>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 shrink-0 rounded-md px-2 text-xs text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
+                    disabled={isTerminating === session.id}
+                    onClick={async () => {
+                      setIsTerminating(session.id);
+                      try {
+                        const res = await authClient.revokeSession({
+                          token: session.token,
+                        });
+                        if (res.error) {
+                          toast.error(res.error.message);
+                        } else {
+                          toast.success(
+                            isCurrentSession
+                              ? "Signed out successfully"
+                              : "Session terminated",
+                          );
+                          router.refresh();
+                        }
+                      } catch (error) {
+                        toast.error(
+                          error instanceof Error
+                            ? error.message
+                            : "Could not terminate session",
+                        );
+                      } finally {
+                        setIsTerminating(undefined);
+                      }
+                    }}
+                  >
+                    {isTerminating === session.id ? (
+                      <Loader2 className="size-3.5 animate-spin" />
+                    ) : isCurrentSession ? (
+                      "Sign out"
+                    ) : (
+                      "Revoke"
+                    )}
+                  </Button>
+                </article>
               );
             })}
-        </div>
-      </div>
+          </div>
+        ) : (
+          <p className="rounded-lg bg-[#FAFAFA] px-4 py-6 text-sm text-[#8F8F8F] dark:bg-[#0A0A0A]">
+            No session details are available.
+          </p>
+        )}
+      </section>
     </div>
   );
 };

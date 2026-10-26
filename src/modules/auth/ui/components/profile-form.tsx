@@ -125,27 +125,33 @@ export const ProfileForm = () => {
 
   return (
     <Tabs defaultValue="profile" className="w-full">
-      <TabsList className="grid w-full grid-cols-2">
+      <TabsList className="mb-3 inline-flex h-9 w-fit justify-start gap-1 rounded-md bg-transparent p-0">
         <TabsTrigger value="profile">Profile</TabsTrigger>
         <TabsTrigger value="password">Password</TabsTrigger>
       </TabsList>
 
       {/* Profile Tab */}
-      <TabsContent value="profile" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Edit Profile</CardTitle>
-            <CardDescription>Update your profile information</CardDescription>
+      <TabsContent value="profile">
+        <Card className="rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+          <CardHeader className="px-5 pt-5 sm:px-6 sm:pt-6">
+            <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+              Profile details
+            </CardTitle>
+            <CardDescription className="text-xs text-[#8F8F8F]">
+              Update the name and image shown on your account.
+            </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-6 px-5 pb-5 sm:px-6 sm:pb-6">
             {/* Profile Picture Section */}
             <div className="space-y-3">
-              <Label className="text-base font-semibold">Profile Picture</Label>
-              <div className="flex items-end gap-4">
+              <Label className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]">
+                Profile image
+              </Label>
+              <div className="flex flex-col items-start gap-4 sm:flex-row sm:items-center">
                 {/* Image Preview */}
                 <div className="relative">
                   {imagePreview ? (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary/20">
+                    <div className="relative size-20 overflow-hidden rounded-full bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#262626]">
                       <Image
                         src={imagePreview}
                         alt="Profile preview"
@@ -154,7 +160,7 @@ export const ProfileForm = () => {
                       />
                     </div>
                   ) : data?.user.image ? (
-                    <div className="relative w-24 h-24 rounded-lg overflow-hidden border-2 border-primary/20">
+                    <div className="relative size-20 overflow-hidden rounded-full bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#262626]">
                       <Image
                         src={data.user.image}
                         alt="Current profile"
@@ -163,16 +169,17 @@ export const ProfileForm = () => {
                       />
                     </div>
                   ) : (
-                    <div className="w-24 h-24 rounded-lg bg-muted border-2 border-dashed border-muted-foreground/30 flex items-center justify-center">
-                      <span className="text-xs text-muted-foreground">
-                        No image
-                      </span>
+                    <div className="flex size-20 items-center justify-center rounded-full bg-[#F2F2F2] text-lg font-medium text-[#4D4D4D] dark:bg-[#262626] dark:text-[#B3B3B3]">
+                      {data?.user.name?.slice(0, 1).toUpperCase() || "?"}
                     </div>
                   )}
                 </div>
 
                 {/* Upload Controls */}
                 <div className="flex-1 space-y-2">
+                  <p className="text-xs text-[#8F8F8F]">
+                    Choose a square image for your account avatar.
+                  </p>
                   <div className="relative">
                     <Input
                       id="image"
@@ -184,11 +191,11 @@ export const ProfileForm = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      className="w-full"
+                      className="h-9 rounded-md border-0 bg-white text-sm text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] hover:bg-[#EBEBEB] dark:bg-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626]"
                       onClick={() => document.getElementById("image")?.click()}
                     >
-                      <Upload className="w-4 h-4 mr-2" />
-                      Choose Image
+                      <Upload className="size-4" />
+                      Choose image
                     </Button>
                   </div>
                   {imagePreview && (
@@ -196,14 +203,14 @@ export const ProfileForm = () => {
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="w-full text-destructive hover:text-destructive"
+                      className="h-8 px-2 text-xs text-[#4D4D4D] hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]"
                       onClick={() => {
                         setImage(null);
                         setImagePreview(null);
                       }}
                     >
-                      <X className="w-4 h-4 mr-2" />
-                      Remove
+                      <X className="size-3.5" />
+                      Remove image
                     </Button>
                   )}
                 </div>
@@ -211,34 +218,36 @@ export const ProfileForm = () => {
             </div>
 
             {/* Name Section */}
-            <div className="space-y-3">
-              <Label htmlFor="name" className="text-base font-semibold">
-                Full Name
+            <div className="space-y-2">
+              <Label htmlFor="name" className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]">
+                Full name
               </Label>
               <Input
                 id="name"
                 type="text"
-                placeholder={data?.user.name || "Enter your name"}
-                value={name}
+                placeholder="Enter your name"
+                value={name || data?.user.name || ""}
                 onChange={(e) => setName(e.target.value)}
-                className="h-10"
+                className="h-10 border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 dark:bg-[#0A0A0A]"
               />
             </div>
 
             {/* Save Button */}
             <Button
               onClick={handleUpdateProfile}
-              disabled={isUpdatingProfile || (!name && !image)}
-              className="w-full"
-              size="lg"
+              disabled={
+                isUpdatingProfile ||
+                (!image && (!name || name === data?.user.name))
+              }
+              className="h-10 w-full rounded-md bg-[#0072F5] text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
             >
               {isUpdatingProfile ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Updating...
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving...
                 </>
               ) : (
-                "Save Changes"
+                "Save profile"
               )}
             </Button>
           </CardContent>
@@ -246,43 +255,42 @@ export const ProfileForm = () => {
       </TabsContent>
 
       {/* Password Tab */}
-      <TabsContent value="password" className="space-y-4">
-        <Card>
-          <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>
-              Update your password to keep your account secure
+      <TabsContent value="password">
+        <Card className="rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+          <CardHeader className="px-5 pt-5 sm:px-6 sm:pt-6">
+            <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
+              Change password
+            </CardTitle>
+            <CardDescription className="text-xs text-[#8F8F8F]">
+              Use a unique password to secure your account.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-5 px-5 pb-5 sm:px-6 sm:pb-6">
             {/* Current Password */}
             <div className="space-y-3">
-              <Label
-                htmlFor="current-password"
-                className="text-base font-semibold"
-              >
-                Current Password
+              <Label htmlFor="current-password" className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]">
+                Current password
               </Label>
               <PasswordInput
                 id="current-password"
                 value={currentPassword}
                 onChange={(e) => setCurrentPassword(e.target.value)}
                 placeholder="Enter your current password"
-                className="h-10"
+                className="h-10 border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 dark:bg-[#0A0A0A]"
               />
             </div>
 
             {/* New Password */}
             <div className="space-y-3">
-              <Label htmlFor="new-password" className="text-base font-semibold">
-                New Password
+              <Label htmlFor="new-password" className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]">
+                New password
               </Label>
               <PasswordInput
                 id="new-password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 placeholder="Enter your new password (min. 8 characters)"
-                className="h-10"
+                className="h-10 border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 dark:bg-[#0A0A0A]"
               />
             </div>
 
@@ -290,21 +298,21 @@ export const ProfileForm = () => {
             <div className="space-y-3">
               <Label
                 htmlFor="confirm-password"
-                className="text-base font-semibold"
+                className="text-sm font-medium text-[#4D4D4D] dark:text-[#B3B3B3]"
               >
-                Confirm Password
+                Confirm password
               </Label>
               <PasswordInput
                 id="confirm-password"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="Confirm your new password"
-                className="h-10"
+                className="h-10 border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 dark:bg-[#0A0A0A]"
               />
             </div>
 
             {/* Sign Out Other Devices */}
-            <div className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg border border-muted-foreground/20">
+            <div className="flex items-center gap-3 rounded-lg bg-[#FAFAFA] p-3 dark:bg-[#0A0A0A]">
               <Checkbox
                 id="sign-out-devices"
                 checked={signOutDevices}
@@ -314,7 +322,7 @@ export const ProfileForm = () => {
               />
               <Label
                 htmlFor="sign-out-devices"
-                className="text-sm font-medium cursor-pointer flex-1 mb-0"
+                className="mb-0 flex-1 cursor-pointer text-sm text-[#4D4D4D] dark:text-[#B3B3B3]"
               >
                 Sign out from all other devices
               </Label>
@@ -329,16 +337,15 @@ export const ProfileForm = () => {
                 !newPassword ||
                 !confirmPassword
               }
-              className="w-full"
-              size="lg"
+              className="h-10 w-full rounded-md bg-[#0072F5] text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
             >
               {isChangingPassword ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Changing...
+                  <Loader2 className="size-4 animate-spin" />
+                  Saving...
                 </>
               ) : (
-                "Change Password"
+                "Update password"
               )}
             </Button>
           </CardContent>
