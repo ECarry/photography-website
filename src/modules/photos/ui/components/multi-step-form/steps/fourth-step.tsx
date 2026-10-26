@@ -27,7 +27,7 @@ export function FourthStep({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-6">
         {/* Image Preview */}
         {initialData?.url && initialData?.imageInfo && (
           <PhotoPreviewCard
@@ -54,11 +54,11 @@ export function FourthStep({
           />
         )}
 
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={onBack}>
+        <div className="sticky bottom-0 z-10 -mx-2 flex gap-2 bg-background/95 px-2 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+          <Button type="button" variant="outline" onClick={onBack} className="h-11 flex-1 sm:flex-none">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button type="submit" disabled={isSubmitting || !isValid}>
+          <Button type="submit" disabled={isSubmitting || !isValid} className="h-11 flex-1 sm:flex-none">
             {isSubmitting ? "Submitting..." : "Submit"}
           </Button>
         </div>

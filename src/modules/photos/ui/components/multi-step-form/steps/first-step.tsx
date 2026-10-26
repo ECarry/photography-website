@@ -56,7 +56,7 @@ export function FirstStep({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-3 sm:space-y-4">
         <div className="space-y-2">
           {!url || !imageInfo ? (
             <>
@@ -77,8 +77,8 @@ export function FirstStep({
             </>
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2 text-green-600 text-sm">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-2 text-green-600 text-xs sm:text-sm">
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Photo uploaded successfully</span>
                 </div>
@@ -99,7 +99,7 @@ export function FirstStep({
                   src={keyToUrl(url)}
                   alt="Uploaded photo"
                   fill
-                  className="object-contain w-full h-full"
+                  className="h-full w-full object-contain"
                   unoptimized
                 />
               </div>
@@ -138,8 +138,8 @@ export function FirstStep({
           )}
         </div>
 
-        <div className="flex justify-end pt-4">
-          <Button type="submit" disabled={!isStepValid}>
+        <div className="sticky bottom-0 z-10 -mx-2 flex justify-end bg-background/95 px-2 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+          <Button type="submit" disabled={!isStepValid} className="h-11 w-full sm:w-auto">
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

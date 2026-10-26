@@ -242,7 +242,7 @@ export function ThirdStep({
           </div>
 
           <FormControl>
-            <div className="h-[400px] w-full rounded-md border overflow-hidden">
+            <div className="h-[280px] w-full overflow-hidden rounded-md border sm:h-[400px]">
               <MapboxComponent
                 ref={mapRef}
                 draggableMarker
@@ -256,10 +256,10 @@ export function ThirdStep({
           </FormControl>
 
           {/* Address Display */}
-          <div className="space-y-1 text-sm text-muted-foreground mt-2">
+          <div className="mt-2 space-y-1 text-sm text-muted-foreground">
             <div className="flex items-center gap-1">
               <MapPin className="h-3 w-3" />
-              <span className="text-xs">
+              <span className="break-words text-xs">
                 {currentLocation.lat != null && currentLocation.lng != null
                   ? formatGPSCoordinates(
                       currentLocation.lat,
@@ -276,11 +276,11 @@ export function ThirdStep({
           </div>
         </FormItem>
 
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={onBack}>
+        <div className="sticky bottom-0 z-10 -mx-2 flex gap-2 bg-background/95 px-2 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+          <Button type="button" variant="outline" onClick={onBack} className="h-11 flex-1 sm:flex-none">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button type="submit" disabled={isSubmitting || !isValid}>
+          <Button type="submit" disabled={isSubmitting || !isValid} className="h-11 flex-1 sm:flex-none">
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

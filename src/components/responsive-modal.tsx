@@ -40,9 +40,9 @@ export const ResponsiveModal = ({
   if (isMobile) {
     return (
       <Drawer open={open} onOpenChange={onOpenChange} dismissible={dismissible}>
-        <DrawerContent className={cn("p-4", className)}>
-          <DrawerHeader>
-            <DrawerTitle>{title}</DrawerTitle>
+        <DrawerContent className={cn("gap-0", className)}>
+          <DrawerHeader className="px-3 pb-3 pt-2 text-left">
+            <DrawerTitle className="text-base">{title}</DrawerTitle>
             <DrawerDescription></DrawerDescription>
           </DrawerHeader>
           {children}

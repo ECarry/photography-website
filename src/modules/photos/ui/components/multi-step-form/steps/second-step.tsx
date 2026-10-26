@@ -62,7 +62,7 @@ export function SecondStep({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
         <div className="gap-6">
           <div className="space-y-6">
             <FormField
@@ -125,7 +125,7 @@ export function SecondStep({
             />
 
             {/* Camera Parameters Section */}
-            <div className="@container min-w-0 space-y-5 rounded-xl border bg-muted/15 p-4 sm:p-5">
+            <div className="@container min-w-0 space-y-5 rounded-xl border bg-muted/15 p-3 sm:p-5">
               <div>
                 <h3 className="text-sm font-semibold">Camera Parameters</h3>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -309,11 +309,11 @@ export function SecondStep({
           </div>
         </div>
 
-        <div className="flex justify-between pt-4">
-          <Button type="button" variant="outline" onClick={onBack}>
+        <div className="sticky bottom-0 z-10 -mx-2 flex gap-2 bg-background/95 px-2 py-3 backdrop-blur sm:static sm:mx-0 sm:bg-transparent sm:p-0">
+          <Button type="button" variant="outline" onClick={onBack} className="h-11 flex-1 sm:flex-none">
             <ArrowLeft className="mr-2 h-4 w-4" /> Back
           </Button>
-          <Button type="submit" disabled={isSubmitting || !isValid}>
+          <Button type="submit" disabled={isSubmitting || !isValid} className="h-11 flex-1 sm:flex-none">
             Next <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>

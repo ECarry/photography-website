@@ -338,8 +338,8 @@ export default function MultiStepForm({
               variants={variants}
               transition={{ duration: 0.3 }}
             >
-              <div className="mb-6">
-                <h2 className="text-xl font-bold">{STEP_CONFIG[step].title}</h2>
+              <div className="mb-4 sm:mb-6">
+                <h2 className="text-lg font-medium sm:text-xl">{STEP_CONFIG[step].title}</h2>
                 <p className="text-muted-foreground text-sm">
                   {STEP_CONFIG[step].description}
                 </p>
