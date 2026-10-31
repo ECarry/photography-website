@@ -1,6 +1,6 @@
 import { createTRPCRouter, protectedProcedure } from "@/trpc/init";
 import { photos, citySets } from "@/db/schema";
-import { sql } from "drizzle-orm";
+import { desc, sql } from "drizzle-orm";
 import { z } from "zod";
 import fs from "fs/promises";
 import path from "path";
@@ -19,6 +19,52 @@ const loadWorldGeoJson = async (): Promise<GeoJSON.FeatureCollection> => {
 };
 
 export const dashboardRouter = createTRPCRouter({
+  getRecentPhotos: protectedProcedure.query(async ({ ctx }) => {
+    return ctx.db
+      .select({
+        id: photos.id,
+        url: photos.url,
+        title: photos.title,
+        blurData: photos.blurData,
+        city: photos.city,
+        region: photos.region,
+        country: photos.country,
+        visibility: photos.visibility,
+        createdAt: photos.createdAt,
+      })
+      .from(photos)
+      .orderBy(desc(photos.createdAt), desc(photos.id))
+      .limit(6);
+  }),
+
+  getPhotoMetadataSummary: protectedProcedure.query(async ({ ctx }) => {
+    const [summary] = await ctx.db
+      .select({
+        missingCaptureDate: sql<number>`COUNT(*) FILTER (
+          WHERE ${photos.dateTimeOriginal} IS NULL
+        )::int`,
+        missingLocation: sql<number>`COUNT(*) FILTER (
+          WHERE ${photos.latitude} IS NULL
+            AND ${photos.longitude} IS NULL
+            AND NULLIF(BTRIM(${photos.city}), '') IS NULL
+            AND NULLIF(BTRIM(${photos.region}), '') IS NULL
+            AND NULLIF(BTRIM(${photos.country}), '') IS NULL
+        )::int`,
+        missingCameraDetails: sql<number>`COUNT(*) FILTER (
+          WHERE NULLIF(BTRIM(${photos.make}), '') IS NULL
+            AND NULLIF(BTRIM(${photos.model}), '') IS NULL
+            AND NULLIF(BTRIM(${photos.lensModel}), '') IS NULL
+        )::int`,
+      })
+      .from(photos);
+
+    return {
+      missingCaptureDate: summary?.missingCaptureDate ?? 0,
+      missingLocation: summary?.missingLocation ?? 0,
+      missingCameraDetails: summary?.missingCameraDetails ?? 0,
+    };
+  }),
+
   getPhotosCountByMonth: protectedProcedure
     .input(
       z
