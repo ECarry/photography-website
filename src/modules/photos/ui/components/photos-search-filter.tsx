@@ -6,7 +6,7 @@ export const PhotosSearchFilter = () => {
   const [filters, setFilters] = usePhotosFilters();
 
   return (
-    <div className="relative w-full sm:w-[260px]">
+    <div className="relative w-full min-w-0">
       <Input
         placeholder="Search title, details, or location"
         value={filters.search}
