@@ -140,7 +140,7 @@ export const CityView = ({ city }: Props) => {
                   aria-label={`View ${photo.title || "photo"}`}
                   className="group min-w-0"
                 >
-                  <div className="relative aspect-square w-full bg-[#F5F5F5]">
+                  <div className="relative aspect-square w-full bg-muted">
                     <div
                       className="absolute overflow-hidden"
                       style={photoWindow}

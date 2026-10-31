@@ -10,19 +10,99 @@ import { PhotoMarker } from "@/modules/discover/ui/components/photo-marker";
 import { ClusterMarker } from "@/modules/discover/ui/components/cluster-marker";
 import { PhotoPopup } from "@/modules/discover/ui/components/photo-popup";
 import type { PhotoPoint } from "@/modules/discover/lib/clustering";
-import { FramedPhoto } from "@/components/framed-photo";
-import { format } from "date-fns/format";
+import BlurImage from "@/components/blur-image";
+import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MapRef } from "react-map-gl/mapbox";
+import Link from "next/link";
 import {
   Drawer,
   DrawerContent,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { cn } from "@/lib/utils";
-
 import { Skeleton } from "@/components/ui/skeleton";
+
+const galleryDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+const galleryFrames = {
+  portrait: "/gallery-frames/black-matted-portrait.png",
+  landscape: "/gallery-frames/black-matted-landscape.png",
+};
+
+function DiscoverPhotoGallery({ photos }: { photos: PhotoPoint[] }) {
+  return (
+    <div className="grid w-full grid-cols-2 gap-x-[1px] gap-y-6">
+      {photos.map((photo) => {
+        const aspectRatio =
+          photo.width > 0 && photo.height > 0
+            ? photo.width / photo.height
+            : 1;
+        const frameImage =
+          aspectRatio < 1 ? galleryFrames.portrait : galleryFrames.landscape;
+        const photoWindow =
+          aspectRatio < 1
+            ? {
+                left: "22.25%",
+                right: "22.25%",
+                top: "8.25%",
+                bottom: "8.125%",
+              }
+            : {
+                left: "8.125%",
+                right: "8.125%",
+                top: "22.5%",
+                bottom: "22.375%",
+              };
+
+        return (
+          <Link
+            href={`/p/${photo.id}`}
+            key={photo.id}
+            aria-label={`View ${photo.title || "photo"}`}
+            className="group min-w-0"
+          >
+            <div className="relative aspect-square w-full bg-muted">
+              <div className="absolute overflow-hidden" style={photoWindow}>
+                <BlurImage
+                  src={keyToUrl(photo.url)}
+                  alt={photo.title || "Photo"}
+                  fill
+                  blurhash={photo.blurData || ""}
+                  className="object-cover"
+                  sizes="(max-width: 639px) 28vw, 18vw"
+                />
+              </div>
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat"
+                style={{ backgroundImage: `url("${frameImage}")` }}
+              />
+            </div>
+            <div className="mx-auto mt-1.5 max-w-[220px] px-1 text-center">
+              <p className="line-clamp-1 text-xs font-medium text-[#292929] dark:text-[#FAFAFA]">
+                {photo.title || "Untitled photograph"}
+              </p>
+              {photo.dateTimeOriginal && (
+                <time
+                  dateTime={photo.dateTimeOriginal.toISOString()}
+                  className="mt-1 block text-[10px] text-[#8F8F8F]"
+                >
+                  {galleryDateFormatter.format(photo.dateTimeOriginal)}
+                </time>
+              )}
+            </div>
+          </Link>
+        );
+      })}
+    </div>
+  );
+}
 
 export const DiscoverLoading = () => {
   return (
@@ -217,37 +297,8 @@ export const DiscoverView = () => {
         {/* Desktop / tablet side panel */}
         {hasSelection && (
           <div className="hidden md:flex h-full bg-background flex-col w-1/2 rounded-xl">
-            <div className="h-full p-4 overflow-y-auto bg-muted rounded-xl hide-scrollbar">
-              {selectedPhotos.length && (
-                <div
-                  className={cn(
-                    "w-full grid grid-cols-2 gap-x-1 gap-y-8",
-                    selectedPhotos.length === 1 ? "grid-cols-1" : "grid-cols-2"
-                  )}
-                >
-                  {selectedPhotos.map((photo) => (
-                    <div key={photo.id} className="space-y-2">
-                      <div className="flex items-center justify-center bg-gray-50 dark:bg-muted h-[80vh] p-10">
-                        <FramedPhoto
-                          src={photo.url}
-                          alt={photo.title}
-                          blurhash={photo.blurData!}
-                          width={photo.width}
-                          height={photo.height}
-                        />
-                      </div>
-                      <div className="flex flex-col w-full items-center justify-center">
-                        <p className="text-sm font-medium">{photo.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          {photo.dateTimeOriginal
-                            ? format(photo.dateTimeOriginal, "d MMM yyyy")
-                            : ""}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+            <div className="h-full p-4 overflow-y-auto bg-background rounded-xl hide-scrollbar">
+              <DiscoverPhotoGallery photos={selectedPhotos} />
             </div>
           </div>
         )}
@@ -270,29 +321,7 @@ export const DiscoverView = () => {
                 <DrawerTitle></DrawerTitle>
               </DrawerHeader>
               <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6 hide-scrollbar">
-                {selectedPhotos.map((photo) => (
-                  <div key={photo.id} className="space-y-2">
-                    <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-4 rounded-xl">
-                      <FramedPhoto
-                        src={photo.url}
-                        alt={photo.title}
-                        blurhash={photo.blurData!}
-                        width={photo.width}
-                        height={photo.height}
-                      />
-                    </div>
-                    <div className="flex flex-col items-center justify-center">
-                      <p className="text-sm font-medium text-center">
-                        {photo.title}
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        {photo.dateTimeOriginal
-                          ? format(photo.dateTimeOriginal, "d MMM yyyy")
-                          : ""}
-                      </p>
-                    </div>
-                  </div>
-                ))}
+                <DiscoverPhotoGallery photos={selectedPhotos} />
               </div>
             </div>
           </DrawerContent>
