@@ -2,13 +2,23 @@
 
 import BlurImage from "@/components/blur-image";
 import Footer from "@/components/footer";
-import { FramedPhoto } from "@/components/framed-photo";
 import VectorCombined from "@/components/vector-combined";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { useTRPC } from "@/trpc/client";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { format } from "date-fns";
 import Link from "next/link";
+
+const galleryDateFormatter = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  day: "numeric",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+const galleryFrames = {
+  portrait: "/gallery-frames/black-matted-portrait.png",
+  landscape: "/gallery-frames/black-matted-landscape.png",
+};
 
 interface Props {
   city: string;
@@ -98,34 +108,76 @@ export const CityView = ({ city }: Props) => {
           </div>
 
           {/* IMAGES  */}
-          <div className="w-full space-y-2">
-            {data.photos?.map((photo) => (
-              <Link
-                href={`/p/${photo.id}`}
-                key={photo.id}
-                className="space-y-2"
-              >
-                <div className="flex items-center justify-center bg-gray-50 dark:bg-muted p-4 rounded-xl">
-                  <FramedPhoto
-                    src={photo.url}
-                    alt={photo.title}
-                    blurhash={photo.blurData!}
-                    width={photo.width}
-                    height={photo.height}
-                  />
-                </div>
-                <div className="flex flex-col items-center justify-center">
-                  <p className="text-sm font-medium text-center">
-                    {photo.title}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {photo.dateTimeOriginal
-                      ? format(photo.dateTimeOriginal, "d MMM yyyy")
-                      : ""}
-                  </p>
-                </div>
-              </Link>
-            ))}
+          <div className="grid w-full grid-cols-2 gap-x-[1px] gap-y-6">
+            {data.photos?.map((photo) => {
+              const aspectRatio =
+                photo.width > 0 && photo.height > 0
+                  ? photo.width / photo.height
+                  : 1;
+              const frameImage =
+                aspectRatio < 1
+                  ? galleryFrames.portrait
+                  : galleryFrames.landscape;
+              const photoWindow =
+                aspectRatio < 1
+                  ? {
+                      left: "22.25%",
+                      right: "22.25%",
+                      top: "8.25%",
+                      bottom: "8.125%",
+                    }
+                  : {
+                      left: "8.125%",
+                      right: "8.125%",
+                      top: "22.5%",
+                      bottom: "22.375%",
+                    };
+
+              return (
+                <Link
+                  href={`/p/${photo.id}`}
+                  key={photo.id}
+                  aria-label={`View ${photo.title || "photo"}`}
+                  className="group min-w-0"
+                >
+                  <div className="relative aspect-square w-full bg-[#F5F5F5]">
+                    <div
+                      className="absolute overflow-hidden"
+                      style={photoWindow}
+                    >
+                      <BlurImage
+                        src={keyToUrl(photo.url)}
+                        alt={photo.title || `Photo from ${data.city}`}
+                        fill
+                        blurhash={photo.blurData || ""}
+                        className="object-cover"
+                        sizes="(max-width: 639px) 28vw, 18vw"
+                      />
+                    </div>
+                    <div
+                      aria-hidden="true"
+                      className="pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat"
+                      style={{ backgroundImage: `url("${frameImage}")` }}
+                    />
+                  </div>
+                  <div className="mx-auto mt-1.5 max-w-[220px] px-1 text-center">
+                    <p className="line-clamp-1 text-xs font-medium text-[#292929] dark:text-[#FAFAFA]">
+                      {photo.title || "Untitled photograph"}
+                    </p>
+                    {photo.dateTimeOriginal && (
+                      <time
+                        dateTime={photo.dateTimeOriginal.toISOString()}
+                        className="mt-1 block text-[10px] text-[#8F8F8F]"
+                      >
+                        {galleryDateFormatter.format(
+                          photo.dateTimeOriginal,
+                        )}
+                      </time>
+                    )}
+                  </div>
+                </Link>
+              );
+            })}
           </div>
           {/* FOOTER  */}
           <Footer />
