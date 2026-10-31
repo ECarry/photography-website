@@ -24,7 +24,7 @@ export function RecentPhotosView() {
   return (
     <section
       aria-labelledby="recent-photos-title"
-      className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
+      className="@container/recent flex h-full flex-col rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
     >
       <header className="mb-5 flex items-center justify-between gap-4">
         <div>
@@ -50,7 +50,7 @@ export function RecentPhotosView() {
       </header>
 
       {photos.length > 0 ? (
-        <ul className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+        <ul className="grid flex-1 grid-cols-2 content-start gap-3 @[360px]/recent:grid-cols-3 @[860px]/recent:grid-cols-6">
           {photos.map((photo) => {
             const place = [photo.city || photo.region, photo.country]
               .filter(Boolean)
@@ -104,7 +104,7 @@ export function RecentPhotosView() {
           })}
         </ul>
       ) : (
-        <div className="rounded-lg bg-[#FAFAFA] px-4 py-8 text-center dark:bg-[#0A0A0A]">
+        <div className="flex flex-1 flex-col items-center justify-center rounded-lg bg-[#FAFAFA] px-4 py-8 text-center dark:bg-[#0A0A0A]">
           <p className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
             No photos yet
           </p>
@@ -121,11 +121,11 @@ export function RecentPhotosLoading() {
   return (
     <section
       aria-label="Loading recently added photos"
-      className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
+      className="@container/recent flex h-full flex-col rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
     >
       <Skeleton className="h-4 w-32" />
       <Skeleton className="mt-2 h-3 w-52" />
-      <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
+      <div className="mt-5 grid flex-1 grid-cols-2 content-start gap-3 @[360px]/recent:grid-cols-3 @[860px]/recent:grid-cols-6">
         {Array.from({ length: 6 }, (_, index) => (
           <div key={index} className="min-w-0">
             <Skeleton className="aspect-[4/3] w-full rounded-md" />

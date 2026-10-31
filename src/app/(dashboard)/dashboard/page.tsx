@@ -8,11 +8,6 @@ import {
   SectionCardsView,
   SectionCardsLoading,
 } from "@/modules/dashboard/ui/views/section-cards-view";
-import {
-  RecentPhotosLoading,
-  RecentPhotosView,
-} from "@/modules/dashboard/ui/views/recent-photos-view";
-import { MetadataSummaryView } from "@/modules/dashboard/ui/views/metadata-summary-view";
 
 const page = async () => {
   const queryClient = getQueryClient();
@@ -44,10 +39,6 @@ const page = async () => {
               <SectionCardsView />
             </Suspense>
             <DashboardWidgets />
-            <Suspense fallback={<RecentPhotosLoading />}>
-              <RecentPhotosView />
-            </Suspense>
-            <MetadataSummaryView />
           </HydrationBoundary>
         </div>
       </div>

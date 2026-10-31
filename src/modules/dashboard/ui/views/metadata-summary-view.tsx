@@ -33,7 +33,7 @@ export function MetadataSummaryView() {
   return (
     <section
       aria-labelledby="metadata-summary-title"
-      className="rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
+      className="flex h-full flex-col rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] sm:p-6"
     >
       <header className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
@@ -59,7 +59,7 @@ export function MetadataSummaryView() {
       </header>
 
       {photosToReview ? (
-        <ul className="mt-5 grid gap-3 sm:grid-cols-3">
+        <ul className="mt-5 grid flex-1 auto-rows-fr gap-2">
           {details.map(({ label, count, icon: Icon }) => (
             <li
               key={label}
@@ -78,7 +78,7 @@ export function MetadataSummaryView() {
           ))}
         </ul>
       ) : (
-        <p className="mt-5 rounded-lg bg-[#FAFAFA] px-4 py-5 text-sm text-[#4D4D4D] dark:bg-[#0A0A0A] dark:text-[#B3B3B3]">
+        <p className="mt-5 flex flex-1 items-center rounded-lg bg-[#FAFAFA] px-4 py-5 text-sm text-[#4D4D4D] dark:bg-[#0A0A0A] dark:text-[#B3B3B3]">
           Your photos have capture dates, locations, and camera details.
         </p>
       )}

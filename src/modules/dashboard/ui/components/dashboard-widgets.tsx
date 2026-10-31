@@ -1,7 +1,13 @@
 "use client";
 
+import { Suspense } from "react";
 import dynamic from "next/dynamic";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  RecentPhotosLoading,
+  RecentPhotosView,
+} from "@/modules/dashboard/ui/views/recent-photos-view";
+import { MetadataSummaryView } from "@/modules/dashboard/ui/views/metadata-summary-view";
 
 const ChartAreaView = dynamic(
   () =>
@@ -40,12 +46,20 @@ const MapView = dynamic(
 
 export function DashboardWidgets() {
   return (
-    <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-12">
-      <div className="lg:col-span-7">
+    <div className="grid grid-cols-1 items-stretch gap-4 xl:grid-cols-2">
+      <div className="min-w-0">
+        <MapView />
+      </div>
+      <div className="min-w-0">
+        <Suspense fallback={<RecentPhotosLoading />}>
+          <RecentPhotosView />
+        </Suspense>
+      </div>
+      <div className="min-w-0">
         <ChartAreaView />
       </div>
-      <div className="lg:col-span-5">
-        <MapView />
+      <div className="min-w-0">
+        <MetadataSummaryView />
       </div>
     </div>
   );

@@ -102,7 +102,7 @@ export function ChartAreaView() {
   }, [photosCountByMonth]);
 
   return (
-    <Card className="@container/card rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+    <Card className="@container/card flex h-full flex-col rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
       <CardHeader className="grid-cols-[1fr_auto] px-5 pt-5 sm:px-6 sm:pt-6">
         <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
           Photo activity
@@ -140,7 +140,7 @@ export function ChartAreaView() {
           </Select>
         </CardAction>
       </CardHeader>
-      <CardContent className="px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
+      <CardContent className="flex-1 px-4 pb-5 pt-4 sm:px-6 sm:pb-6">
         <ChartContainer
           config={chartConfig}
           className="h-[280px] w-full"
