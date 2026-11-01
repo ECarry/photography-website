@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import Mapbox from "@/modules/mapbox/ui/components/map";
 import VectorCombined from "@/components/vector-combined";
 import { useTRPC } from "@/trpc/client";
+import { X } from "lucide-react";
 import {
   keepPreviousData,
   skipToken,
@@ -27,6 +28,7 @@ import Link from "next/link";
 import {
   Drawer,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
@@ -56,7 +58,7 @@ function DiscoverPhotoGallery({
   onLoadMore: () => void;
 }) {
   return (
-    <div className="grid w-full grid-cols-2 gap-x-[1px] gap-y-6">
+    <div className="grid w-full grid-cols-2 gap-x-3 gap-y-7">
       {photos.map((photo) => {
         const aspectRatio =
           photo.width > 0 && photo.height > 0
@@ -160,8 +162,8 @@ export const DiscoverView = () => {
   const [viewportBounds, setViewportBounds] =
     useState<DiscoverBounds | null>(null);
   const { data: photoData = [] } = useQuery(
-    trpc.discover.getPhotosInBounds.queryOptions(
-      viewportBounds ?? skipToken,
+    trpc.discover.getManyPhotos.queryOptions(
+      viewportBounds ? { bounds: viewportBounds } : skipToken,
       {
         staleTime: 30_000,
         gcTime: 60_000,
@@ -396,6 +398,10 @@ export const DiscoverView = () => {
   }, [clusters, singlePhotos, handleSelectPhotos, getClusterPhotos]);
 
   const hasSelection = selectedPhotoTotal > 0;
+  const selectionSummary =
+    selectedPhotos.length < selectedPhotoTotal
+      ? `Showing ${selectedPhotos.length} of ${selectedPhotoTotal} photos`
+      : `${selectedPhotoTotal} ${selectedPhotoTotal === 1 ? "photo" : "photos"}`;
 
   return (
     <div className="w-full h-full rounded-xl overflow-hidden">
@@ -429,8 +435,28 @@ export const DiscoverView = () => {
 
         {/* Desktop / tablet side panel */}
         {hasSelection && (
-          <div className="hidden md:flex h-full bg-background flex-col w-1/2 rounded-xl">
-            <div className="h-full p-4 overflow-y-auto bg-background rounded-xl hide-scrollbar">
+          <div className="hidden h-full w-1/2 flex-col overflow-hidden rounded-xl bg-background md:flex">
+            <header className="flex shrink-0 items-center justify-between gap-4 px-5 py-4">
+              <div className="min-w-0">
+                <h2 className="text-sm font-medium text-foreground">
+                  Photos in this area
+                </h2>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {selectionSummary}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={clearSelection}
+                aria-label="Clear photo selection"
+                title="Clear selection"
+              >
+                <X className="size-4" />
+              </Button>
+            </header>
+            <div className="min-h-0 flex-1 overflow-y-auto bg-background px-5 pb-5 hide-scrollbar">
               <DiscoverPhotoGallery
                 photos={selectedPhotos}
                 total={selectedPhotoTotal}
@@ -455,10 +481,21 @@ export const DiscoverView = () => {
         >
           <DrawerContent className="md:hidden inset-0 h-screen w-screen rounded-none">
             <div className="flex flex-col h-full">
-              <DrawerHeader className="flex items-center justify-between">
-                <DrawerTitle>
-                  Selected photos · {selectedPhotoTotal}
-                </DrawerTitle>
+              <DrawerHeader className="flex flex-row items-center justify-between gap-4 text-left">
+                <div className="min-w-0 text-left">
+                  <DrawerTitle>Photos in this area</DrawerTitle>
+                  <DrawerDescription>{selectionSummary}</DrawerDescription>
+                </div>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={clearSelection}
+                  aria-label="Clear photo selection"
+                  title="Clear selection"
+                >
+                  <X className="size-4" />
+                </Button>
               </DrawerHeader>
               <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6 hide-scrollbar">
                 <DiscoverPhotoGallery

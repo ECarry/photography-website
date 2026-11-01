@@ -12,46 +12,26 @@ const discoverBoundsSchema = z
   })
   .refine((bounds) => bounds.south <= bounds.north);
 
+const discoverPhotosInputSchema = z.object({
+  bounds: discoverBoundsSchema.optional(),
+});
+
 export const discoverRouter = createTRPCRouter({
-  getManyPhotos: baseProcedure.input(z.object({})).query(async ({ ctx }) => {
-    const data = await ctx.db
-      .select({
-        id: photos.id,
-        url: photos.url,
-        title: photos.title,
-        latitude: photos.latitude,
-        longitude: photos.longitude,
-        blurData: photos.blurData,
-        width: photos.width,
-        height: photos.height,
-        dateTimeOriginal: photos.dateTimeOriginal,
-      })
-      .from(photos)
-      .where(
-        and(
-          eq(photos.visibility, "public"),
-          isNotNull(photos.latitude),
-          isNotNull(photos.longitude),
-        ),
-      )
-      .orderBy(desc(photos.updatedAt));
-
-    return data;
-  }),
-
-  getPhotosInBounds: baseProcedure
-    .input(discoverBoundsSchema)
+  getManyPhotos: baseProcedure
+    .input(discoverPhotosInputSchema)
     .query(async ({ ctx, input }) => {
-      const longitudeFilter =
-        input.west <= input.east
+      const bounds = input.bounds;
+      const longitudeFilter = bounds
+        ? bounds.west <= bounds.east
           ? and(
-              gte(photos.longitude, input.west),
-              lte(photos.longitude, input.east),
+              gte(photos.longitude, bounds.west),
+              lte(photos.longitude, bounds.east),
             )
           : or(
-              gte(photos.longitude, input.west),
-              lte(photos.longitude, input.east),
-            );
+              gte(photos.longitude, bounds.west),
+              lte(photos.longitude, bounds.east),
+            )
+        : undefined;
 
       return ctx.db
         .select({
@@ -71,8 +51,8 @@ export const discoverRouter = createTRPCRouter({
             eq(photos.visibility, "public"),
             isNotNull(photos.latitude),
             isNotNull(photos.longitude),
-            gte(photos.latitude, input.south),
-            lte(photos.latitude, input.north),
+            bounds ? gte(photos.latitude, bounds.south) : undefined,
+            bounds ? lte(photos.latitude, bounds.north) : undefined,
             longitudeFilter,
           ),
         )
