@@ -2,28 +2,23 @@ import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   createClusterIndex,
   getClustersFromIndex,
-  calculateBounds,
   type PhotoPoint,
 } from "@/modules/discover/lib/clustering";
+import type { DiscoverBounds } from "@/modules/discover/lib/viewport-bounds";
 
 interface UsePhotoClusteringProps {
   photos: PhotoPoint[];
+  bounds: DiscoverBounds | null;
   initialZoom?: number;
 }
 
 export function usePhotoClustering({
   photos,
+  bounds,
   initialZoom = 3,
 }: UsePhotoClusteringProps) {
   const [zoom, setZoom] = useState(initialZoom);
-  const [bounds, setBounds] = useState<[number, number, number, number]>([
-    -180, -85, 180, 85,
-  ]);
-  const pendingViewRef = useRef<{
-    zoom: number;
-    latitude: number;
-    longitude: number;
-  } | null>(null);
+  const pendingZoomRef = useRef(initialZoom);
   const moveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter valid photos (with coordinates)
@@ -45,9 +40,14 @@ export function usePhotoClustering({
 
   // Get clusters for current zoom and bounds
   const { clusters, singlePhotos } = useMemo(() => {
-    if (!clusterIndex) return { clusters: [], singlePhotos: [] };
+    if (!clusterIndex || !bounds) return { clusters: [], singlePhotos: [] };
 
-    const result = getClustersFromIndex(clusterIndex, zoom, bounds);
+    const result = getClustersFromIndex(clusterIndex, zoom, [
+      bounds.west,
+      bounds.south,
+      bounds.east,
+      bounds.north,
+    ]);
 
     return result;
   }, [clusterIndex, zoom, bounds]);
@@ -59,25 +59,15 @@ export function usePhotoClustering({
     [],
   );
 
-  // Limit reclustering while the map is moving; always process the latest view.
+  // Limit reclustering while the map is moving; always process the latest zoom.
   const handleMove = useCallback(
     (viewState: { zoom: number; latitude: number; longitude: number }) => {
-      pendingViewRef.current = viewState;
+      pendingZoomRef.current = viewState.zoom;
       if (moveTimerRef.current) return;
 
       moveTimerRef.current = setTimeout(() => {
         moveTimerRef.current = null;
-        const latestView = pendingViewRef.current;
-        if (!latestView) return;
-
-        setZoom(latestView.zoom);
-        setBounds(
-          calculateBounds(
-            latestView.latitude,
-            latestView.longitude,
-            latestView.zoom,
-          ),
-        );
+        setZoom(pendingZoomRef.current);
       }, 100);
     },
     [],

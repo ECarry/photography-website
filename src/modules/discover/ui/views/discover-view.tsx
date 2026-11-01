@@ -4,12 +4,20 @@ import { useCallback, useMemo, useState, useRef, useEffect } from "react";
 import Mapbox from "@/modules/mapbox/ui/components/map";
 import VectorCombined from "@/components/vector-combined";
 import { useTRPC } from "@/trpc/client";
-import { useSuspenseQuery } from "@tanstack/react-query";
+import {
+  keepPreviousData,
+  skipToken,
+  useQuery,
+} from "@tanstack/react-query";
 import { usePhotoClustering } from "@/modules/discover/hooks/use-photo-clustering";
 import { PhotoMarker } from "@/modules/discover/ui/components/photo-marker";
 import { ClusterMarker } from "@/modules/discover/ui/components/cluster-marker";
 import { PhotoPopup } from "@/modules/discover/ui/components/photo-popup";
 import type { PhotoPoint } from "@/modules/discover/lib/clustering";
+import {
+  expandViewportBounds,
+  type DiscoverBounds,
+} from "@/modules/discover/lib/viewport-bounds";
 import BlurImage from "@/components/blur-image";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import { Button } from "@/components/ui/button";
@@ -149,8 +157,18 @@ export const DiscoverLoading = () => {
 
 export const DiscoverView = () => {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(
-    trpc.discover.getManyPhotos.queryOptions({})
+  const [viewportBounds, setViewportBounds] =
+    useState<DiscoverBounds | null>(null);
+  const { data: photoData = [] } = useQuery(
+    trpc.discover.getPhotosInBounds.queryOptions(
+      viewportBounds ?? skipToken,
+      {
+        staleTime: 30_000,
+        gcTime: 60_000,
+        placeholderData: keepPreviousData,
+        throwOnError: true,
+      },
+    ),
   );
 
   const isMobile = useIsMobile();
@@ -162,7 +180,35 @@ export const DiscoverView = () => {
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
   const mapFocusPhotosRef = useRef<PhotoPoint[]>([]);
+  const selectedClusterPageLoaderRef = useRef<
+    ((clusterId: number, limit?: number, offset?: number) => PhotoPoint[]) | null
+  >(null);
   const [selectionRevision, setSelectionRevision] = useState(0);
+
+  const updateViewportBounds = useCallback(() => {
+    const mapBounds = mapRef.current?.getBounds();
+    if (!mapBounds) return;
+
+    const nextBounds = expandViewportBounds({
+      west: mapBounds.getWest(),
+      south: mapBounds.getSouth(),
+      east: mapBounds.getEast(),
+      north: mapBounds.getNorth(),
+    });
+
+    setViewportBounds((current) => {
+      if (
+        current &&
+        current.west === nextBounds.west &&
+        current.south === nextBounds.south &&
+        current.east === nextBounds.east &&
+        current.north === nextBounds.north
+      ) {
+        return current;
+      }
+      return nextBounds;
+    });
+  }, []);
 
   // Resize map when selection changes (panel opens or closes)
   useEffect(() => {
@@ -174,6 +220,7 @@ export const DiscoverView = () => {
       if (!mapRef.current) return;
 
       mapRef.current.resize();
+      updateViewportBounds();
 
       // Only fly to photos if there's a selection
       const photosToFocus = mapFocusPhotosRef.current;
@@ -225,7 +272,7 @@ export const DiscoverView = () => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [selectionRevision, isMobile]);
+  }, [selectionRevision, isMobile, updateViewportBounds]);
 
   // Use clustering hook
   const {
@@ -233,17 +280,30 @@ export const DiscoverView = () => {
     singlePhotos,
     handleMove,
     getClusterPhotos,
-  } = usePhotoClustering({ photos: data, initialZoom: 3 });
+  } = usePhotoClustering({
+    photos: photoData,
+    bounds: viewportBounds,
+    initialZoom: 3,
+  });
 
   const handleSelectPhotos = useCallback(
     (
       photos: PhotoPoint[],
-      cluster?: { id: number; count: number },
+      cluster?: {
+        id: number;
+        count: number;
+        getPage: (
+          clusterId: number,
+          limit?: number,
+          offset?: number,
+        ) => PhotoPoint[];
+      },
     ) => {
       setSelectedPhotos(photos);
       mapFocusPhotosRef.current = photos;
       setSelectedClusterId(cluster?.id ?? null);
       setSelectedPhotoTotal(cluster?.count ?? photos.length);
+      selectedClusterPageLoaderRef.current = cluster?.getPage ?? null;
       setSelectionRevision((revision) => revision + 1);
       if (isMobile) {
         setIsDrawerOpen(true);
@@ -257,14 +317,17 @@ export const DiscoverView = () => {
     mapFocusPhotosRef.current = [];
     setSelectedClusterId(null);
     setSelectedPhotoTotal(0);
+    selectedClusterPageLoaderRef.current = null;
     setSelectionRevision((revision) => revision + 1);
     setIsDrawerOpen(false);
   };
 
   const handleLoadMorePhotos = useCallback(() => {
-    if (selectedClusterId === null) return;
+    if (selectedClusterId === null || !selectedClusterPageLoaderRef.current) {
+      return;
+    }
 
-    const nextPhotos = getClusterPhotos(
+    const nextPhotos = selectedClusterPageLoaderRef.current(
       selectedClusterId,
       CLUSTER_PHOTO_PAGE_SIZE,
       selectedPhotos.length,
@@ -272,7 +335,7 @@ export const DiscoverView = () => {
     if (nextPhotos.length === 0) return;
 
     setSelectedPhotos((current) => [...current, ...nextPhotos]);
-  }, [getClusterPhotos, selectedClusterId, selectedPhotos.length]);
+  }, [selectedClusterId, selectedPhotos.length]);
 
   // Convert clusters and photos to map markers
   const markers = useMemo(() => {
@@ -302,6 +365,7 @@ export const DiscoverView = () => {
                 handleSelectPhotos(photos, {
                   id: cluster.clusterId,
                   count: cluster.count,
+                  getPage: getClusterPhotos,
                 });
               }
             }}
@@ -349,7 +413,9 @@ export const DiscoverView = () => {
               zoom: 3,
             }}
             markers={markers}
+            onLoad={updateViewportBounds}
             onMove={handleMove}
+            onMoveEnd={updateViewportBounds}
             onMapClick={() => {
               if (hasSelection) {
                 clearSelection();

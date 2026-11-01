@@ -135,6 +135,11 @@ export const photos = pgTable(
     index("year_idx").on(sql`DATE_TRUNC('year', ${t.dateTimeOriginal})`),
     index("city_idx").on(t.city),
     index("photos_datetime_original_idx").on(t.dateTimeOriginal),
+    index("photos_discover_bounds_idx").on(
+      t.visibility,
+      t.latitude,
+      t.longitude,
+    ),
   ]
 );
 

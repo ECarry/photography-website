@@ -43,6 +43,8 @@ export interface MapboxProps {
   ) => void;
   onGeoJsonClick?: (feature: GeoJSON.Feature) => void;
   onMapClick?: () => void;
+  onLoad?: () => void;
+  onMoveEnd?: () => void;
   onMove?: (viewState: {
     zoom: number;
     latitude: number;
@@ -77,6 +79,8 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       onMarkerDragEnd,
       onGeoJsonClick,
       onMapClick,
+      onLoad,
+      onMoveEnd,
       onMove,
       draggableMarker = false,
       showGeocoder = false,
@@ -214,6 +218,8 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
         style={{ width: "100%", height: "100%" }}
         mapStyle={MAP_STYLES[theme === "dark" ? "dark" : "light"]}
         interactiveLayerIds={geoJsonData ? ["data"] : undefined}
+        onLoad={() => onLoad?.()}
+        onMoveEnd={() => onMoveEnd?.()}
         onClick={onClick}
         onMove={(evt) => {
           if (showTemporaryMarker) {
