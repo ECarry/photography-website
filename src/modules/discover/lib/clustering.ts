@@ -5,10 +5,11 @@ export type PhotoPoint = DiscoverGetManyPhotos[number];
 
 export interface Cluster {
   id: string;
+  clusterId: number;
   latitude: number;
   longitude: number;
   count: number;
-  photos: PhotoPoint[];
+  thumbnail: PhotoPoint;
 }
 
 /**
@@ -60,16 +61,18 @@ export function getClustersFromIndex(
       const clusterId = props.cluster_id as number;
       const pointCount = props.point_count as number;
 
-      // Get all points in this cluster
-      const leaves = index.getLeaves(clusterId, Infinity);
-      const photos = leaves.map((leaf) => leaf.properties as PhotoPoint);
+      const thumbnail = index.getLeaves(clusterId, 1)[0]?.properties as
+        | PhotoPoint
+        | undefined;
+      if (!thumbnail) return;
 
       clusters.push({
         id: `cluster-${clusterId}`,
+        clusterId,
         latitude,
         longitude,
         count: pointCount,
-        photos,
+        thumbnail,
       });
     } else {
       // This is a single point

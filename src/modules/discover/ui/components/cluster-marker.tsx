@@ -8,8 +8,7 @@ interface ClusterMarkerProps {
 }
 
 export const ClusterMarker = ({ cluster, onClick }: ClusterMarkerProps) => {
-  // Use first photo as thumbnail
-  const thumbnail = cluster.photos[0];
+  const thumbnail = cluster.thumbnail;
 
   return (
     <div className="relative group cursor-pointer" onClick={onClick}>

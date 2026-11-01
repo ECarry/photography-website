@@ -1,4 +1,4 @@
-import { useMemo, useState, useCallback } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import {
   createClusterIndex,
   getClustersFromIndex,
@@ -19,6 +19,12 @@ export function usePhotoClustering({
   const [bounds, setBounds] = useState<[number, number, number, number]>([
     -180, -85, 180, 85,
   ]);
+  const pendingViewRef = useRef<{
+    zoom: number;
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const moveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Filter valid photos (with coordinates)
   const validPhotos = useMemo(() => {
@@ -46,20 +52,43 @@ export function usePhotoClustering({
     return result;
   }, [clusterIndex, zoom, bounds]);
 
-  // Handle map move/zoom changes
+  useEffect(
+    () => () => {
+      if (moveTimerRef.current) clearTimeout(moveTimerRef.current);
+    },
+    [],
+  );
+
+  // Limit reclustering while the map is moving; always process the latest view.
   const handleMove = useCallback(
     (viewState: { zoom: number; latitude: number; longitude: number }) => {
-      setZoom(viewState.zoom);
+      pendingViewRef.current = viewState;
+      if (moveTimerRef.current) return;
 
-      // Calculate approximate bounds based on viewport
-      const newBounds = calculateBounds(
-        viewState.latitude,
-        viewState.longitude,
-        viewState.zoom
-      );
-      setBounds(newBounds);
+      moveTimerRef.current = setTimeout(() => {
+        moveTimerRef.current = null;
+        const latestView = pendingViewRef.current;
+        if (!latestView) return;
+
+        setZoom(latestView.zoom);
+        setBounds(
+          calculateBounds(
+            latestView.latitude,
+            latestView.longitude,
+            latestView.zoom,
+          ),
+        );
+      }, 100);
     },
-    []
+    [],
+  );
+
+  const getClusterPhotos = useCallback(
+    (clusterId: number, limit = 48, offset = 0) =>
+      clusterIndex
+        ?.getLeaves(clusterId, limit, offset)
+        .map((leaf) => leaf.properties as PhotoPoint) ?? [],
+    [clusterIndex],
   );
 
   return {
@@ -67,5 +96,6 @@ export function usePhotoClustering({
     singlePhotos,
     zoom,
     handleMove,
+    getClusterPhotos,
   };
 }

@@ -12,6 +12,7 @@ import { PhotoPopup } from "@/modules/discover/ui/components/photo-popup";
 import type { PhotoPoint } from "@/modules/discover/lib/clustering";
 import BlurImage from "@/components/blur-image";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
+import { Button } from "@/components/ui/button";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { MapRef } from "react-map-gl/mapbox";
 import Link from "next/link";
@@ -35,7 +36,17 @@ const galleryFrames = {
   landscape: "/gallery-frames/black-matted-landscape.png",
 };
 
-function DiscoverPhotoGallery({ photos }: { photos: PhotoPoint[] }) {
+const CLUSTER_PHOTO_PAGE_SIZE = 48;
+
+function DiscoverPhotoGallery({
+  photos,
+  total,
+  onLoadMore,
+}: {
+  photos: PhotoPoint[];
+  total: number;
+  onLoadMore: () => void;
+}) {
   return (
     <div className="grid w-full grid-cols-2 gap-x-[1px] gap-y-6">
       {photos.map((photo) => {
@@ -100,6 +111,22 @@ function DiscoverPhotoGallery({ photos }: { photos: PhotoPoint[] }) {
           </Link>
         );
       })}
+      {photos.length < total && (
+        <div className="col-span-2 flex flex-col items-center gap-2 py-3">
+          <p className="text-xs text-muted-foreground">
+            Showing {photos.length} of {total} photos
+          </p>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={onLoadMore}
+            className="h-8"
+          >
+            Load more
+          </Button>
+        </div>
+      )}
     </div>
   );
 }
@@ -128,8 +155,14 @@ export const DiscoverView = () => {
 
   const isMobile = useIsMobile();
   const [selectedPhotos, setSelectedPhotos] = useState<PhotoPoint[]>([]);
+  const [selectedPhotoTotal, setSelectedPhotoTotal] = useState(0);
+  const [selectedClusterId, setSelectedClusterId] = useState<number | null>(
+    null,
+  );
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const mapRef = useRef<MapRef>(null);
+  const mapFocusPhotosRef = useRef<PhotoPoint[]>([]);
+  const [selectionRevision, setSelectionRevision] = useState(0);
 
   // Resize map when selection changes (panel opens or closes)
   useEffect(() => {
@@ -143,10 +176,11 @@ export const DiscoverView = () => {
       mapRef.current.resize();
 
       // Only fly to photos if there's a selection
-      if (selectedPhotos.length === 0) return;
+      const photosToFocus = mapFocusPhotosRef.current;
+      if (photosToFocus.length === 0) return;
 
       // Calculate center of selected photos
-      const validPhotos = selectedPhotos.filter(
+      const validPhotos = photosToFocus.filter(
         (p) => p.latitude != null && p.longitude != null
       );
 
@@ -191,17 +225,26 @@ export const DiscoverView = () => {
     }, 100);
 
     return () => clearTimeout(timer);
-  }, [selectedPhotos, isMobile]);
+  }, [selectionRevision, isMobile]);
 
   // Use clustering hook
-  const { clusters, singlePhotos, handleMove } = usePhotoClustering({
-    photos: data,
-    initialZoom: 3,
-  });
+  const {
+    clusters,
+    singlePhotos,
+    handleMove,
+    getClusterPhotos,
+  } = usePhotoClustering({ photos: data, initialZoom: 3 });
 
   const handleSelectPhotos = useCallback(
-    (photos: PhotoPoint[]) => {
+    (
+      photos: PhotoPoint[],
+      cluster?: { id: number; count: number },
+    ) => {
       setSelectedPhotos(photos);
+      mapFocusPhotosRef.current = photos;
+      setSelectedClusterId(cluster?.id ?? null);
+      setSelectedPhotoTotal(cluster?.count ?? photos.length);
+      setSelectionRevision((revision) => revision + 1);
       if (isMobile) {
         setIsDrawerOpen(true);
       }
@@ -211,8 +254,25 @@ export const DiscoverView = () => {
 
   const clearSelection = () => {
     setSelectedPhotos([]);
+    mapFocusPhotosRef.current = [];
+    setSelectedClusterId(null);
+    setSelectedPhotoTotal(0);
+    setSelectionRevision((revision) => revision + 1);
     setIsDrawerOpen(false);
   };
+
+  const handleLoadMorePhotos = useCallback(() => {
+    if (selectedClusterId === null) return;
+
+    const nextPhotos = getClusterPhotos(
+      selectedClusterId,
+      CLUSTER_PHOTO_PAGE_SIZE,
+      selectedPhotos.length,
+    );
+    if (nextPhotos.length === 0) return;
+
+    setSelectedPhotos((current) => [...current, ...nextPhotos]);
+  }, [getClusterPhotos, selectedClusterId, selectedPhotos.length]);
 
   // Convert clusters and photos to map markers
   const markers = useMemo(() => {
@@ -234,8 +294,15 @@ export const DiscoverView = () => {
           <ClusterMarker
             cluster={cluster}
             onClick={() => {
-              if (cluster.photos.length) {
-                handleSelectPhotos(cluster.photos);
+              const photos = getClusterPhotos(
+                cluster.clusterId,
+                CLUSTER_PHOTO_PAGE_SIZE,
+              );
+              if (photos.length > 0) {
+                handleSelectPhotos(photos, {
+                  id: cluster.clusterId,
+                  count: cluster.count,
+                });
               }
             }}
           />
@@ -262,9 +329,9 @@ export const DiscoverView = () => {
     });
 
     return result;
-  }, [clusters, singlePhotos, handleSelectPhotos]);
+  }, [clusters, singlePhotos, handleSelectPhotos, getClusterPhotos]);
 
-  const hasSelection = selectedPhotos.length > 0;
+  const hasSelection = selectedPhotoTotal > 0;
 
   return (
     <div className="w-full h-full rounded-xl overflow-hidden">
@@ -298,7 +365,11 @@ export const DiscoverView = () => {
         {hasSelection && (
           <div className="hidden md:flex h-full bg-background flex-col w-1/2 rounded-xl">
             <div className="h-full p-4 overflow-y-auto bg-background rounded-xl hide-scrollbar">
-              <DiscoverPhotoGallery photos={selectedPhotos} />
+              <DiscoverPhotoGallery
+                photos={selectedPhotos}
+                total={selectedPhotoTotal}
+                onLoadMore={handleLoadMorePhotos}
+              />
             </div>
           </div>
         )}
@@ -309,19 +380,26 @@ export const DiscoverView = () => {
         <Drawer
           open={isDrawerOpen && hasSelection}
           onOpenChange={(open) => {
-            setIsDrawerOpen(open);
-            if (!open) {
-              setSelectedPhotos([]);
+            if (open) {
+              setIsDrawerOpen(true);
+            } else {
+              clearSelection();
             }
           }}
         >
           <DrawerContent className="md:hidden inset-0 h-screen w-screen rounded-none">
             <div className="flex flex-col h-full">
               <DrawerHeader className="flex items-center justify-between">
-                <DrawerTitle></DrawerTitle>
+                <DrawerTitle>
+                  Selected photos · {selectedPhotoTotal}
+                </DrawerTitle>
               </DrawerHeader>
               <div className="flex-1 overflow-y-auto px-4 pb-6 space-y-6 hide-scrollbar">
-                <DiscoverPhotoGallery photos={selectedPhotos} />
+                <DiscoverPhotoGallery
+                  photos={selectedPhotos}
+                  total={selectedPhotoTotal}
+                  onLoadMore={handleLoadMorePhotos}
+                />
               </div>
             </div>
           </DrawerContent>
