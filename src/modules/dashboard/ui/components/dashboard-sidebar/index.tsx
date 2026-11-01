@@ -10,7 +10,8 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 import Link from "next/link";
-import { IconLivePhoto } from "@tabler/icons-react";
+import { RiCameraLensFill } from "react-icons/ri";
+import { siteConfig } from "@/site.config";
 import { User } from "@/modules/auth/lib/auth-types";
 import { getSession } from "@/modules/auth/lib/get-session";
 
@@ -51,12 +52,24 @@ export const DashboardSidebar = async ({
           <SidebarMenuItem>
             <SidebarMenuButton
               asChild
-              className="h-11 rounded-md px-2 hover:bg-transparent"
+              className="h-12 rounded-md px-2 hover:bg-transparent"
             >
-              <Link href="/dashboard" className="gap-3">
-                <IconLivePhoto className="size-5 text-[#171717] dark:text-[#FAFAFA]" />
-                <span className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
-                  Photography
+              <Link
+                href="/dashboard"
+                aria-label={`${siteConfig.name} dashboard`}
+                className="gap-3"
+              >
+                <RiCameraLensFill
+                  aria-hidden="true"
+                  className="size-5 shrink-0 text-[#171717] dark:text-[#FAFAFA]"
+                />
+                <span className="flex min-w-0 flex-col gap-1 leading-none">
+                  <span className="truncate text-[13px] font-semibold uppercase tracking-[0.08em] text-[#171717] dark:text-[#FAFAFA]">
+                    {siteConfig.name}
+                  </span>
+                  <span className="text-[9px] font-medium uppercase tracking-[0.12em] text-[#8F8F8F]">
+                    Dashboard
+                  </span>
                 </span>
               </Link>
             </SidebarMenuButton>
