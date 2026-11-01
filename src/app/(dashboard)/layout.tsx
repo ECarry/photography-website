@@ -23,9 +23,9 @@ function Layout({ children }: { children: React.ReactNode }) {
     >
       <DashboardSidebar
         variant="sidebar"
-        className="border-r-0 shadow-[1px_0_0_rgba(0,0,0,0.08)] dark:shadow-[1px_0_0_rgba(255,255,255,0.08)]"
+        className="border-r border-[#EBEBEB] shadow-none dark:border-[#303030]"
       />
-      <SidebarInset className="bg-[#FAFAFA] dark:bg-[#0A0A0A]">
+      <SidebarInset className="border-l-0 border-t-0 bg-[#FAFAFA] dark:bg-[#0A0A0A]">
         <SiteHeader />
         {children}
         <CreatePhotoModal />

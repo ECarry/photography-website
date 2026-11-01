@@ -23,7 +23,7 @@ export function SiteHeader() {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center bg-[#FAFAFA] shadow-[0_1px_0_0_rgba(0,0,0,0.1)] dark:bg-[#0A0A0A]">
+    <header className="sticky top-0 z-30 flex h-16 shrink-0 items-center border-b border-[#EBEBEB] bg-[#FAFAFA] dark:border-[#303030] dark:bg-[#0A0A0A]">
       <div className="flex w-full items-center gap-4 px-4 md:px-6">
         <SidebarTrigger className="size-9 rounded-md text-[#4D4D4D] transition-none hover:bg-[#EBEBEB] hover:text-[#171717] dark:text-[#B3B3B3] dark:hover:bg-[#262626] dark:hover:text-[#FAFAFA]" />
         <Breadcrumb className="min-w-0">
