@@ -62,7 +62,10 @@ export function SecondStep({
 
   return (
     <Form {...form}>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 sm:space-y-5">
+      <form
+        onSubmit={handleSubmit(onSubmit)}
+        className="space-y-4 sm:space-y-5 [&_input]:text-base sm:[&_input]:text-sm"
+      >
         <div className="gap-6">
           <div className="space-y-6">
             <FormField

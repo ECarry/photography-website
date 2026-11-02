@@ -25,6 +25,7 @@ interface ResponsiveModalProps {
   onOpenChange: (open: boolean) => void;
   className?: string;
   dismissible?: boolean;
+  handleOnly?: boolean;
 }
 
 export const ResponsiveModal = ({
@@ -34,18 +35,36 @@ export const ResponsiveModal = ({
   onOpenChange,
   className,
   dismissible = true,
+  handleOnly = false,
 }: ResponsiveModalProps) => {
   const isMobile = useIsMobile();
 
   if (isMobile) {
     return (
-      <Drawer open={open} onOpenChange={onOpenChange} dismissible={dismissible}>
-        <DrawerContent className={cn("gap-0", className)}>
-          <DrawerHeader className="px-3 pb-3 pt-2 text-left">
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        dismissible={dismissible}
+        handleOnly={handleOnly}
+      >
+        <DrawerContent
+          className={cn(
+            "h-[94dvh] max-h-[94dvh] gap-0 overflow-hidden",
+            className,
+          )}
+        >
+          <DrawerHeader className="shrink-0 px-3 pb-3 pt-2 text-left">
             <DrawerTitle className="text-base">{title}</DrawerTitle>
-            <DrawerDescription></DrawerDescription>
+            <DrawerDescription className="sr-only">
+              Upload a photo and add its details.
+            </DrawerDescription>
           </DrawerHeader>
-          {children}
+          <div
+            className="min-h-0 flex-1 touch-pan-y overflow-y-auto overscroll-contain"
+            style={{ WebkitOverflowScrolling: "touch" }}
+          >
+            {children}
+          </div>
         </DrawerContent>
       </Drawer>
     );
