@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createTRPCRouter, baseProcedure } from "@/trpc/init";
+import { createTRPCRouter, publicProcedure } from "@/trpc/init";
 import { desc, eq, and } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
 export const homeRouter = createTRPCRouter({
-  getManyLikePhotos: baseProcedure
+  getManyLikePhotos: publicProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(10).default(10),
@@ -25,7 +25,7 @@ export const homeRouter = createTRPCRouter({
 
       return data;
     }),
-  getCitySets: baseProcedure
+  getCitySets: publicProcedure
     .input(
       z.object({
         limit: z.number().min(1).max(100).default(10),
@@ -60,7 +60,7 @@ export const homeRouter = createTRPCRouter({
 
       return data;
     }),
-  getPhotoById: baseProcedure
+  getPhotoById: publicProcedure
     .input(
       z.object({
         id: z.uuid(),

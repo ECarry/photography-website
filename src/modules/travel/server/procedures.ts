@@ -1,11 +1,11 @@
 import { z } from "zod";
-import { createTRPCRouter, baseProcedure } from "@/trpc/init";
+import { createTRPCRouter, publicProcedure } from "@/trpc/init";
 import { desc, eq, and } from "drizzle-orm";
 import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 
 export const travelRouter = createTRPCRouter({
-  getCitySets: baseProcedure.query(async ({ ctx }) => {
+  getCitySets: publicProcedure.query(async ({ ctx }) => {
     return ctx.db
       .select({
         id: citySets.id,
@@ -29,7 +29,7 @@ export const travelRouter = createTRPCRouter({
       )
       .orderBy(desc(citySets.updatedAt));
   }),
-  getOne: baseProcedure
+  getOne: publicProcedure
     .input(
       z.object({
         city: z.string(),

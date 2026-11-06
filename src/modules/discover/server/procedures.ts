@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { createTRPCRouter, baseProcedure } from "@/trpc/init";
+import { createTRPCRouter, publicProcedure } from "@/trpc/init";
 import { and, desc, eq, gte, isNotNull, lte, or } from "drizzle-orm";
 import { photos } from "@/db/schema";
 
@@ -17,7 +17,7 @@ const discoverPhotosInputSchema = z.object({
 });
 
 export const discoverRouter = createTRPCRouter({
-  getManyPhotos: baseProcedure
+  getManyPhotos: publicProcedure
     .input(discoverPhotosInputSchema)
     .query(async ({ ctx, input }) => {
       const bounds = input.bounds;

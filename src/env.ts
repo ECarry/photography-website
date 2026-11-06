@@ -13,7 +13,19 @@ const serverSchema = z.object({
   // Auth
   BETTER_AUTH_SECRET: z.string().min(1, "BETTER_AUTH_SECRET is required"),
   BETTER_AUTH_URL: z.string().min(1, "BETTER_AUTH_URL is required"),
-});
+
+  // Upstash Redis (optional — rate limiting is disabled when unset)
+  UPSTASH_REDIS_REST_URL: z.string().optional(),
+  UPSTASH_REDIS_REST_TOKEN: z.string().optional(),
+}).refine(
+  (env) =>
+    Boolean(env.UPSTASH_REDIS_REST_URL) ===
+    Boolean(env.UPSTASH_REDIS_REST_TOKEN),
+  {
+    message:
+      "UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN must be set together",
+  },
+);
 
 /**
  * Validate server-side environment variables.
