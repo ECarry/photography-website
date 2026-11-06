@@ -193,7 +193,7 @@ const TiptapEditor = ({ content, onChange, disabled = false, onUploadStateChange
 
   return (
     <div className="story-editor relative min-w-0 rounded-xl border bg-background shadow-sm">
-      <div className="sticky top-0 z-10 flex w-full items-center rounded-t-xl border-b bg-background/95 p-2 backdrop-blur">
+      <div className="sticky top-16 z-20 flex w-full items-center rounded-t-xl border-b bg-background/95 p-2 backdrop-blur">
         <ToolbarProvider editor={editor}>
           <div className="flex min-w-0 flex-wrap items-center gap-1">
             <UndoToolbar />
