@@ -423,7 +423,7 @@ export function CityDetailView({ city }: CityDetailViewProps) {
             </span>
           </div>
           {cityData.photos.length > 0 ? (
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-1 gap-x-[1px] gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
               {cityData.photos.map((photo) => (
                 <CityPhotoCard
                   key={photo.id}
@@ -473,16 +473,13 @@ export function CityDetailLoadingView() {
           <Skeleton className="h-[220px] rounded-xl" />
           <Skeleton className="h-[220px] rounded-xl" />
         </div>
-        <div className="mt-8 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 2xl:grid-cols-4">
+        <div className="mt-8 grid grid-cols-1 gap-x-[1px] gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 8 }, (_, index) => (
-            <div
-              key={index}
-              className="overflow-hidden rounded-xl bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]"
-            >
-              <Skeleton className="aspect-[4/3] w-full rounded-none" />
-              <div className="space-y-3 p-3">
-                <Skeleton className="h-4 w-2/3" />
-                <Skeleton className="h-4 w-1/3" />
+            <div key={index} className="min-w-0">
+              <Skeleton className="aspect-square w-full rounded-none" />
+              <div className="mx-auto mt-1.5 max-w-[220px] space-y-2 px-1">
+                <Skeleton className="mx-auto h-3 w-2/3" />
+                <Skeleton className="mx-auto h-2.5 w-1/3" />
               </div>
             </div>
           ))}
