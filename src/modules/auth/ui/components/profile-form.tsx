@@ -39,7 +39,8 @@ export const ProfileForm = () => {
   const { data } = authClient.useSession();
 
   // Edit Profile State
-  const [name, setName] = useState<string>("");
+  const [name, setName] = useState<string | null>(null);
+  const [savedName, setSavedName] = useState<string | null>(null);
   const [image, setImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
@@ -50,6 +51,10 @@ export const ProfileForm = () => {
   const [confirmPassword, setConfirmPassword] = useState<string>("");
   const [signOutDevices, setSignOutDevices] = useState<boolean>(false);
   const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const currentName = data?.user.name ?? "";
+  const originalName = savedName ?? currentName;
+  const nameChanged = name !== null && name.trim() !== originalName;
+  const emptyName = name !== null && name.trim().length === 0;
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -64,15 +69,26 @@ export const ProfileForm = () => {
   };
 
   const handleUpdateProfile = async () => {
+    if (name !== null && !name.trim()) {
+      toast.error("Name cannot be empty");
+      return;
+    }
+
+    const nameToSave = name?.trim();
     setIsUpdatingProfile(true);
     try {
       await authClient.updateUser({
         image: image ? await convertImageToBase64(image) : undefined,
-        name: name || undefined,
+        name: nameToSave,
         fetchOptions: {
           onSuccess: () => {
             toast.success("Profile updated successfully");
-            setName("");
+            if (nameToSave !== undefined) {
+              setName(nameToSave);
+              setSavedName(nameToSave);
+            } else {
+              setName(null);
+            }
             setImage(null);
             setImagePreview(null);
             router.refresh();
@@ -226,10 +242,15 @@ export const ProfileForm = () => {
                 id="name"
                 type="text"
                 placeholder="Enter your name"
-                value={name || data?.user.name || ""}
+                value={name ?? currentName}
                 onChange={(e) => setName(e.target.value)}
                 className="h-10 border-0 bg-[#FAFAFA] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] focus-visible:ring-0 dark:bg-[#0A0A0A]"
               />
+              {emptyName && (
+                <p role="alert" className="text-xs text-[#E5484D]">
+                  Name cannot be empty.
+                </p>
+              )}
             </div>
 
             {/* Save Button */}
@@ -237,7 +258,8 @@ export const ProfileForm = () => {
               onClick={handleUpdateProfile}
               disabled={
                 isUpdatingProfile ||
-                (!image && (!name || name === data?.user.name))
+                emptyName ||
+                (!image && !nameChanged)
               }
               className="h-10 w-full rounded-md bg-[#0072F5] text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
             >
