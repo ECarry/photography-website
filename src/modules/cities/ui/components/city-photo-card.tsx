@@ -9,7 +9,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BlurImage from "@/components/blur-image";
-import Link from "next/link";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
 import type { CityGetOne } from "../../types";
 import { formatPhotoDate } from "@/modules/cities/format-photo-date";
@@ -49,23 +48,20 @@ export function CityPhotoCard({
     aspectRatio < 1
       ? galleryFrames.portrait
       : galleryFrames.landscape;
-  const frameScale = 0.9;
-  const frameOffset = 5;
-  const scaleFrameInset = (value: number) =>
-    `${frameOffset + value * frameScale}%`;
+  const isPortrait = aspectRatio < 1;
   const photoWindow =
-    aspectRatio < 1
+    isPortrait
       ? {
-          left: scaleFrameInset(22.25),
-          right: scaleFrameInset(22.25),
-          top: scaleFrameInset(8.25),
-          bottom: scaleFrameInset(8.125),
+          left: "22.25%",
+          right: "22.25%",
+          top: "8.25%",
+          bottom: "8.125%",
         }
       : {
-          left: scaleFrameInset(8.125),
-          right: scaleFrameInset(8.125),
-          top: scaleFrameInset(22.5),
-          bottom: scaleFrameInset(22.375),
+          left: "8.125%",
+          right: "8.125%",
+          top: "22.5%",
+          bottom: "22.375%",
         };
   const coverLabel = isCoverPhoto
     ? isPublicPhoto
@@ -83,8 +79,8 @@ export function CityPhotoCard({
 
   return (
     <article className="group min-w-0">
-      <div className="relative aspect-square w-full bg-muted">
-        <div>
+      <div className="relative aspect-[4/5] w-full bg-muted">
+        <div className="absolute left-1/2 top-1/2 aspect-square w-[94%] -translate-x-1/2 -translate-y-1/2">
           <div className="absolute overflow-hidden" style={photoWindow}>
             <BlurImage
               src={keyToUrl(photo.url)}
@@ -97,7 +93,7 @@ export function CityPhotoCard({
           </div>
           <div
             aria-hidden="true"
-            className="pointer-events-none absolute inset-x-0 top-[5%] bottom-[5%] bg-contain bg-center bg-no-repeat"
+            className="pointer-events-none absolute inset-0 bg-contain bg-center bg-no-repeat"
             style={{ backgroundImage: `url("${frameImage}")` }}
           />
         </div>

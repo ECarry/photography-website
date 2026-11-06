@@ -476,7 +476,7 @@ export function CityDetailLoadingView() {
         <div className="mt-8 grid grid-cols-1 gap-x-[1px] gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 8 }, (_, index) => (
             <div key={index} className="min-w-0">
-              <Skeleton className="aspect-square w-full rounded-none" />
+              <Skeleton className="aspect-[4/5] w-full rounded-none" />
               <div className="mx-auto mt-1.5 max-w-[220px] space-y-2 px-1">
                 <Skeleton className="mx-auto h-3 w-2/3" />
                 <Skeleton className="mx-auto h-2.5 w-1/3" />
