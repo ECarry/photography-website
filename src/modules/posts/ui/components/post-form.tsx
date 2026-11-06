@@ -141,8 +141,26 @@ export const PostForm = ({ post }: PostFormProps) => {
     }
   }
 
+  const handleMobileVisibilityChange = (
+    value: z.infer<typeof formSchema>["visibility"],
+  ) => {
+    form.setValue("visibility", value, {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
+  const submitLabel = isPending
+    ? "Saving…"
+    : isUploading
+      ? "Waiting for image upload…"
+      : post
+        ? "Save changes"
+        : visibility === "private"
+          ? "Save draft"
+          : "Publish story";
+
   return (
-    <div className="mx-auto w-full max-w-[1400px] space-y-6">
+    <div className="mx-auto w-full max-w-[1400px] space-y-6 pb-24 xl:pb-0">
       <div className="flex flex-wrap items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-3">
           <Button
@@ -245,7 +263,7 @@ export const PostForm = ({ post }: PostFormProps) => {
             </div>
             {/* Right Form Section */}
             <aside className="min-w-0 space-y-4 xl:sticky xl:top-20">
-              <div className="space-y-5 rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
+              <div className="hidden space-y-5 rounded-xl bg-white p-5 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] xl:block">
                 <div>
                   <h2 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
                     Publishing
@@ -287,7 +305,7 @@ export const PostForm = ({ post }: PostFormProps) => {
                   disabled={isPending || isUploading}
                 >
                   {isPending || isUploading ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-                  {isPending ? "Saving…" : isUploading ? "Waiting for image upload…" : post ? "Save changes" : visibility === "private" ? "Save draft" : "Publish story"}
+                  {submitLabel}
                 </Button>
                 <div role="status" className="flex items-center justify-center gap-1.5 text-xs text-[#8F8F8F]">
                   {isDirty ? "Unsaved changes" : hasSaved ? <><Check className="size-3.5" /> All changes saved</> : post ? "No unsaved changes" : "Not saved yet"}
@@ -362,6 +380,38 @@ export const PostForm = ({ post }: PostFormProps) => {
               </div>
             </aside>
           </fieldset>
+          <div className="fixed inset-x-0 bottom-0 z-40 border-t border-[#EBEBEB] bg-white/95 px-4 pb-[max(env(safe-area-inset-bottom),0.75rem)] pt-3 shadow-[0_-8px_20px_rgba(0,0,0,0.04)] backdrop-blur dark:border-[#303030] dark:bg-[#171717]/95 xl:hidden">
+            <div className="mx-auto flex w-full max-w-[1400px] items-center gap-2">
+              <Select
+                value={visibility}
+                onValueChange={handleMobileVisibilityChange}
+                disabled={isPending || isUploading}
+              >
+                <SelectTrigger
+                  aria-label="Story visibility"
+                  className="h-10 min-w-0 flex-1 border-0 bg-[#FAFAFA] text-sm shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#0A0A0A]"
+                >
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="private">Private · only you</SelectItem>
+                  <SelectItem value="public">Public · everyone</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button
+                type="submit"
+                disabled={isPending || isUploading}
+                className="h-10 min-w-[132px] flex-1 rounded-md bg-[#0072F5] px-3 text-sm font-medium text-white shadow-none hover:bg-[#005FCC]"
+              >
+                {isPending || isUploading ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Save className="size-4" />
+                )}
+                <span className="truncate">{submitLabel}</span>
+              </Button>
+            </div>
+          </div>
         </form>
       </Form>
     </div>
