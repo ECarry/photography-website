@@ -1,6 +1,6 @@
 # Photography Website
 
-A modern photography portfolio website built with Next.js 16, featuring interactive maps, photo management, and a comprehensive dashboard.
+A photography portfolio and management site built with Next.js 16. It includes public travel, photo, and blog pages plus an authenticated dashboard for managing photos, cities, posts, and profile settings.
 
 ## 📸 Screenshots
 
@@ -15,23 +15,88 @@ _Dashboard_
 - **Next.js 16** with React 19 and React Compiler
 - **TanStack Query v5** for advanced data fetching and caching
 - **tRPC v11** for end-to-end type-safe APIs
-- **Interactive Maps** with Mapbox GL JS integration
-- **Photo Management** with EXIF data extraction and iPhone album integration
-- **Real-time Dashboard** with analytics and statistics
+- **Photo Management** with direct S3-compatible uploads, EXIF metadata, location editing, favorites, and visibility controls
+- **Travel Galleries** with city collections, framed photo galleries, and cover-photo management
+- **Discover** with a Mapbox map and public photos in the current viewport
+- **Blog Publishing** with a rich-text post editor, cover images, tags, and public/private visibility
+- **Dashboard Analytics** with photo activity, travel statistics, and metadata summaries
 - **Modern UI** built with Tailwind CSS and shadcn/ui components
 - **Authentication** powered by Better Auth
 - **Database** using Drizzle ORM with PostgreSQL
-- **File Storage** via S3-compatible storage
+- **File Storage** via S3-compatible storage and presigned uploads
+
+## 🗺️ Application Routes
+
+### Public
+
+| Route | Description |
+| --- | --- |
+| `/` | Photography portfolio home page |
+| `/about` | Photographer profile and equipment |
+| `/travel` | Travel destinations |
+| `/travel/[city]` | City gallery |
+| `/discover` | Map of public, geotagged photos |
+| `/blog` | Public posts |
+| `/blog/[slug]` | Blog post |
+| `/p/[id]` | Photo detail page |
+| `/screensaver` | Full-screen photo display |
+
+### Dashboard
+
+| Route | Description |
+| --- | --- |
+| `/sign-in` | Dashboard sign-in |
+| `/dashboard` | Dashboard overview and analytics |
+| `/dashboard/photos` | Photo library and bulk management |
+| `/dashboard/photos/[id]` | Edit a photo |
+| `/dashboard/cities` | Manage city collections |
+| `/dashboard/cities/[city]` | Edit a city and manage its photos |
+| `/dashboard/posts` | Manage blog posts |
+| `/dashboard/posts/new` | Create a post |
+| `/dashboard/posts/[slug]` | Edit a post |
+| `/dashboard/profile` | Profile and security settings |
 
 ## 📋 Prerequisites
 
 Before deploying, ensure you have:
 
-- **Node.js 18+** or **Bun** runtime
-- **PostgreSQL database** (recommended: Neon, Supabase, or Vercel Postgres)
+- **Node.js 20.9+** or **Bun**
+- **PostgreSQL database** (Neon is supported through its serverless driver; other PostgreSQL services can use the `local`/node-postgres driver)
 - **S3-compatible storage** for image storage (AWS S3, Cloudflare R2, DigitalOcean Spaces, etc.)
-- **Mapbox** account for map features
-- **Vercel** account for deployment (or any Node.js hosting provider)
+- **Mapbox** access token for map features
+- A deployment target such as Vercel or Docker (optional)
+
+## 💻 Local Development
+
+```bash
+bun install
+cp .env.example .env
+# Fill in DATABASE_URL, Better Auth, S3, and Mapbox values.
+bun run db:push
+bun run dev
+```
+
+Open `http://localhost:3000`. To create the initial local account, run this in a second terminal while the development server is running:
+
+```bash
+bun run seed:user
+```
+
+Registration is limited to the first user in development and is disabled in production.
+
+## 🧰 Common Commands
+
+| Command | Purpose |
+| --- | --- |
+| `bun run dev` | Start the development server |
+| `bun run build` | Create a production build |
+| `bun run start` | Serve a completed production build |
+| `bun run lint` | Run ESLint |
+| `bun run test:unit` | Run unit tests |
+| `bun run db:push` | Push the Drizzle schema to the configured database |
+| `bun run db:studio` | Open Drizzle Studio |
+| `bun run seed:user` | Create the first user in development |
+| `bun run seed:demo-post` | Create or update the demo blog post |
 
 ## 🎨 Customization
 
@@ -97,19 +162,18 @@ Configure the following environment variables:
 ```env
 # PostgreSQL connection string
 DATABASE_URL=postgresql://username:password@host:port/database_name?sslmode=require
+
+# Optional: "local" uses node-postgres; omit or use "neon" for Neon serverless
+DATABASE_PROVIDER=local
 ```
 
-**For Neon Database:**
+For Neon, use `DATABASE_PROVIDER=neon` or leave `DATABASE_PROVIDER` unset. Other PostgreSQL services such as Supabase can use the `local` (node-postgres) driver.
 
-1. Create account at [neon.tech](https://neon.tech)
-2. Create a new project
-3. Copy the connection string from dashboard
+To create a Neon database:
 
-**For Supabase:**
-
-1. Create project at [supabase.com](https://supabase.com)
-2. Go to Settings > Database
-3. Copy the connection string
+1. Create an account at [neon.tech](https://neon.tech)
+2. Create a project
+3. Copy its connection string
 
 #### Authentication Configuration
 
@@ -128,11 +192,13 @@ NEXT_PUBLIC_APP_URL=https://your-domain.com
 # S3-compatible storage settings
 S3_ENDPOINT=https://your-s3-endpoint.com
 S3_BUCKET_NAME=your-bucket-name
-S3_PUBLIC_URL=https://your-custom-domain.com
 S3_ACCESS_KEY_ID=your-access-key
 S3_SECRET_ACCESS_KEY=your-secret-key
+# Public asset base URL used by the website
 NEXT_PUBLIC_S3_PUBLIC_URL=https://your-custom-domain.com
 ```
+
+The public URL must point to a domain that can serve objects from the bucket. The browser uploads directly to storage using short-lived presigned URLs.
 
 **Supported Storage Providers:**
 
@@ -201,10 +267,19 @@ NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN=pk.your-mapbox-token
 2. Go to Account > Access Tokens
 3. Create a new token with appropriate scopes
 
+#### Optional Rate Limiting
+
+Set both variables to enable Upstash-backed rate limiting for public API requests. Leave both unset to disable it.
+
+```env
+UPSTASH_REDIS_REST_URL=
+UPSTASH_REDIS_REST_TOKEN=
+```
+
 #### Admin User Configuration
 
 ```env
-# Default admin user for seeding
+# Used by the first-user development setup
 SEED_USER_EMAIL=admin@yourdomain.com
 SEED_USER_PASSWORD=your-secure-password
 SEED_USER_NAME=Admin User
@@ -215,12 +290,23 @@ SEED_USER_NAME=Admin User
 ```bash
 # Push database schema
 bun run db:push
+```
 
-# Create admin user
+### Step 4: Run the Development Server
+
+```bash
+bun run dev
+```
+
+In another terminal, create the first account while the development server is running:
+
+```bash
 bun run seed:user
 ```
 
-### Step 4: Build and Test Locally
+`seed:user` calls the app's sign-up endpoint. It only works in development, before any user exists; public registration is disabled in production.
+
+### Step 5: Build and Test Locally
 
 ```bash
 # Build the application
@@ -232,7 +318,7 @@ bun run start
 
 Visit `http://localhost:3000` to verify everything works correctly.
 
-### Step 5: Deploy to Vercel
+### Step 6: Deploy to Vercel
 
 #### Option A: Deploy via Vercel CLI
 
@@ -262,7 +348,7 @@ In your Vercel dashboard, add all environment variables from your `.env` file:
 2. Add each variable with appropriate values for production
 3. Make sure to update URLs to use your production domain
 
-### Step 6: Post-Deployment Setup
+### Step 7: Post-Deployment Setup
 
 #### Database Migration (if needed)
 
@@ -272,13 +358,7 @@ vercel env pull .env.local
 bun run db:push
 ```
 
-#### Create Admin User (Production)
-
-```bash
-# Seed admin user in production
-vercel env pull .env.local
-bun run seed:user
-```
+`seed:user` cannot create an account against a production server because registration is disabled there. Bootstrap the initial production account through a controlled, one-time process; do not enable public registration.
 
 #### Upgrade: Photo URL storage change (S3 Key)
 
@@ -299,7 +379,7 @@ bun run seed:user
      ```
 
 - **Notes**
-  - Ensure your public access domain is configured via `S3_PUBLIC_URL` or `NEXT_PUBLIC_S3_PUBLIC_URL`. At runtime, the app combines this base URL with the key to form a full public URL.
+  - Set `NEXT_PUBLIC_S3_PUBLIC_URL` to the public asset base URL. At runtime, the app combines this base URL with the stored object key.
   - If you have custom prefixes or multiple buckets, validate the script behavior in a staging environment first.
 
 ## 🐳 Docker Deployment
@@ -327,19 +407,23 @@ Run only the App container, connecting to external services (e.g., Neon Postgres
 
 1.  Create a `.env` file with your credentials:
     ```bash
-    DATABASE_PROVIDER=cloud
-    DATABASE_URL="postgres://..."
+    DATABASE_URL="postgresql://..."
     BETTER_AUTH_SECRET="..."
+    BETTER_AUTH_URL="https://your-domain.com"
+    NEXT_PUBLIC_APP_URL="https://your-domain.com"
     S3_ACCESS_KEY_ID="..."
     S3_SECRET_ACCESS_KEY="..."
     S3_BUCKET_NAME="..."
-    S3_ENDPOINT="..." # Optional
-    S3_PUBLIC_URL="..."
+    S3_ENDPOINT="https://your-storage-endpoint"
+    NEXT_PUBLIC_S3_PUBLIC_URL="https://your-public-storage-domain"
+    NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN="pk...."
     ```
 2.  Start the service:
     ```bash
     docker compose -f docker-compose.cloud.yml up -d
     ```
+
+The Cloud Compose file sets `DATABASE_PROVIDER=neon` and passes the public app, storage, and Mapbox values as build arguments. Set a real Mapbox token if you use map pages.
 
 ### ⚠️ Important Note on Building
 
@@ -361,7 +445,7 @@ The Dockerfile uses a **multi-stage build** with two deployment targets:
 - Starts instantly — no build step at runtime.
 - Environment variables for SSG are passed as build args.
 
-## 🛠 Tech Stack
+## ⚙️ Operations and Security
 
 ### Custom Domain Setup
 
@@ -376,18 +460,11 @@ The Dockerfile uses a **multi-stage build** with two deployment targets:
    NEXT_PUBLIC_APP_URL=https://your-custom-domain.com
    ```
 
-### Performance Optimization
+### Performance and Images
 
-1. **Enable Vercel Analytics:**
-
-   ```bash
-   npm install @vercel/analytics
-   ```
-
-2. **Configure Image Optimization:**
-   - Ensure S3-compatible storage is properly configured
-   - Set up custom domain for your storage bucket
-   - Configure CDN settings (CloudFlare, AWS CloudFront, etc.)
+- Vercel Analytics is already included in the application.
+- For Cloudflare R2, the Cloudflare image loader can resize images at the edge.
+- For other providers, use the default Next.js image loader and configure a public storage domain or CDN.
 
 ### Security Considerations
 
@@ -408,9 +485,8 @@ The Dockerfile uses a **multi-stage build** with two deployment targets:
 
 ## 📱 Mobile Optimization
 
-The application is fully responsive and optimized for mobile devices:
+The dashboard and public pages are responsive and optimized for mobile browsers:
 
-- **Progressive Web App** features
 - **Touch-friendly** interface
 - **Optimized images** with lazy loading
 - **Fast loading** with Next.js optimizations
