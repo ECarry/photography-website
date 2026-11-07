@@ -13,6 +13,10 @@ export const metadata = {
   description: "Blog",
 };
 
+// ISR: serve the cached page and regenerate in the background at most hourly.
+// Publishing/editing a post triggers on-demand revalidation (see posts router).
+export const revalidate = 3600;
+
 const page = () => {
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(trpc.blog.getMany.queryOptions());

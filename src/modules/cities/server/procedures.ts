@@ -6,6 +6,7 @@ import {
 import { citySets, photos } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { TRPCError } from "@trpc/server";
+import { revalidatePhotoCaches } from "@/lib/cache";
 
 export const cityRouter = createTRPCRouter({
   // Get all city sets
@@ -128,6 +129,8 @@ export const cityRouter = createTRPCRouter({
         .where(eq(citySets.id, cityId))
         .returning();
 
+      revalidatePhotoCaches();
+
       return updatedCitySet;
     }),
 
@@ -164,6 +167,8 @@ export const cityRouter = createTRPCRouter({
         })
         .where(eq(citySets.id, cityId))
         .returning();
+
+      revalidatePhotoCaches();
 
       return updatedCitySet;
     }),

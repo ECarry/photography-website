@@ -8,7 +8,7 @@ const createCaller = createCallerFactory(appRouter);
  * Creates an authenticated test caller.
  * Uses the real database — make sure TEST_DATABASE_URL is set.
  */
-export const createAuthedCaller = () => createCaller({ db });
+export const createAuthedCaller = () => createCaller({ db, clientIp: null });
 
 /**
  * Helper to build a minimal valid photo input for testing.

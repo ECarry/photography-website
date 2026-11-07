@@ -10,6 +10,13 @@ import {
 } from "@/constants";
 import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
 import { escapeLike } from "@/lib/escape-like";
+import { revalidatePath } from "next/cache";
+
+/** Expire the ISR cache for the public blog pages. */
+function revalidateBlogPages() {
+  revalidatePath("/blog");
+  revalidatePath("/blog/[slug]", "page");
+}
 
 function isUniqueViolation(error: unknown): boolean {
   if (typeof error !== "object" || error === null) return false;
@@ -25,6 +32,8 @@ export const postsRouter = createTRPCRouter({
     .mutation(async ({ ctx, input }) => {
       try {
         const [newPost] = await ctx.db.insert(posts).values(input).returning();
+
+        revalidateBlogPages();
 
         return newPost;
       } catch (error) {
@@ -53,6 +62,8 @@ export const postsRouter = createTRPCRouter({
         });
       }
 
+      revalidateBlogPages();
+
       return data;
     }),
   update: protectedProcedure
@@ -76,6 +87,8 @@ export const postsRouter = createTRPCRouter({
         if (!updatedPost) {
           throw new TRPCError({ code: "NOT_FOUND" });
         }
+
+        revalidateBlogPages();
 
         return updatedPost;
       } catch (error) {

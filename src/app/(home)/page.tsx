@@ -17,6 +17,10 @@ import {
   SliderView,
 } from "@/modules/home/ui/views/slider-view";
 
+// ISR: photo/city data is cached with the "photos" tag; photo mutations
+// trigger on-demand revalidation, with an hourly background refresh as backup.
+export const revalidate = 3600;
+
 const page = async () => {
   const queryClient = getQueryClient();
   void queryClient.prefetchQuery(

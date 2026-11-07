@@ -3,15 +3,27 @@ import { cache } from "react";
 import superjson from "superjson";
 import { initTRPC, TRPCError } from "@trpc/server";
 import { getSession } from "@/modules/auth/lib/get-session";
-import { getClientIp, publicRatelimit } from "@/lib/ratelimit";
+import { parseClientIp, publicRatelimit } from "@/lib/ratelimit";
 import { logger } from "@/lib/logger";
 
 export const createTRPCContext = cache(async () => {
-  return { db };
+  return { db, clientIp: null };
 });
+
+/**
+ * Context for HTTP requests hitting the tRPC route handler.
+ * Carries the client IP so public procedures can be rate limited.
+ */
+export async function createHTTPTRPCContext(opts: { req: Request }) {
+  return {
+    db,
+    clientIp: parseClientIp((name) => opts.req.headers.get(name)),
+  };
+}
 
 type Context = {
   db: typeof db;
+  clientIp: string | null;
 };
 
 const t = initTRPC.context<Context>().create({
@@ -24,13 +36,14 @@ export const baseProcedure = t.procedure;
 
 /**
  * Public procedure with per-IP rate limiting (60 req/min, sliding window).
- * Disabled when Upstash Redis is not configured; fail-closed on Redis errors.
+ * - Only HTTP requests are limited; server-side (RSC) calls carry no IP and
+ *   are exempt so public pages stay statically renderable (ISR).
+ * - Disabled when Upstash Redis is not configured; fail-closed on Redis errors.
  */
 export const publicProcedure = t.procedure.use(
-  t.middleware(async ({ next, path }) => {
-    if (!publicRatelimit) return next();
-
-    const ip = await getClientIp();
+  t.middleware(async ({ ctx, next, path }) => {
+    const ip = ctx.clientIp;
+    if (!publicRatelimit || ip === null) return next();
 
     let success: boolean;
     try {

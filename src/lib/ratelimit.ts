@@ -1,11 +1,14 @@
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
-import { headers } from "next/headers";
 import { logger } from "@/lib/logger";
 
 /**
  * Extract the client IP from request headers.
  * Pure helper so it can be unit tested without a Next.js request scope.
+ *
+ * NOTE: Do not read `next/headers` here — rate limiting only applies to HTTP
+ * requests hitting the tRPC route handler. Server-side (RSC) invocations pass
+ * no IP and are exempt, which keeps public pages statically renderable (ISR).
  */
 export function parseClientIp(getHeader: (name: string) => string | null): string {
   const forwardedFor = getHeader("x-forwarded-for");
@@ -18,15 +21,6 @@ export function parseClientIp(getHeader: (name: string) => string | null): strin
   if (realIp?.trim()) return realIp.trim();
 
   return "unknown";
-}
-
-/**
- * Resolve the client IP for the current request.
- * Works in both route handlers and server component render scopes.
- */
-export async function getClientIp(): Promise<string> {
-  const requestHeaders = await headers();
-  return parseClientIp((name) => requestHeaders.get(name));
 }
 
 /**

@@ -19,6 +19,7 @@ import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
 import { escapeLike } from "@/lib/escape-like";
 import { logger } from "@/lib/logger";
+import { revalidatePhotoCaches } from "@/lib/cache";
 
 type AppDatabase = typeof import("@/db").db;
 type DatabaseExecutor = Pick<AppDatabase, "select" | "insert" | "update" | "delete">;
@@ -217,14 +218,16 @@ export const photosRouter = createTRPCRouter({
 
       try {
         if (process.env.DATABASE_PROVIDER === "local") {
-          return await ctx.db.transaction(async (transaction) => {
-            const [insertedPhoto] = await transaction
+          const insertedPhoto = await ctx.db.transaction(async (transaction) => {
+            const [newPhoto] = await transaction
               .insert(photos)
               .values(values)
               .returning();
-            await addPhotoToCitySet(transaction, insertedPhoto);
-            return insertedPhoto;
+            await addPhotoToCitySet(transaction, newPhoto);
+            return newPhoto;
           });
+          revalidatePhotoCaches();
+          return insertedPhoto;
         }
 
         const insertQuery = ctx.db
@@ -259,10 +262,12 @@ export const photosRouter = createTRPCRouter({
             insertQuery,
             citySetQuery,
           ]);
+          revalidatePhotoCaches();
           return insertedPhotos[0];
         }
 
         const [insertedPhotos] = await neonDatabase.batch([insertQuery]);
+        revalidatePhotoCaches();
         return insertedPhotos[0];
       } catch (error) {
         logger.error("Photo creation failed", error);
@@ -336,6 +341,8 @@ export const photosRouter = createTRPCRouter({
           );
           photo = existingPhoto;
         }
+
+        revalidatePhotoCaches();
 
         // Delete the object only after the database changes commit.
         try {
@@ -439,6 +446,8 @@ export const photosRouter = createTRPCRouter({
 
       await syncPhotoCitySet(ctx.db, previousPhoto, updatedPhoto);
 
+      revalidatePhotoCaches();
+
       return updatedPhoto;
     }),
   bulkUpdate: protectedProcedure
@@ -487,6 +496,8 @@ export const photosRouter = createTRPCRouter({
         })
         .where(inArray(photos.id, ids))
         .returning();
+
+      revalidatePhotoCaches();
 
       return { updatedCount: updated.length };
     }),

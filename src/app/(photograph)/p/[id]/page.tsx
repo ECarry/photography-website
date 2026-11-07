@@ -14,6 +14,14 @@ type Props = {
   params: Promise<{ id: string }>;
 };
 
+// ISR: revalidated on demand via the "photos" cache tag, hourly as backup.
+export const revalidate = 3600;
+
+// Enable on-demand static generation without prerendering paths at build time.
+export function generateStaticParams() {
+  return [];
+}
+
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const id = (await params).id;
   const queryClient = getQueryClient();
