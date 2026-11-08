@@ -41,6 +41,7 @@ export default function MultiStepForm({
   const createPhoto = useMutation(trpc.photos.create.mutationOptions());
   const removeS3Object = useMutation(trpc.s3.deleteFile.mutationOptions());
   const pendingUploadKeysRef = useRef(new Set<string>());
+  const pendingUploadDeleteTokensRef = useRef(new Map<string, string>());
   const removeS3ObjectRef = useRef(removeS3Object.mutateAsync);
   const isMountedRef = useRef(false);
   const isCreatingPhotoRef = useRef(false);
@@ -52,13 +53,17 @@ export default function MultiStepForm({
   useEffect(
     () => {
       const pendingUploadKeys = pendingUploadKeysRef.current;
+      const pendingUploadDeleteTokens = pendingUploadDeleteTokensRef.current;
       isMountedRef.current = true;
       return () => {
         isMountedRef.current = false;
         if (isCreatingPhotoRef.current) return;
 
         for (const key of pendingUploadKeys) {
-          void removeS3ObjectRef.current({ key }).catch((error) => {
+          void removeS3ObjectRef.current({
+            key,
+            deleteToken: pendingUploadDeleteTokens.get(key),
+          }).catch((error) => {
             logger.error("Abandoned photo upload cleanup failed", error, { key });
           });
         }
@@ -95,9 +100,13 @@ export default function MultiStepForm({
   const handleUploadSuccess = (
     uploadedUrl: string,
     uploadedExif: TExifData | null,
-    uploadedImageInfo: TImageInfo
+    uploadedImageInfo: TImageInfo,
+    deleteToken?: string,
   ) => {
     pendingUploadKeysRef.current.add(uploadedUrl);
+    if (deleteToken) {
+      pendingUploadDeleteTokensRef.current.set(uploadedUrl, deleteToken);
+    }
     setUrl(uploadedUrl);
     setExif(uploadedExif);
     setImageInfo(uploadedImageInfo);
@@ -105,8 +114,14 @@ export default function MultiStepForm({
 
   // Handle re-upload
   const handleReupload = (url: string) => {
-    void removeS3Object.mutateAsync({ key: url }).then(
-      () => pendingUploadKeysRef.current.delete(url),
+    void removeS3Object.mutateAsync({
+      key: url,
+      deleteToken: pendingUploadDeleteTokensRef.current.get(url),
+    }).then(
+      () => {
+        pendingUploadKeysRef.current.delete(url);
+        pendingUploadDeleteTokensRef.current.delete(url);
+      },
       (error) => {
         logger.error("Replaced photo upload cleanup failed", error, { key: url });
         toast.error("Could not remove the previous uploaded photo");
@@ -189,8 +204,12 @@ export default function MultiStepForm({
           const uploadedKey = finalData.url;
           if (uploadedKey) {
             try {
-              await removeS3Object.mutateAsync({ key: uploadedKey });
+              await removeS3Object.mutateAsync({
+                key: uploadedKey,
+                deleteToken: pendingUploadDeleteTokensRef.current.get(uploadedKey),
+              });
               pendingUploadKeysRef.current.delete(uploadedKey);
+              pendingUploadDeleteTokensRef.current.delete(uploadedKey);
               if (isMountedRef.current) {
                 setUrl(null);
                 setExif(null);
@@ -218,6 +237,7 @@ export default function MultiStepForm({
 
         isCreatingPhotoRef.current = false;
         pendingUploadKeysRef.current.delete(finalData.url);
+        pendingUploadDeleteTokensRef.current.delete(finalData.url);
         try {
           await Promise.all([
             queryClient.invalidateQueries(

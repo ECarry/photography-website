@@ -39,6 +39,7 @@ const FileUploader = ({
       uploading: boolean;
       progress: number;
       key?: string;
+      deleteToken?: string;
       isDeleting: boolean;
       error: boolean;
       objectUrl?: string;
@@ -66,7 +67,7 @@ const FileUploader = ({
       );
 
       try {
-        const { publicUrl } = await s3Client.upload({
+        const { publicUrl, deleteToken } = await s3Client.upload({
           file,
           folder,
           onProgress: (progress) => {
@@ -85,6 +86,7 @@ const FileUploader = ({
             return {
               uploadUrl: data.presignedUrl,
               publicUrl: data.key,
+              deleteToken: data.deleteToken,
             };
           },
         });
@@ -98,6 +100,7 @@ const FileUploader = ({
                   progress: 100,
                   error: false,
                   key: publicUrl,
+                  deleteToken,
                 }
               : f
           )
@@ -238,7 +241,10 @@ const FileUploader = ({
           prev.map((f) => (f.key === key ? { ...f, isDeleting: true } : f))
         );
 
-        await deleteFile.mutateAsync({ key });
+        await deleteFile.mutateAsync({
+          key,
+          deleteToken: fileToDelete?.deleteToken,
+        });
 
         setFiles((prev) => {
           const remaining = prev.filter((f) => f.key !== key);

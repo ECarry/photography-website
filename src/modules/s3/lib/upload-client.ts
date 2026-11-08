@@ -20,11 +20,16 @@ interface UploadToS3Options {
     filename: string;
     contentType: AllowedContentType;
     folder: AllowedUploadFolder;
-  }) => Promise<{ uploadUrl: string; publicUrl: string }>;
+  }) => Promise<{
+    uploadUrl: string;
+    publicUrl: string;
+    deleteToken?: string;
+  }>;
 }
 
 interface UploadToS3Result {
   publicUrl: string;
+  deleteToken?: string;
 }
 
 class UploadError extends Error {
@@ -143,7 +148,7 @@ export class S3Client {
 
       const uniqueFilename = this.generateUniqueFilename(file.name);
 
-      const { uploadUrl, publicUrl } = await getUploadUrl({
+      const { uploadUrl, publicUrl, deleteToken } = await getUploadUrl({
         filename: uniqueFilename,
         contentType: file.type as AllowedContentType,
         folder,
@@ -151,7 +156,7 @@ export class S3Client {
 
       await this.uploadWithProgress(file, uploadUrl, onProgress);
 
-      return { publicUrl };
+      return { publicUrl, deleteToken };
     } catch (error) {
       if (error instanceof UploadError) {
         throw error;

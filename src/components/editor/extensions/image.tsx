@@ -55,6 +55,10 @@ export const ImageExtension = Image.extend({
       align: {
         default: "center",
       },
+      deleteToken: {
+        default: null,
+        rendered: false,
+      },
     };
   },
 
@@ -79,6 +83,7 @@ function TiptapImage(props: NodeViewProps) {
   const [openedMore, setOpenedMore] = useState(false);
 
   const rawSrc = node.attrs.src as string | null | undefined;
+  const rawDeleteToken = node.attrs.deleteToken as string | null | undefined;
   const imageSrc =
     typeof rawSrc === "string" &&
     !rawSrc.startsWith("http://") &&
@@ -95,7 +100,10 @@ function TiptapImage(props: NodeViewProps) {
       !rawSrc.startsWith("data:")
     ) {
       try {
-        await deleteFile.mutateAsync({ key: rawSrc });
+        await deleteFile.mutateAsync({
+          key: rawSrc,
+          deleteToken: rawDeleteToken ?? undefined,
+        });
         toast.success("Image deleted successfully");
       } catch (error) {
         toast.error(
@@ -105,7 +113,7 @@ function TiptapImage(props: NodeViewProps) {
     }
 
     deleteNode();
-  }, [deleteFile, rawSrc, deleteNode]);
+  }, [deleteFile, rawDeleteToken, rawSrc, deleteNode]);
 
   function handleResizingPosition({
     e,

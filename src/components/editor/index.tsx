@@ -116,7 +116,7 @@ const TiptapEditor = ({ content, onChange, disabled = false, onUploadStateChange
             onUploadStateChange?.(true);
 
             try {
-              const { publicUrl } = await s3Client.upload({
+              const { publicUrl, deleteToken } = await s3Client.upload({
                 file,
                 folder: "posts",
                 getUploadUrl: async ({ filename, contentType, folder }) => {
@@ -130,6 +130,7 @@ const TiptapEditor = ({ content, onChange, disabled = false, onUploadStateChange
                   return {
                     uploadUrl: data.presignedUrl,
                     publicUrl: data.key,
+                    deleteToken: data.deleteToken,
                   };
                 },
               });
@@ -140,7 +141,7 @@ const TiptapEditor = ({ content, onChange, disabled = false, onUploadStateChange
               if (position === undefined || placeholder?.type.name !== "image-placeholder") return;
               editor.chain().focus().insertContentAt(
                 { from: position, to: position + placeholder.nodeSize },
-                { type: "image", attrs: { src: publicUrl } },
+                { type: "image", attrs: { src: publicUrl, deleteToken } },
               ).run();
 
               toast.success("Image uploaded successfully");

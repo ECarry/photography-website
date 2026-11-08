@@ -18,7 +18,8 @@ interface UsePhotoUploadProps {
   onUploadSuccess?: (
     url: string,
     exif: TExifData | null,
-    imageInfo: TImageInfo
+    imageInfo: TImageInfo,
+    deleteToken?: string,
   ) => void;
 }
 
@@ -54,7 +55,7 @@ export function usePhotoUpload({
       setExif(exifData);
       setImageInfo(imageInfo);
 
-      const { publicUrl } = await s3Client.upload({
+      const { publicUrl, deleteToken } = await s3Client.upload({
         file,
         folder,
         onProgress: (progress) => {
@@ -68,16 +69,17 @@ export function usePhotoUpload({
             folder,
           });
 
-          return {
-            uploadUrl: data.presignedUrl,
-            publicUrl: data.key,
-          };
+            return {
+              uploadUrl: data.presignedUrl,
+              publicUrl: data.key,
+              deleteToken: data.deleteToken,
+            };
         },
       });
 
       setUploadedImageUrl(publicUrl);
       toast.success("Photo uploaded successfully!");
-      onUploadSuccess?.(publicUrl, exifData, imageInfo);
+      onUploadSuccess?.(publicUrl, exifData, imageInfo, deleteToken);
     } catch (error) {
       setExif(null);
       setImageInfo(null);

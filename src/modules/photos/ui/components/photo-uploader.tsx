@@ -9,7 +9,8 @@ interface PhotoUploaderProps {
   onUploadSuccess?: (
     url: string,
     exif: TExifData | null,
-    imageInfo: TImageInfo
+    imageInfo: TImageInfo,
+    deleteToken?: string,
   ) => void;
   folder?: AllowedUploadFolder;
   onCreateSuccess?: () => void;
