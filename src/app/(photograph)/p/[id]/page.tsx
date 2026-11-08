@@ -5,6 +5,7 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
 import {
   LoadingState,
   PhotographView,
@@ -28,10 +29,21 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await queryClient.fetchQuery(
     trpc.home.getPhotoById.queryOptions({ id })
   );
+  const description = toSeoDescription(
+    data.description,
+    `A photograph from Sera's travel and city photography collection.`,
+  );
 
   return {
     title: data.title,
-    description: data.description,
+    description,
+    alternates: { canonical: `/p/${id}` },
+    ...createSocialMetadata({
+      title: data.title,
+      description,
+      path: `/p/${id}`,
+      image: data.url,
+    }),
   };
 }
 

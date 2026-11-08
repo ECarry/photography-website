@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
@@ -7,10 +8,19 @@ import {
   BlogView,
   BlogViewLoadingStatus,
 } from "@/modules/blog/ui/views/blog-view";
+import { createSocialMetadata } from "@/lib/seo";
 
-export const metadata = {
+const description =
+  "Field notes, travel stories, and the moments behind Sera's photographs.";
+
+export const metadata: Metadata = {
   title: "Blog",
-  description: "Blog",
+  description,
+  ...createSocialMetadata({
+    title: "Blog",
+    description,
+    path: "/blog",
+  }),
 };
 
 // ISR: serve the cached page and regenerate in the background at most hourly.

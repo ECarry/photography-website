@@ -16,6 +16,7 @@ import { revalidatePath } from "next/cache";
 function revalidateBlogPages() {
   revalidatePath("/blog");
   revalidatePath("/blog/[slug]", "page");
+  revalidatePath("/sitemap.xml");
 }
 
 function isUniqueViolation(error: unknown): boolean {

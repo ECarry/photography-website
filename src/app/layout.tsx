@@ -18,8 +18,30 @@ const readexPro = Readex_Pro({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ),
   title: siteConfig.metadata.title,
   description: siteConfig.metadata.description,
+  openGraph: {
+    type: "website",
+    siteName: siteConfig.name,
+    title: siteConfig.metadata.title.default,
+    description: siteConfig.metadata.description,
+    url: "/",
+    images: [
+      {
+        url: "/bg.jpg",
+        alt: `${siteConfig.name} photography`,
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: siteConfig.metadata.title.default,
+    description: siteConfig.metadata.description,
+    images: ["/bg.jpg"],
+  },
 };
 
 export const viewport: Viewport = {

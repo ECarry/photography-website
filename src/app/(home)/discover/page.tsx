@@ -1,11 +1,21 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { ErrorBoundary } from "react-error-boundary";
 import { DiscoverWidget } from "@/modules/discover/ui/components/discover-widget";
+import { createSocialMetadata } from "@/lib/seo";
 
-export const metadata = {
+const description =
+  "Explore public photography on an interactive map and discover images from cities and places around the world.";
+
+export const metadata: Metadata = {
   title: "Discover",
-  description:
-    "Explore photos on an interactive map. Discover stunning photography from cities and locations around the world.",
+  description,
+  ...createSocialMetadata({
+    title: "Discover",
+    description,
+    path: "/discover",
+    image: "/bg.jpg",
+  }),
 };
 
 const page = () => (

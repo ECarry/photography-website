@@ -36,7 +36,8 @@ export const siteConfig = {
       template: "%s - Sera Photography",
       default: "Sera Photography",
     },
-    description: "Sera Photography",
+    description:
+      "Travel and city photography by Sera, capturing stories and quiet moments from around the world.",
   },
 
   /** Social links shown in profile card and footer */

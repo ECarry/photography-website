@@ -1,4 +1,5 @@
 import { Suspense } from "react";
+import type { Metadata } from "next";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { ErrorBoundary } from "react-error-boundary";
@@ -7,11 +8,20 @@ import {
   TravelView,
   LoadingStatus,
 } from "@/modules/travel/ui/views/travel-view";
+import { createSocialMetadata } from "@/lib/seo";
 
-export const metadata = {
+const description =
+  "Browse travel photography by city. Explore destinations and photo stories from around the world.";
+
+export const metadata: Metadata = {
   title: "Travel",
-  description:
-    "Browse travel photography by city. Explore beautiful destinations and discover photos from around the world.",
+  description,
+  ...createSocialMetadata({
+    title: "Travel",
+    description,
+    path: "/travel",
+    image: "/bg.jpg",
+  }),
 };
 
 // ISR: revalidated on demand via the "photos" cache tag, hourly as backup.

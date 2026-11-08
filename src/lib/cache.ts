@@ -1,6 +1,6 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
-import { revalidateTag } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import superjson from "superjson";
 
 /**
@@ -49,4 +49,5 @@ export function createCachedQuery<TArgs extends unknown[], TResult>(
  */
 export function revalidatePhotoCaches() {
   revalidateTag(CACHE_TAGS.photos, { expire: 0 });
+  revalidatePath("/sitemap.xml");
 }

@@ -10,10 +10,23 @@ import ProfileCard from "../../../modules/home/ui/components/profile-card";
 import CardContainer from "@/components/card-container";
 import VectorCombined from "@/components/vector-combined";
 import { siteConfig } from "@/site.config";
+import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
+
+const description = toSeoDescription(
+  siteConfig.bio,
+  "Meet Sera and explore the stories, places, and camera gear behind the photographs.",
+  160,
+);
 
 export const metadata: Metadata = {
   title: "About",
-  description: "About page",
+  description,
+  ...createSocialMetadata({
+    title: "About",
+    description,
+    path: "/about",
+    image: "/bg.jpg",
+  }),
 };
 
 const AboutPage = () => {

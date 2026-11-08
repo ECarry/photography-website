@@ -6,6 +6,8 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
+import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
+import { siteConfig } from "@/site.config";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -28,10 +30,23 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await queryClient.fetchQuery(
     trpc.blog.getOne.queryOptions({ slug: decodedSlug })
   );
+  const description = toSeoDescription(
+    data.description || data.content,
+    `A story from ${siteConfig.name}'s photography journal.`,
+  );
+  const canonical = `/blog/${encodeURIComponent(decodedSlug)}`;
 
   return {
     title: data.title,
-    description: data.description,
+    description,
+    alternates: { canonical },
+    ...createSocialMetadata({
+      type: "article",
+      title: data.title,
+      description,
+      path: canonical,
+      image: data.coverImage,
+    }),
   };
 }
 

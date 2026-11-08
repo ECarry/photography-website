@@ -6,6 +6,7 @@ import {
   getTravelCityPath,
   getTravelCitySetId,
 } from "@/modules/travel/city-url";
+import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -36,12 +37,25 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const data = await queryClient.fetchQuery(
     trpc.travel.getOne.queryOptions({ citySetId }),
   );
+  const description = toSeoDescription(
+    data.description,
+    `Explore travel photography from ${data.city}, ${data.country}.`,
+  );
+  const canonical = getTravelCityPath(data.id, data.city);
+  const coverPhoto =
+    data.photos.find((photo) => photo.id === data.coverPhotoId) ??
+    data.photos[0];
 
   return {
     title: `${data.city}, ${data.country}`,
-    description:
-      data.description ||
-      `Explore travel photography from ${data.city}, ${data.country}.`,
+    description,
+    alternates: { canonical },
+    ...createSocialMetadata({
+      title: `${data.city}, ${data.country}`,
+      description,
+      path: canonical,
+      image: coverPhoto?.url,
+    }),
   };
 }
 
