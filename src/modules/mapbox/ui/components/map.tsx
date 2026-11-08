@@ -37,6 +37,9 @@ export interface MapboxProps {
     element?: React.ReactNode;
   }>;
   geoJsonData?: GeoJSON.FeatureCollection;
+  geoJsonFillPaint?: mapboxgl.FillLayerSpecification["paint"];
+  geoJsonLinePaint?: mapboxgl.LineLayerSpecification["paint"];
+  mapStyleUrl?: string;
   onMarkerDragEnd?: (
     markerId: string,
     lngLat: { lng: number; lat: number },
@@ -76,6 +79,9 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
       },
       markers = [],
       geoJsonData,
+      geoJsonFillPaint,
+      geoJsonLinePaint,
+      mapStyleUrl,
       onMarkerDragEnd,
       onGeoJsonClick,
       onMapClick,
@@ -94,7 +100,7 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
     ref,
   ) => {
     const mapRef = useRef<MapRef>(null);
-    const { theme } = useTheme();
+    const { resolvedTheme } = useTheme();
 
     const handleRef = useCallback(
       (node: MapRef | null) => {
@@ -123,11 +129,11 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
     const layerStyle: LayerProps = {
       id: "data",
       type: "fill",
-      paint: {
+      paint: geoJsonFillPaint ?? {
         "fill-color": [
           "case",
           ["get", "visited"],
-          theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+          resolvedTheme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
           "#0080ff", // Default color for non-visited
         ],
         "fill-opacity": [
@@ -143,11 +149,11 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
     const strokeLayerStyle: LayerProps = {
       id: "data-stroke",
       type: "line",
-      paint: {
+      paint: geoJsonLinePaint ?? {
         "line-color": [
           "case",
           ["get", "visited"],
-          theme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
+          resolvedTheme === "dark" ? "#3b82f6" : "#2563eb", // Blue color for visited countries
           "transparent",
         ],
         "line-width": 2,
@@ -216,7 +222,10 @@ const Mapbox = forwardRef<MapRef, MapboxProps>(
         mapboxAccessToken={process.env.NEXT_PUBLIC_MAPBOX_ACCESS_TOKEN}
         initialViewState={initialViewState}
         style={{ width: "100%", height: "100%" }}
-        mapStyle={MAP_STYLES[theme === "dark" ? "dark" : "light"]}
+        mapStyle={
+          mapStyleUrl ??
+          MAP_STYLES[resolvedTheme === "dark" ? "dark" : "light"]
+        }
         interactiveLayerIds={geoJsonData ? ["data"] : undefined}
         onLoad={() => onLoad?.()}
         onMoveEnd={() => onMoveEnd?.()}

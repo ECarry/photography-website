@@ -1,131 +1,63 @@
 "use client";
 
-import { useRef } from "react";
-import type { PointerEvent as ReactPointerEvent } from "react";
+import { useTheme } from "next-themes";
 import { useSuspenseQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Mapbox from "@/modules/mapbox/ui/components/map";
 import { useTRPC } from "@/trpc/client";
-import type { MapRef } from "react-map-gl/mapbox";
+import { siteConfig } from "@/site.config";
 
 const numberFormatter = new Intl.NumberFormat("en-US");
-
-interface RankingDragState {
-  pointerId: number;
-  pointerType: string;
-  lastX: number;
-  lastY: number;
-  startX: number;
-  startY: number;
-  startedOnList: boolean;
-  gestureMode: "pending" | "map" | "list";
-}
+const compactNumberFormatter = new Intl.NumberFormat("en-US", {
+  notation: "compact",
+  maximumFractionDigits: 0,
+});
 
 export function MapView() {
   const trpc = useTRPC();
-  const mapRef = useRef<MapRef | null>(null);
-  const rankingDragRef = useRef<RankingDragState | null>(null);
-  const rankingListRef = useRef<HTMLOListElement | null>(null);
+  const { resolvedTheme } = useTheme();
+  const isDark = resolvedTheme === "dark";
   const { data } = useSuspenseQuery(
     trpc.dashboard.getVisitedCountriesWithGeoJson.queryOptions(),
   );
-  const countries = data.countries;
-  const maxPhotoCount = countries[0]?.photoCount ?? 0;
-  const totalPhotos = countries.reduce(
-    (total, country) => total + country.photoCount,
-    0,
+  const countries = [...data.countries].sort(
+    (first, second) => second.photoCount - first.photoCount,
   );
-
-  const handleRankingPointerDown = (
-    event: ReactPointerEvent<HTMLElement>,
-  ) => {
-    if (event.pointerType === "mouse" && event.button !== 0) return;
-
-    const startedOnList =
-      event.target instanceof Element &&
-      Boolean(event.target.closest("[data-ranking-scroll]"));
-
-    rankingDragRef.current = {
-      pointerId: event.pointerId,
-      pointerType: event.pointerType,
-      lastX: event.clientX,
-      lastY: event.clientY,
-      startX: event.clientX,
-      startY: event.clientY,
-      startedOnList,
-      gestureMode: "pending",
-    };
-
-    event.currentTarget.setPointerCapture(event.pointerId);
-  };
-
-  const handleRankingPointerMove = (
-    event: ReactPointerEvent<HTMLElement>,
-  ) => {
-    const drag = rankingDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    const deltaX = event.clientX - drag.lastX;
-    const deltaY = event.clientY - drag.lastY;
-    const totalX = event.clientX - drag.startX;
-    const totalY = event.clientY - drag.startY;
-    drag.lastX = event.clientX;
-    drag.lastY = event.clientY;
-
-    if (Math.hypot(totalX, totalY) < 4) return;
-
-    if (drag.gestureMode === "pending") {
-      drag.gestureMode =
-        drag.pointerType === "touch" &&
-        drag.startedOnList &&
-        Math.abs(totalY) >= Math.abs(totalX)
-          ? "list"
-          : "map";
-    }
-
-    if (drag.gestureMode === "list") {
-      if (rankingListRef.current) {
-        rankingListRef.current.scrollTop -= deltaY;
-      }
-      return;
-    }
-
-    mapRef.current?.panBy([-deltaX, -deltaY], { duration: 0 });
-  };
-
-  const handleRankingPointerEnd = (
-    event: ReactPointerEvent<HTMLElement>,
-  ) => {
-    const drag = rankingDragRef.current;
-    if (!drag || drag.pointerId !== event.pointerId) return;
-
-    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
-      event.currentTarget.releasePointerCapture(event.pointerId);
-    }
-    rankingDragRef.current = null;
-  };
+  const mapFillStart = isDark ? "#1B2A1E" : "#E4F0E5";
+  const mapFillEnd = isDark ? "#4D9559" : "#287A3C";
 
   return (
-    <Card className="flex h-full flex-col overflow-hidden rounded-xl border-0 bg-white py-0 shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
-      <CardHeader className="grid-cols-[1fr_auto] px-5 pt-5 sm:px-6 sm:pt-6">
-        <CardTitle className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
-          Travel footprint
-        </CardTitle>
-        <CardDescription className="text-xs text-[#8F8F8F]">
-          Your collection by country
-        </CardDescription>
-        <div className="col-start-2 row-span-2 row-start-1 text-right">
-          <p className="text-[20px] font-semibold leading-6 tracking-[-0.6px] tabular-nums text-[#171717] dark:text-[#FAFAFA]">
-            {numberFormatter.format(countries.length)}
-          </p>
-          <p className="mt-1 text-xs text-[#8F8F8F]">countries</p>
-        </div>
-      </CardHeader>
-      <CardContent className="flex flex-1 flex-col px-3 pb-3 pt-3 sm:px-5 sm:pb-5">
-        <div className="relative min-h-[420px] flex-1 overflow-hidden rounded-lg bg-[#F2F2F2] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] sm:min-h-[360px] dark:bg-[#262626]">
+    <section
+      aria-labelledby="dashboard-countries-title"
+      className={`@container/countries flex h-full min-w-0 flex-col overflow-hidden rounded-xl border shadow-[0_0_0_1px_rgba(0,0,0,0.08)] ${
+        isDark
+          ? "border-[#202020] bg-[#080808] text-[#FAFAFA]"
+          : "border-[#E5E5E5] bg-white text-[#171717]"
+      }`}
+    >
+      <header
+        className={`flex h-14 shrink-0 items-center justify-between border-b px-5 ${
+          isDark ? "border-[#202020]" : "border-[#E5E5E5]"
+        }`}
+      >
+        <h2
+          id="dashboard-countries-title"
+          className="text-[14px] font-semibold tracking-[-0.28px]"
+        >
+          Countries
+        </h2>
+        <span className={isDark ? "text-xs text-white/45" : "text-xs text-[#8F8F8F]"}>
+          {numberFormatter.format(countries.length)} countries
+        </span>
+      </header>
+
+      <div className="grid flex-1 grid-cols-1 @xl/countries:grid-cols-[minmax(0,1.7fr)_minmax(260px,1fr)]">
+        <div
+          className={`relative h-[300px] overflow-hidden @xl/countries:h-[410px] ${
+            isDark ? "bg-[#070907]" : "bg-[#F2F4F2]"
+          }`}
+        >
           <div className="absolute inset-0">
             <Mapbox
-              ref={mapRef}
               id="dashboardMap"
               showControls={false}
               scrollZoom={false}
@@ -138,71 +70,90 @@ export function MapView() {
                 zoom: 0,
               }}
               geoJsonData={data.geoJson}
+              mapStyleUrl={
+                isDark
+                  ? siteConfig.mapbox.darkStyle
+                  : siteConfig.mapbox.lightStyle
+              }
+              geoJsonFillPaint={{
+                "fill-color": [
+                  "interpolate",
+                  ["linear"],
+                  ["get", "photoRatio"],
+                  0,
+                  mapFillStart,
+                  100,
+                  mapFillEnd,
+                ] as const,
+                "fill-opacity": 0.9,
+              }}
+              geoJsonLinePaint={{
+                "line-color": isDark ? "#0b0b0b" : "#ffffff",
+                "line-width": 0.7,
+                "line-opacity": 0.9,
+              }}
             />
           </div>
-
-          {countries.length > 0 ? (
-            <section
-              aria-label="Countries ranked by photos"
-                className="absolute inset-x-3 bottom-3 z-10 flex max-h-[235px] select-none flex-col touch-none rounded-lg bg-transparent p-4 cursor-grab active:cursor-grabbing sm:inset-y-4 sm:left-auto sm:right-4 sm:max-h-none sm:w-[320px] sm:p-5"
-              onPointerDown={handleRankingPointerDown}
-              onPointerMove={handleRankingPointerMove}
-              onPointerUp={handleRankingPointerEnd}
-              onPointerCancel={handleRankingPointerEnd}
+          {countries.length === 0 && (
+            <div
+              className={`absolute inset-x-4 bottom-4 rounded-md border px-3 py-2 text-xs ${
+                isDark
+                  ? "border-white/10 bg-black/80 text-white/70"
+                  : "border-black/10 bg-white/90 text-[#4D4D4D]"
+              }`}
             >
-              <div className="mb-4 flex items-center justify-between gap-2">
-                <h3 className="text-[14px] font-medium tracking-[-0.28px] text-[#171717] dark:text-[#FAFAFA]">
-                  Most photographed
-                </h3>
-                <span className="shrink-0 text-right text-xs tabular-nums text-[#8F8F8F]">
-                  {numberFormatter.format(totalPhotos)} photos
-                </span>
-              </div>
-              <ol
-                ref={rankingListRef}
-                data-ranking-scroll
-                className="min-h-0 flex-1 space-y-3 overflow-y-auto pr-2"
-              >
-                {countries.map((country, index) => (
-                  <li
-                    key={`${country.countryCode}-${country.country}`}
-                    className="space-y-1.5"
-                  >
-                    <div className="flex items-center justify-between gap-3 text-xs">
-                      <span className="min-w-0 truncate text-[#171717] dark:text-[#FAFAFA]">
-                        <span className="mr-2 font-mono text-[#8F8F8F]">
-                          {String(index + 1).padStart(2, "0")}
-                        </span>
-                        {country.country || country.countryCode}
-                      </span>
-                      <span className="shrink-0 tabular-nums text-[#4D4D4D] dark:text-[#B3B3B3]">
-                        {numberFormatter.format(country.photoCount)}
-                      </span>
-                    </div>
-                    <div
-                      aria-hidden="true"
-                      className="h-1 overflow-hidden rounded-full bg-[#F2F2F2] dark:bg-[#303030]"
-                    >
-                      <div
-                        className="h-full rounded-full bg-[#171717] dark:bg-[#FAFAFA]"
-                        style={{
-                          width: `${maxPhotoCount
-                            ? (country.photoCount / maxPhotoCount) * 100
-                            : 0}%`,
-                        }}
-                      />
-                    </div>
-                  </li>
-                ))}
-              </ol>
-            </section>
-          ) : (
-            <p className="absolute inset-x-3 bottom-3 z-10 rounded-lg bg-white/95 p-4 text-sm text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] backdrop-blur-sm dark:bg-[#171717]/95 dark:text-[#B3B3B3] sm:inset-x-auto sm:left-4 sm:max-w-sm">
-              Add location data to your photos to see your travel footprint.
-            </p>
+              Add country metadata to your photos to see them on the map.
+            </div>
           )}
         </div>
-      </CardContent>
-    </Card>
+
+        <aside
+          className={`h-[320px] min-w-0 overflow-y-auto border-t p-3 @xl/countries:h-[410px] @xl/countries:border-l @xl/countries:border-t-0 ${
+            isDark
+              ? "border-[#202020] bg-[#050505]"
+              : "border-[#E5E5E5] bg-white"
+          }`}
+        >
+          {countries.length > 0 ? (
+            <ol className="space-y-2">
+              {countries.map((country) => (
+                <li
+                  key={`${country.countryCode}-${country.country}`}
+                  className={`relative flex h-9 items-center overflow-hidden rounded-md px-3 ${
+                    isDark ? "bg-[#111111]" : "bg-[#F4F4F4]"
+                  }`}
+                >
+                  <span
+                    aria-hidden="true"
+                    className={`absolute inset-y-0 left-0 ${
+                      isDark ? "bg-[#202820]" : "bg-[#E4EEE5]"
+                    }`}
+                    style={{ width: `${country.photoRatio}%` }}
+                  />
+                  <span className="relative z-10 min-w-0 flex-1 truncate text-xs font-medium">
+                    {country.country || country.countryCode}
+                  </span>
+                  <span
+                    className={`relative z-10 shrink-0 text-right text-xs tabular-nums ${
+                      isDark ? "text-white/55" : "text-[#737373]"
+                    }`}
+                  >
+                    {compactNumberFormatter.format(country.photoCount)}
+                  </span>
+                </li>
+              ))}
+            </ol>
+          ) : (
+            <p
+              className={`px-2 py-3 text-xs ${
+                isDark ? "text-white/45" : "text-[#8F8F8F]"
+              }`}
+            >
+              No country data yet.
+            </p>
+          )}
+        </aside>
+      </div>
+    </section>
   );
 }

@@ -145,19 +145,37 @@ export const dashboardRouter = createTRPCRouter({
       .groupBy(photos.country, photos.countryCode)
       .orderBy(sql`COUNT(*) DESC`);
 
-    const visitedSet = new Set(
-      countries.map((c) => c.countryCode as string).filter(Boolean),
+    const maxPhotoCount = countries[0]?.photoCount ?? 0;
+    const countriesWithRatio = countries.map((country) => ({
+      ...country,
+      photoRatio: maxPhotoCount
+        ? (country.photoCount / maxPhotoCount) * 100
+        : 0,
+    }));
+    const countriesByCode = new Map(
+      countriesWithRatio.map((country) => [country.countryCode, country]),
     );
 
     const world = await loadWorldGeoJson();
 
-    const features = world.features.filter((feature) => {
-      const id = String(feature.id ?? "");
-      return visitedSet.has(id);
+    const features = world.features.flatMap((feature) => {
+      const countryCode = String(feature.id ?? "");
+      const country = countriesByCode.get(countryCode);
+      if (!country) return [];
+
+      return [{
+        ...feature,
+        properties: {
+          ...(feature.properties ?? {}),
+          visited: true,
+          photoCount: country.photoCount,
+          photoRatio: country.photoRatio,
+        },
+      }];
     });
 
     return {
-      countries,
+      countries: countriesWithRatio,
       geoJson: {
         ...world,
         features,
