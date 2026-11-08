@@ -14,197 +14,72 @@ import {
   photosInsertSchema,
 } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
-import type { NeonHttpDatabase } from "drizzle-orm/neon-http";
 import { DeleteObjectCommand } from "@aws-sdk/client-s3";
 import { s3Client } from "@/modules/s3/lib/server-client";
 import { escapeLike } from "@/lib/escape-like";
 import { logger } from "@/lib/logger";
 import { revalidatePhotoCaches } from "@/lib/cache";
+import {
+  atomicExecute,
+  type DatabaseExecutor,
+} from "@/db/atomic-execute";
+import {
+  addPhotoToCitySet,
+  buildCitySetSyncQueries,
+  buildPhotoRemovalBatch,
+  buildCitySetUpsertQuery,
+  removePhotoFromCitySet,
+  syncPhotoCitySet,
+} from "./city-set-sync";
 
-type AppDatabase = typeof import("@/db").db;
-type DatabaseExecutor = Pick<AppDatabase, "select" | "insert" | "update" | "delete">;
-
-function getCitySetName(photo: {
-  city?: string | null;
-  region?: string | null;
-  countryCode?: string | null;
-}) {
-  return photo.countryCode === "JP" || photo.countryCode === "TW"
-    ? photo.region
-    : photo.city;
-}
-
-async function removePhotoFromCitySet(
-  database: DatabaseExecutor,
-  photo: typeof photos.$inferSelect,
-) {
-  const cityName = getCitySetName(photo);
-  if (!photo.country || !cityName) return;
-
-  const [citySet] = await database
-    .select()
-    .from(citySets)
-    .where(
-      and(
-        eq(citySets.country, photo.country),
-        eq(citySets.city, cityName),
-      ),
-    );
-
-  if (!citySet) return;
-
-  if (citySet.photoCount <= 1) {
-    await database
-      .delete(citySets)
-      .where(
-        and(
-          eq(citySets.id, citySet.id),
-          sql`${citySets.photoCount} <= 1`,
-        ),
-      );
-    return;
-  }
-
-  const cityPhotoColumn =
-    photo.countryCode === "JP" || photo.countryCode === "TW"
-      ? photos.region
-      : photos.city;
-  const newCoverPhotoId =
-    citySet.coverPhotoId === photo.id
-      ? (
-          await database
-            .select({ id: photos.id })
-            .from(photos)
-            .where(
-              and(
-                eq(photos.country, photo.country),
-                eq(cityPhotoColumn, cityName),
-                sql`${photos.id} != ${photo.id}`,
-              ),
-            )
-            .limit(1)
-        )[0]?.id
-      : undefined;
-
-  await database
-    .update(citySets)
-    .set({
-      photoCount: sql`${citySets.photoCount} - 1`,
-      ...(newCoverPhotoId ? { coverPhotoId: newCoverPhotoId } : {}),
-      updatedAt: new Date(),
-    })
-    .where(
-      and(
-        eq(citySets.id, citySet.id),
-        sql`${citySets.photoCount} > 1`,
-      ),
-    );
-}
-
-function buildPhotoRemovalBatch(
-  database: DatabaseExecutor,
-  photo: typeof photos.$inferSelect,
-) {
-  const cityName = getCitySetName(photo);
-  const hasCity = Boolean(photo.country && cityName);
-  const cityCondition = hasCity
-    ? sql`${citySets.country} = ${photo.country} AND ${citySets.city} = ${cityName}`
-    : sql`false`;
-  const photoCityColumn =
-    photo.countryCode === "JP" || photo.countryCode === "TW"
-      ? photos.region
-      : photos.city;
-  const replacementCoverPhoto = hasCity
-    ? sql`(
-        SELECT ${photos.id}
-        FROM ${photos}
-        WHERE ${photos.country} = ${photo.country}
-          AND ${photoCityColumn} = ${cityName}
-          AND ${photos.id} != ${photo.id}
-        LIMIT 1
-      )`
-    : sql`${citySets.coverPhotoId}`;
-
-  return [
-    database
-      .delete(citySets)
-      .where(sql`${cityCondition} AND ${citySets.photoCount} <= 1`),
-    database
-      .update(citySets)
-      .set({
-        photoCount: sql`${citySets.photoCount} - 1`,
-        coverPhotoId: sql`CASE
-          WHEN ${citySets.coverPhotoId} = ${photo.id}
-          THEN ${replacementCoverPhoto}
-          ELSE ${citySets.coverPhotoId}
-        END`,
-        updatedAt: new Date(),
-      })
-      .where(sql`${cityCondition} AND ${citySets.photoCount} > 1`),
-    database.delete(photos).where(eq(photos.id, photo.id)).returning(),
-  ] as const;
-}
-
-async function addPhotoToCitySet(
-  database: DatabaseExecutor,
-  photo: typeof photos.$inferSelect,
-) {
-  const cityName = getCitySetName(photo);
-  if (!photo.country || !photo.countryCode || !cityName) return;
-
-  await database
-    .insert(citySets)
-    .values({
-      country: photo.country,
-      countryCode: photo.countryCode,
-      city: cityName,
-      photoCount: 1,
-      coverPhotoId: photo.id,
-    })
-    .onConflictDoUpdate({
-      target: [citySets.country, citySets.city],
-      set: {
-        countryCode: photo.countryCode,
-        photoCount: sql`${citySets.photoCount} + 1`,
-        coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${photo.id})`,
-        updatedAt: new Date(),
-      },
-    });
-}
-
-async function syncPhotoCitySet(
+async function validatePhotoUpdate(
   database: DatabaseExecutor,
   previousPhoto: typeof photos.$inferSelect,
-  updatedPhoto: typeof photos.$inferSelect,
+  input: z.infer<typeof photosUpdateSchema>,
 ) {
-  const previousCity = getCitySetName(previousPhoto);
-  const updatedCity = getCitySetName(updatedPhoto);
-  const isSameCity =
-    previousPhoto.country === updatedPhoto.country &&
-    previousCity === updatedCity;
+  if (
+    input.visibility === "private" &&
+    previousPhoto.visibility === "public"
+  ) {
+    const [coveringCity] = await database
+      .select({ id: citySets.id })
+      .from(citySets)
+      .where(eq(citySets.coverPhotoId, previousPhoto.id))
+      .limit(1);
 
-  if (isSameCity) {
-    if (
-      updatedPhoto.country &&
-      updatedCity &&
-      updatedPhoto.countryCode &&
-      previousPhoto.countryCode !== updatedPhoto.countryCode
-    ) {
-      await database
-        .update(citySets)
-        .set({ countryCode: updatedPhoto.countryCode, updatedAt: new Date() })
-        .where(
-          and(
-            eq(citySets.country, updatedPhoto.country),
-            eq(citySets.city, updatedCity),
-          ),
-        );
+    if (coveringCity) {
+      throw new TRPCError({
+        code: "BAD_REQUEST",
+        message:
+          "Choose another public cover photo before making this photo private",
+      });
     }
-    return;
   }
 
-  await removePhotoFromCitySet(database, previousPhoto);
-  await addPhotoToCitySet(database, updatedPhoto);
+  const coordinatesChanged =
+    (input.latitude !== undefined &&
+      input.latitude !== previousPhoto.latitude) ||
+    (input.longitude !== undefined &&
+      input.longitude !== previousPhoto.longitude);
+  const locationFields = [
+    "country",
+    "countryCode",
+    "region",
+    "city",
+    "district",
+    "fullAddress",
+    "placeFormatted",
+  ] as const;
+  const hasCompleteLocation = locationFields.every((field) =>
+    Object.prototype.hasOwnProperty.call(input, field),
+  );
+
+  if (coordinatesChanged && !hasCompleteLocation) {
+    throw new TRPCError({
+      code: "BAD_REQUEST",
+      message: "Location metadata is required when coordinates change",
+    });
+  }
 }
 
 export const photosRouter = createTRPCRouter({
@@ -217,58 +92,40 @@ export const photosRouter = createTRPCRouter({
       };
 
       try {
-        if (process.env.DATABASE_PROVIDER === "local") {
-          const insertedPhoto = await ctx.db.transaction(async (transaction) => {
+        const insertedPhoto = await atomicExecute(ctx.db, {
+          local: async (transaction) => {
             const [newPhoto] = await transaction
               .insert(photos)
               .values(values)
               .returning();
             await addPhotoToCitySet(transaction, newPhoto);
             return newPhoto;
-          });
-          revalidatePhotoCaches();
-          return insertedPhoto;
-        }
+          },
+          neon: async (neonDatabase) => {
+            const insertQuery = neonDatabase
+              .insert(photos)
+              .values(values)
+              .returning();
+            const citySetQuery = buildCitySetUpsertQuery(
+              neonDatabase,
+              values,
+            );
 
-        const insertQuery = ctx.db
-          .insert(photos)
-          .values(values)
-          .returning();
-        const neonDatabase = ctx.db as NeonHttpDatabase<
-          typeof import("@/db/schema")
-        >;
-        const cityName = getCitySetName(values);
+            if (citySetQuery) {
+              const [insertedPhotos] = await neonDatabase.batch([
+                insertQuery,
+                citySetQuery,
+              ]);
+              return insertedPhotos[0];
+            }
 
-        if (values.country && values.countryCode && cityName) {
-          const citySetQuery = ctx.db
-            .insert(citySets)
-            .values({
-              country: values.country,
-              countryCode: values.countryCode,
-              city: cityName,
-              photoCount: 1,
-              coverPhotoId: values.id,
-            })
-            .onConflictDoUpdate({
-              target: [citySets.country, citySets.city],
-              set: {
-                countryCode: values.countryCode,
-                photoCount: sql`${citySets.photoCount} + 1`,
-                coverPhotoId: sql`COALESCE(${citySets.coverPhotoId}, ${values.id})`,
-                updatedAt: new Date(),
-              },
-            });
-          const [insertedPhotos] = await neonDatabase.batch([
-            insertQuery,
-            citySetQuery,
-          ]);
-          revalidatePhotoCaches();
-          return insertedPhotos[0];
-        }
+            const [insertedPhotos] = await neonDatabase.batch([insertQuery]);
+            return insertedPhotos[0];
+          },
+        });
 
-        const [insertedPhotos] = await neonDatabase.batch([insertQuery]);
         revalidatePhotoCaches();
-        return insertedPhotos[0];
+        return insertedPhoto;
       } catch (error) {
         logger.error("Photo creation failed", error);
         throw new TRPCError({
@@ -291,9 +148,8 @@ export const photosRouter = createTRPCRouter({
       }
 
       try {
-        let photo: typeof photos.$inferSelect;
-        if (process.env.DATABASE_PROVIDER === "local") {
-          photo = await ctx.db.transaction(async (transaction) => {
+        const photo = await atomicExecute(ctx.db, {
+          local: async (transaction) => {
             const [existingPhoto] = await transaction
               .select()
               .from(photos)
@@ -319,28 +175,36 @@ export const photosRouter = createTRPCRouter({
               });
             }
             return deletedPhoto;
-          });
-        } else {
-          const [existingPhoto] = await ctx.db
-            .select()
-            .from(photos)
-            .where(eq(photos.id, id));
+          },
+          neon: async (neonDatabase) => {
+            const [existingPhoto] = await ctx.db
+              .select()
+              .from(photos)
+              .where(eq(photos.id, id));
 
-          if (!existingPhoto) {
-            throw new TRPCError({
-              code: "NOT_FOUND",
-              message: "Photo not found",
-            });
-          }
+            if (!existingPhoto) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Photo not found",
+              });
+            }
 
-          const neonDatabase = ctx.db as NeonHttpDatabase<
-            typeof import("@/db/schema")
-          >;
-          await neonDatabase.batch(
-            buildPhotoRemovalBatch(ctx.db, existingPhoto),
-          );
-          photo = existingPhoto;
-        }
+            const [, , deletedPhotos] = await neonDatabase.batch(
+              buildPhotoRemovalBatch(neonDatabase, existingPhoto),
+            );
+            const [deletedPhoto] = deletedPhotos as
+              | (typeof photos.$inferSelect)[]
+              | [];
+
+            if (!deletedPhoto) {
+              throw new TRPCError({
+                code: "NOT_FOUND",
+                message: "Photo not found",
+              });
+            }
+            return deletedPhoto;
+          },
+        });
 
         revalidatePhotoCaches();
 
@@ -377,74 +241,79 @@ export const photosRouter = createTRPCRouter({
         throw new TRPCError({ code: "BAD_REQUEST" });
       }
 
-      const [previousPhoto] = await ctx.db
-        .select()
-        .from(photos)
-        .where(eq(photos.id, id));
+      const updatedPhoto = await atomicExecute(ctx.db, {
+        local: async (transaction) => {
+          const [previousPhoto] = await transaction
+            .select()
+            .from(photos)
+            .where(eq(photos.id, id));
 
-      if (!previousPhoto) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
+          if (!previousPhoto) {
+            throw new TRPCError({ code: "NOT_FOUND" });
+          }
 
-      if (
-        input.visibility === "private" &&
-        previousPhoto.visibility === "public"
-      ) {
-        const [coveringCity] = await ctx.db
-          .select({ id: citySets.id })
-          .from(citySets)
-          .where(eq(citySets.coverPhotoId, id))
-          .limit(1);
+          await validatePhotoUpdate(transaction, previousPhoto, input);
+          const [updatedPhoto] = await transaction
+            .update(photos)
+            .set({
+              ...input,
+              updatedAt: new Date(),
+            })
+            .where(eq(photos.id, id))
+            .returning();
 
-        if (coveringCity) {
-          throw new TRPCError({
-            code: "BAD_REQUEST",
-            message:
-              "Choose another public cover photo before making this photo private",
-          });
-        }
-      }
+          if (!updatedPhoto) {
+            throw new TRPCError({ code: "NOT_FOUND" });
+          }
 
-      const coordinatesChanged =
-        (input.latitude !== undefined &&
-          input.latitude !== previousPhoto.latitude) ||
-        (input.longitude !== undefined &&
-          input.longitude !== previousPhoto.longitude);
-      const locationFields = [
-        "country",
-        "countryCode",
-        "region",
-        "city",
-        "district",
-        "fullAddress",
-        "placeFormatted",
-      ] as const;
-      const hasCompleteLocation =
-        locationFields.every((field) =>
-          Object.prototype.hasOwnProperty.call(input, field),
-        );
+          await syncPhotoCitySet(transaction, previousPhoto, updatedPhoto);
+          return updatedPhoto;
+        },
+        neon: async (neonDatabase) => {
+          const [previousPhoto] = await ctx.db
+            .select()
+            .from(photos)
+            .where(eq(photos.id, id));
 
-      if (coordinatesChanged && !hasCompleteLocation) {
-        throw new TRPCError({
-          code: "BAD_REQUEST",
-          message: "Location metadata is required when coordinates change",
-        });
-      }
+          if (!previousPhoto) {
+            throw new TRPCError({ code: "NOT_FOUND" });
+          }
 
-      const [updatedPhoto] = await ctx.db
-        .update(photos)
-        .set({
-          ...input,
-          updatedAt: new Date(),
-        })
-        .where(eq(photos.id, id))
-        .returning();
+          await validatePhotoUpdate(ctx.db, previousPhoto, input);
+          const updatedAt = new Date();
+          const updateQuery = neonDatabase
+            .update(photos)
+            .set({
+              ...input,
+              updatedAt,
+            })
+            .where(eq(photos.id, id))
+            .returning();
+          const updatedPhotoValues = {
+            ...previousPhoto,
+            ...input,
+            updatedAt,
+          };
+          const citySetQueries = buildCitySetSyncQueries(
+            neonDatabase,
+            previousPhoto,
+            updatedPhotoValues,
+          );
+          const results = await neonDatabase.batch([
+            updateQuery,
+            ...citySetQueries,
+          ]);
+          const [updatedPhoto] = results[0] as
+            | (typeof photos.$inferSelect)[]
+            | [];
 
-      if (!updatedPhoto) {
-        throw new TRPCError({ code: "NOT_FOUND" });
-      }
+          if (!updatedPhoto) {
+            throw new TRPCError({ code: "NOT_FOUND" });
+          }
 
-      await syncPhotoCitySet(ctx.db, previousPhoto, updatedPhoto);
+          return updatedPhoto;
+        },
+      });
 
       revalidatePhotoCaches();
 
