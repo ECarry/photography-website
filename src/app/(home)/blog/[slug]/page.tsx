@@ -6,8 +6,14 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
+import {
+  createSocialMetadata,
+  getAbsoluteSiteUrl,
+  getPublicImageUrl,
+  toSeoDescription,
+} from "@/lib/seo";
 import { siteConfig } from "@/site.config";
+import { JsonLd } from "@/components/json-ld";
 
 type Props = {
   params: Promise<{ slug: string }>;
@@ -55,17 +61,47 @@ export default async function page({ params }: Props) {
   // Decode URL-encoded params
   const decodedSlug = decodeURIComponent(slug);
   const queryClient = getQueryClient();
-  await queryClient.fetchQuery(
+  const post = await queryClient.fetchQuery(
     trpc.blog.getOne.queryOptions({ slug: decodedSlug })
   );
+  const description = toSeoDescription(
+    post.description || post.content,
+    `A story from ${siteConfig.name}'s photography journal.`,
+  );
+  const canonicalUrl = getAbsoluteSiteUrl(
+    `/blog/${encodeURIComponent(decodedSlug)}`,
+  );
+  const coverImage = getPublicImageUrl(post.coverImage);
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "BlogPosting",
+    headline: post.title,
+    description,
+    url: canonicalUrl,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    datePublished: post.createdAt.toISOString(),
+    dateModified: post.updatedAt.toISOString(),
+    author: {
+      "@type": "Person",
+      name: siteConfig.name,
+    },
+    image: [getAbsoluteSiteUrl(coverImage ?? "/bg.jpg")],
+    ...(post.tags?.length ? { keywords: post.tags.join(", ") } : {}),
+  };
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<p>Loading...</p>}>
-        <ErrorBoundary fallback={<p>Error</p>}>
-          <BlogSlugView slug={decodedSlug} />
-        </ErrorBoundary>
-      </Suspense>
-    </HydrationBoundary>
+    <>
+      <JsonLd data={jsonLd} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <Suspense fallback={<p>Loading...</p>}>
+          <ErrorBoundary fallback={<p>Error</p>}>
+            <BlogSlugView slug={decodedSlug} />
+          </ErrorBoundary>
+        </Suspense>
+      </HydrationBoundary>
+    </>
   );
 }

@@ -19,6 +19,13 @@ export function getPublicImageUrl(source?: string | null) {
   return `${publicBaseUrl.replace(/\/+$/, "")}/${source.replace(/^\/+/, "")}`;
 }
 
+export function getAbsoluteSiteUrl(path: string) {
+  return new URL(
+    path,
+    process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
+  ).toString();
+}
+
 export function createSocialMetadata({
   title,
   description,
@@ -61,4 +68,8 @@ export function toSeoDescription(
   if (!text) return fallback;
   if (text.length <= maxLength) return text;
   return `${text.slice(0, maxLength - 3).trimEnd()}...`;
+}
+
+export function serializeJsonLd(data: Record<string, unknown>) {
+  return JSON.stringify(data).replace(/</g, "\\u003c");
 }

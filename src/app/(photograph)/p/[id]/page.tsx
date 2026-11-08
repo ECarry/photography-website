@@ -5,7 +5,14 @@ import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
-import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
+import {
+  createSocialMetadata,
+  getAbsoluteSiteUrl,
+  getPublicImageUrl,
+  toSeoDescription,
+} from "@/lib/seo";
+import { JsonLd } from "@/components/json-ld";
+import { siteConfig } from "@/site.config";
 import {
   LoadingState,
   PhotographView,
@@ -50,16 +57,56 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 const page = async ({ params }: Props) => {
   const id = (await params).id;
   const queryClient = getQueryClient();
-  await queryClient.fetchQuery(trpc.home.getPhotoById.queryOptions({ id }));
+  const photo = await queryClient.fetchQuery(
+    trpc.home.getPhotoById.queryOptions({ id }),
+  );
+  const description = toSeoDescription(
+    photo.description,
+    `A photograph from ${siteConfig.name}'s travel and city photography collection.`,
+  );
+  const canonicalUrl = getAbsoluteSiteUrl(`/p/${id}`);
+  const imageUrl = getPublicImageUrl(photo.url);
+  const jsonLd: Record<string, unknown> = {
+    "@context": "https://schema.org",
+    "@type": "ImageObject",
+    name: photo.title,
+    description,
+    url: canonicalUrl,
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": canonicalUrl,
+    },
+    creator: {
+      "@type": "Person",
+      name: siteConfig.name,
+    },
+    width: Math.round(photo.width),
+    height: Math.round(photo.height),
+    ...(imageUrl
+      ? {
+          contentUrl: getAbsoluteSiteUrl(imageUrl),
+          thumbnailUrl: getAbsoluteSiteUrl(imageUrl),
+        }
+      : {}),
+    ...(photo.dateTimeOriginal
+      ? { dateCreated: photo.dateTimeOriginal.toISOString() }
+      : {}),
+    ...(photo.createdAt
+      ? { uploadDate: photo.createdAt.toISOString() }
+      : {}),
+  };
 
   return (
-    <HydrationBoundary state={dehydrate(queryClient)}>
-      <Suspense fallback={<LoadingState />}>
-        <ErrorBoundary fallback={<p>Error</p>}>
-          <PhotographView id={id} />
-        </ErrorBoundary>
-      </Suspense>
-    </HydrationBoundary>
+    <>
+      <JsonLd data={jsonLd} />
+      <HydrationBoundary state={dehydrate(queryClient)}>
+        <Suspense fallback={<LoadingState />}>
+          <ErrorBoundary fallback={<p>Error</p>}>
+            <PhotographView id={id} />
+          </ErrorBoundary>
+        </Suspense>
+      </HydrationBoundary>
+    </>
   );
 };
 
