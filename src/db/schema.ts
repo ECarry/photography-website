@@ -167,19 +167,11 @@ export const citySets = pgTable(
   (t) => [uniqueIndex("unique_city_set").on(t.country, t.city)]
 );
 
-// Soft relations
-export const citySetsRelations = relations(citySets, ({ one, many }) => ({
+// City-set membership is resolved explicitly: JP/TW city-set names use `region`.
+export const citySetsRelations = relations(citySets, ({ one }) => ({
   coverPhoto: one(photos, {
     fields: [citySets.coverPhotoId],
     references: [photos.id],
-  }),
-  photos: many(photos),
-}));
-
-export const photosRelations = relations(photos, ({ one }) => ({
-  citySet: one(citySets, {
-    fields: [photos.country, photos.city],
-    references: [citySets.country, citySets.city],
   }),
 }));
 
