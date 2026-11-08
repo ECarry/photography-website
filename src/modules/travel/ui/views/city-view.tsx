@@ -21,12 +21,14 @@ const galleryFrames = {
 };
 
 interface Props {
-  city: string;
+  citySetId: string;
 }
 
-export const CityView = ({ city }: Props) => {
+export const CityView = ({ citySetId }: Props) => {
   const trpc = useTRPC();
-  const { data } = useSuspenseQuery(trpc.travel.getOne.queryOptions({ city }));
+  const { data } = useSuspenseQuery(
+    trpc.travel.getOne.queryOptions({ citySetId }),
+  );
 
   const coverPhoto = data.photos.find((item) => data.coverPhotoId === item.id);
   const coverPhotoDate = coverPhoto?.dateTimeOriginal

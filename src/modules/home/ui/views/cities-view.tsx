@@ -19,6 +19,7 @@ export const CitiesView = () => {
         <CityCard
           key={item.id}
           title={item.city}
+          citySetId={item.id}
           coverPhoto={item.coverPhoto}
         />
       ))}

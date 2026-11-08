@@ -2,6 +2,7 @@ import Link from "next/link";
 import { PiArrowRight } from "react-icons/pi";
 import TextScroll from "./text-scroll";
 import type { PublicCitySet } from "../../types";
+import { getTravelCityPath } from "../../city-url";
 
 interface CityItemProps {
   city: PublicCitySet;
@@ -10,7 +11,10 @@ interface CityItemProps {
 
 export const CityItem = ({ city, onMouseEnter }: CityItemProps) => {
   return (
-    <Link href={`/travel/${encodeURIComponent(city.city)}`} className="block">
+    <Link
+      href={getTravelCityPath(city.id, city.city)}
+      className="block"
+    >
       <div
         key={city.id}
         className="w-full py-5 px-3 bg-muted hover:bg-muted-hover rounded-xl grid grid-cols-2 items-center cursor-pointer group transition-all duration-150 ease-[cubic-bezier(0.22, 1, 0.36, 1)] flex-1 overflow-hidden"

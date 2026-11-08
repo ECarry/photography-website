@@ -5,6 +5,7 @@ import { citySets, photos } from "@/db/schema";
 import { TRPCError } from "@trpc/server";
 import { db } from "@/db";
 import { CACHE_TAGS, createCachedQuery } from "@/lib/cache";
+import { getCitySetPhotoNameColumn } from "@/modules/cities/city-set-location";
 
 const getCitySetsCached = createCachedQuery(
   async () => {
@@ -36,22 +37,30 @@ const getCitySetsCached = createCachedQuery(
 );
 
 const getOneCached = createCachedQuery(
-  async (city: string) => {
+  async (citySetId: string) => {
     // Get city set info
     const [citySet] = await db
       .select()
       .from(citySets)
-      .where(and(eq(citySets.city, city)));
+      .where(eq(citySets.id, citySetId));
 
     if (!citySet) {
       return null;
     }
 
-    // Get all photos in this city
+    // Match the same city/region field used when this city set was created.
+    const photoCityColumn = getCitySetPhotoNameColumn(citySet.countryCode);
     const cityPhotos = await db
       .select()
       .from(photos)
-      .where(and(eq(photos.city, city), eq(photos.visibility, "public")))
+      .where(
+        and(
+          eq(photos.country, citySet.country),
+          eq(photos.countryCode, citySet.countryCode),
+          eq(photoCityColumn, citySet.city),
+          eq(photos.visibility, "public"),
+        ),
+      )
       .orderBy(desc(photos.dateTimeOriginal), desc(photos.createdAt));
 
     if (cityPhotos.length === 0) {
@@ -77,14 +86,38 @@ export const travelRouter = createTRPCRouter({
   getCitySets: publicProcedure.query(async () => {
     return getCitySetsCached();
   }),
-  getOne: publicProcedure
+  resolveLegacyCity: publicProcedure
     .input(
       z.object({
-        city: z.string(),
+        city: z.string().trim().min(1),
       }),
     )
     .query(async ({ input }) => {
-      const data = await getOneCached(input.city);
+      const matches = (await getCitySetsCached()).filter(
+        (citySet) => citySet.city === input.city,
+      );
+
+      if (matches.length === 0) {
+        return { status: "not-found" as const };
+      }
+      if (matches.length > 1) {
+        return { status: "ambiguous" as const };
+      }
+
+      return {
+        status: "found" as const,
+        citySetId: matches[0].id,
+        city: matches[0].city,
+      };
+    }),
+  getOne: publicProcedure
+    .input(
+      z.object({
+        citySetId: z.uuid(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const data = await getOneCached(input.citySetId);
 
       if (!data) {
         throw new TRPCError({

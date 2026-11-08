@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { getCitySetName } from "@/modules/photos/server/city-set-sync";
+import {
+  getCitySetName,
+  getCitySetPhotoNameColumn,
+} from "@/modules/cities/city-set-location";
+import { photos } from "@/db/schema";
 
 describe("getCitySetName", () => {
   it.each(["JP", "TW"])(
@@ -23,5 +27,16 @@ describe("getCitySetName", () => {
         region: "New York",
       }),
     ).toBe("New York");
+  });
+
+  it.each(["JP", "TW"])(
+    "matches photo regions to city sets for %s",
+    (countryCode) => {
+      expect(getCitySetPhotoNameColumn(countryCode)).toBe(photos.region);
+    },
+  );
+
+  it("matches the city column for other countries", () => {
+    expect(getCitySetPhotoNameColumn("US")).toBe(photos.city);
   });
 });

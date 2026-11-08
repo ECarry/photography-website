@@ -1,27 +1,20 @@
 import { and, eq, sql } from "drizzle-orm";
 import type { DatabaseExecutor } from "@/db/atomic-execute";
+import {
+  getCitySetName,
+  getCitySetPhotoNameColumn,
+  type CitySetLocation,
+} from "@/modules/cities/city-set-location";
 import { citySets, photos } from "@/db/schema";
 
 type Photo = typeof photos.$inferSelect;
-type CitySetPhoto = {
+type CitySetPhoto = CitySetLocation & {
   id: string;
   country?: string | null;
-  city?: string | null;
-  countryCode?: string | null;
-  region?: string | null;
 };
-type CitySetLocation = Omit<CitySetPhoto, "id" | "country">;
-
-function usesRegionForCitySet(photo: CitySetLocation) {
-  return photo.countryCode === "JP" || photo.countryCode === "TW";
-}
-
-export function getCitySetName(photo: CitySetLocation) {
-  return usesRegionForCitySet(photo) ? photo.region : photo.city;
-}
 
 function getPhotoCityColumn(photo: CitySetLocation) {
-  return usesRegionForCitySet(photo) ? photos.region : photos.city;
+  return getCitySetPhotoNameColumn(photo.countryCode);
 }
 
 export function buildCitySetUpsertQuery(

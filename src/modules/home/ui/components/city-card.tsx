@@ -5,6 +5,7 @@ import BlurImage from "@/components/blur-image";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 import VectorTopLeftAnimation from "./vector-top-left-animation";
 import { keyToUrl } from "@/modules/s3/lib/key-to-url";
+import { getTravelCityPath } from "@/modules/travel/city-url";
 
 type CoverPhoto = {
   url: string;
@@ -14,16 +15,17 @@ type CoverPhoto = {
 
 interface Props {
   title: string;
+  citySetId: string;
   coverPhoto: CoverPhoto;
 }
 
-const CityCard = ({ title, coverPhoto }: Props) => {
+const CityCard = ({ title, citySetId, coverPhoto }: Props) => {
   const router = useRouter();
 
   return (
     <div
       className="w-full relative group cursor-pointer"
-      onClick={() => router.push(`/travel/${title}`)}
+      onClick={() => router.push(getTravelCityPath(citySetId, title))}
     >
       <AspectRatio
         ratio={0.75 / 1}
