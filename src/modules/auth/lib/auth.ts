@@ -7,6 +7,9 @@ import * as schema from "@/db/schema";
 import { nextCookies } from "better-auth/next-js";
 import { count } from "drizzle-orm";
 import { logger } from "@/lib/logger";
+import { createSecondaryStorage } from "./secondary-storage";
+
+const secondaryStorage = createSecondaryStorage();
 
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
@@ -17,6 +20,32 @@ export const auth = betterAuth({
   }),
   emailAndPassword: {
     enabled: true,
+  },
+
+  // Redis-backed storage keeps rate limit counters shared across instances
+  // and persistent across restarts. Sessions stay in the database so the
+  // profile page can keep listing active sessions.
+  ...(secondaryStorage
+    ? {
+        secondaryStorage,
+        session: {
+          storeSessionInDatabase: true,
+        },
+      }
+    : {}),
+
+  // Brute-force protection for auth endpoints (enabled in production by
+  // default; in-memory fallback when Upstash is not configured).
+  // Single-admin site: sign-up is already blocked outside development by the
+  // hook below, and password reset is not offered — only sign-in needs a
+  // strict rule.
+  rateLimit: {
+    window: 60,
+    max: 60,
+    ...(secondaryStorage ? { storage: "secondary-storage" as const } : {}),
+    customRules: {
+      "/sign-in/email": { window: 60, max: 5 },
+    },
   },
 
   plugins: [nextCookies()],
