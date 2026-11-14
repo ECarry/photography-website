@@ -23,6 +23,7 @@ import {
   atomicExecute,
   type DatabaseExecutor,
 } from "@/db/atomic-execute";
+import { readBatch } from "@/db/read-batch";
 import {
   addPhotoToCitySet,
   buildCitySetSyncQueries,
@@ -438,7 +439,7 @@ export const photosRouter = createTRPCRouter({
           : undefined,
       );
 
-      const data = await ctx.db
+      const dataQuery = ctx.db
         .select({
           id: photos.id,
           url: photos.url,
@@ -463,12 +464,16 @@ export const photosRouter = createTRPCRouter({
         .limit(pageSize)
         .offset((page - 1) * pageSize);
 
-      const [total] = await ctx.db
+      const countQuery = ctx.db
         .select({
           count: count(),
         })
         .from(photos)
         .where(where);
+      const [data, [total]] = await readBatch(ctx.db, [
+        dataQuery,
+        countQuery,
+      ]);
 
       const totalPages = Math.ceil(total.count / pageSize);
 

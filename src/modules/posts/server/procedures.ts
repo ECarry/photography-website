@@ -11,6 +11,7 @@ import {
 import { posts, postsInsertSchema, postsUpdateSchema } from "@/db/schema";
 import { escapeLike } from "@/lib/escape-like";
 import { revalidatePath } from "next/cache";
+import { readBatch } from "@/db/read-batch";
 
 /** Expire the ISR cache for the public blog pages. */
 function revalidateBlogPages() {
@@ -135,24 +136,27 @@ export const postsRouter = createTRPCRouter({
     .query(async ({ ctx, input }) => {
       const { page, pageSize, search } = input;
 
-      const data = await ctx.db
+      const where = search
+        ? ilike(posts.title, `%${escapeLike(search)}%`)
+        : undefined;
+      const dataQuery = ctx.db
         .select()
         .from(posts)
-        .where(
-          search ? ilike(posts.title, `%${escapeLike(search)}%`) : undefined,
-        )
+        .where(where)
         .orderBy(desc(posts.createdAt), desc(posts.id))
         .limit(pageSize)
         .offset((page - 1) * pageSize);
 
-      const [total] = await ctx.db
+      const countQuery = ctx.db
         .select({
           count: count(),
         })
         .from(posts)
-        .where(
-          search ? ilike(posts.title, `%${escapeLike(search)}%`) : undefined,
-        );
+        .where(where);
+      const [data, [total]] = await readBatch(ctx.db, [
+        dataQuery,
+        countQuery,
+      ]);
 
       const totalPages = Math.ceil(total.count / pageSize);
 
