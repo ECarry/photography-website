@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { ScreensaverView } from "@/modules/photograph/ui/views/screensaver-view";
 
@@ -17,9 +17,9 @@ const page = () => {
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Suspense fallback={<p>Loading...</p>}>
-        <ErrorBoundary fallback={<p>Error</p>}>
+        <RetryErrorBoundary>
           <ScreensaverView />
-        </ErrorBoundary>
+        </RetryErrorBoundary>
       </Suspense>
     </HydrationBoundary>
   );

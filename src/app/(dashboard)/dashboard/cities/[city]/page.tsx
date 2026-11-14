@@ -2,11 +2,10 @@ import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import {
   CityDetailView,
   CityDetailLoadingView,
-  CityDetailErrorView,
 } from "@/modules/cities/ui/views/city-detail-view";
 
 type Props = {
@@ -30,11 +29,11 @@ const CityDetailPage = async ({ params }: Props) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ErrorBoundary FallbackComponent={CityDetailErrorView}>
+      <RetryErrorBoundary>
         <Suspense fallback={<CityDetailLoadingView />}>
           <CityDetailView city={decodedCity} />
         </Suspense>
-      </ErrorBoundary>
+      </RetryErrorBoundary>
     </HydrationBoundary>
   );
 };

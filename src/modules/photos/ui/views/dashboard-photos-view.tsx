@@ -22,9 +22,8 @@ import {
 } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ImageOff, TriangleAlert } from "lucide-react";
+import { ImageOff } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useErrorBoundary } from "react-error-boundary";
 import { useModal } from "@/hooks/use-modal";
 import { DEFAULT_PAGE } from "@/constants";
 import { toast } from "sonner";
@@ -340,29 +339,6 @@ const EmptyStatus = ({
         )}
       </EmptyContent>
     </Empty>
-  );
-};
-
-export const ErrorStatus = () => {
-  const { resetBoundary } = useErrorBoundary();
-
-  return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 md:px-6 xl:px-8">
-      <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
-        <EmptyHeader>
-          <EmptyMedia variant="icon">
-            <TriangleAlert />
-          </EmptyMedia>
-          <EmptyTitle>Something went wrong</EmptyTitle>
-          <EmptyDescription>Please try again later.</EmptyDescription>
-        </EmptyHeader>
-        <EmptyContent>
-          <Button variant="ghost" size="sm" onClick={resetBoundary}>
-            Try again
-          </Button>
-        </EmptyContent>
-      </Empty>
-    </div>
   );
 };
 

@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { TRPCError } from "@trpc/server";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { PhotoIdView } from "@/modules/photos/ui/views/photo-id-view";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
@@ -47,11 +47,11 @@ const Page = async ({ params }: Props) => {
   const queryClient = getQueryClient();
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ErrorBoundary fallback={<p>Something went wrong</p>}>
+      <RetryErrorBoundary>
         <Suspense fallback={<p>Loading...</p>}>
           <PhotoIdView id={id} />
         </Suspense>
-      </ErrorBoundary>
+      </RetryErrorBoundary>
     </HydrationBoundary>
   );
 };

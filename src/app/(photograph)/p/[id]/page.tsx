@@ -4,7 +4,7 @@ import { trpc } from "@/trpc/server";
 import { HydrationBoundary } from "@tanstack/react-query";
 import { dehydrate } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import {
   createSocialMetadata,
   getAbsoluteSiteUrl,
@@ -101,9 +101,9 @@ const page = async ({ params }: Props) => {
       <JsonLd data={jsonLd} />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<LoadingState />}>
-          <ErrorBoundary fallback={<p>Error</p>}>
+          <RetryErrorBoundary>
             <PhotographView id={id} />
-          </ErrorBoundary>
+          </RetryErrorBoundary>
         </Suspense>
       </HydrationBoundary>
     </>

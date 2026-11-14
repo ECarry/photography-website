@@ -121,19 +121,6 @@ const EmptyStatus = ({
   );
 };
 
-export const ErrorStatus = () => {
-  return (
-    <div className="mx-auto w-full max-w-[1400px] px-4 md:px-6 xl:px-8">
-      <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
-        <EmptyHeader>
-          <EmptyTitle>Could not load stories</EmptyTitle>
-          <EmptyDescription>Please refresh the page and try again.</EmptyDescription>
-        </EmptyHeader>
-      </Empty>
-    </div>
-  );
-};
-
 export const LoadingStatus = () => {
   return (
     <div className="mx-auto w-full max-w-[1400px] px-4 pb-8 md:px-6 xl:px-8">

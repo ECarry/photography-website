@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import type { Metadata } from "next";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { DiscoverWidget } from "@/modules/discover/ui/components/discover-widget";
 import { createSocialMetadata } from "@/lib/seo";
 
@@ -20,9 +20,9 @@ export const metadata: Metadata = {
 
 const page = () => (
   <Suspense fallback={<p>Loading...</p>}>
-    <ErrorBoundary fallback={<p>Error</p>}>
+    <RetryErrorBoundary>
       <DiscoverWidget />
-    </ErrorBoundary>
+    </RetryErrorBoundary>
   </Suspense>
 );
 

@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
 import ProfileCard from "@/modules/home/ui/components/profile-card";
@@ -36,9 +36,9 @@ const page = async () => {
         {/* LEFT CONTENT - Fixed */}
         <div className="w-full lg:w-1/2 h-[70vh] lg:fixed lg:top-0 lg:left-0 lg:h-screen p-0 lg:p-3 rounded-xl">
           <Suspense fallback={<SliderViewLoadingStatus />}>
-            <ErrorBoundary fallback={<p>Something went wrong</p>}>
+            <RetryErrorBoundary>
               <SliderView />
-            </ErrorBoundary>
+            </RetryErrorBoundary>
           </Suspense>
         </div>
         {/* Spacer for fixed left content */}
@@ -53,9 +53,9 @@ const page = async () => {
 
           {/* CITY SETS CARD  */}
           <Suspense fallback={<CitiesViewLoadingStatus />}>
-            <ErrorBoundary fallback={<p>Something went wrong</p>}>
+            <RetryErrorBoundary>
               <CitiesView />
-            </ErrorBoundary>
+            </RetryErrorBoundary>
           </Suspense>
 
           <Footer />

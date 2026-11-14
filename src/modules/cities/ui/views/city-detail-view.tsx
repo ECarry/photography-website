@@ -488,24 +488,3 @@ export function CityDetailLoadingView() {
     </main>
   );
 }
-
-export function CityDetailErrorView() {
-  return (
-    <main className="flex min-h-[60vh] flex-col items-center justify-center bg-[#FAFAFA] px-4 text-center dark:bg-[#0A0A0A]">
-      <p className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
-        Failed to load city details
-      </p>
-      <p className="mt-1 text-sm text-[#8F8F8F]">Please try again.</p>
-      <Button
-        asChild
-        variant="outline"
-        className="mt-4 h-9 rounded-md bg-white text-[#4D4D4D] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717] dark:text-[#B3B3B3]"
-      >
-        <Link href="/dashboard/cities">
-          <ArrowLeft className="size-4" />
-          All cities
-        </Link>
-      </Button>
-    </main>
-  );
-}

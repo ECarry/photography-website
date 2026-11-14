@@ -2,7 +2,7 @@ import { Suspense } from "react";
 import type { Metadata } from "next";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import {
   BlogView,
@@ -34,9 +34,9 @@ const page = () => {
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
       <Suspense fallback={<BlogViewLoadingStatus />}>
-        <ErrorBoundary fallback={<p>Error</p>}>
+        <RetryErrorBoundary>
           <BlogView />
-        </ErrorBoundary>
+        </RetryErrorBoundary>
       </Suspense>
     </HydrationBoundary>
   );

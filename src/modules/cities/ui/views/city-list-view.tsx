@@ -153,18 +153,3 @@ export function CityListLoadingView() {
     </main>
   );
 }
-
-export function CityListErrorView() {
-  return (
-    <div className="mx-auto flex min-h-[320px] max-w-[1400px] items-center justify-center px-4 text-center">
-      <div>
-        <p className="text-sm font-medium text-[#171717] dark:text-[#FAFAFA]">
-          Could not load cities
-        </p>
-        <p className="mt-1 text-sm text-[#8F8F8F]">
-          Please refresh the page and try again.
-        </p>
-      </div>
-    </div>
-  );
-}

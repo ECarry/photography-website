@@ -9,7 +9,7 @@ import {
 import { createSocialMetadata, toSeoDescription } from "@/lib/seo";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { Suspense } from "react";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { CityView } from "@/modules/travel/ui/views/city-view";
 
 type Props = {
@@ -78,11 +78,11 @@ export default async function TravelCityPage({ params }: Props) {
     );
     return (
       <HydrationBoundary state={dehydrate(queryClient)}>
-        <ErrorBoundary fallback={<p>Something went wrong</p>}>
+        <RetryErrorBoundary>
           <Suspense fallback={<p>Loading...</p>}>
             <CityView citySetId={citySetId} />
           </Suspense>
-        </ErrorBoundary>
+        </RetryErrorBoundary>
       </HydrationBoundary>
     );
   }

@@ -2,7 +2,7 @@ import { Metadata } from "next";
 import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { PostView } from "@/modules/posts/ui/views/post-view";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 
@@ -44,11 +44,11 @@ const Page = async ({ params }: Props) => {
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>
-      <ErrorBoundary fallback={<p>Something went wrong</p>}>
+      <RetryErrorBoundary>
         <Suspense fallback={<p>Loading...</p>}>
           <PostView slug={decodedSlug} />
         </Suspense>
-      </ErrorBoundary>
+      </RetryErrorBoundary>
     </HydrationBoundary>
   );
 };

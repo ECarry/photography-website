@@ -2,13 +2,12 @@ import { Suspense } from "react";
 import { trpc } from "@/trpc/server";
 import { getQueryClient } from "@/trpc/server";
 import type { SearchParams } from "nuqs/server";
-import { ErrorBoundary } from "react-error-boundary";
+import { RetryErrorBoundary } from "@/components/retry-error-boundary";
 import { loadSearchParams } from "@/modules/posts/params";
 import { dehydrate, HydrationBoundary } from "@tanstack/react-query";
 import { PostsListHeader } from "@/modules/posts/ui/components/posts-list-header";
 import {
   DashboardPostsView,
-  ErrorStatus,
   LoadingStatus,
 } from "@/modules/posts/ui/views/dashboard-posts-view";
 
@@ -34,9 +33,9 @@ const page = async ({ searchParams }: Props) => {
       <PostsListHeader />
       <HydrationBoundary state={dehydrate(queryClient)}>
         <Suspense fallback={<LoadingStatus />}>
-          <ErrorBoundary fallback={<ErrorStatus />}>
+          <RetryErrorBoundary>
             <DashboardPostsView />
-          </ErrorBoundary>
+          </RetryErrorBoundary>
         </Suspense>
       </HydrationBoundary>
     </main>
