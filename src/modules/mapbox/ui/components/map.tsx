@@ -33,7 +33,6 @@ export interface MapboxProps {
     id: string;
     longitude: number;
     latitude: number;
-    popupContent?: React.ReactNode;
     element?: React.ReactNode;
   }>;
   geoJsonData?: GeoJSON.FeatureCollection;

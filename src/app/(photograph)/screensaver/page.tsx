@@ -12,7 +12,9 @@ export const metadata = {
 
 const page = () => {
   const queryClient = getQueryClient();
-  void queryClient.prefetchQuery(trpc.discover.getManyPhotos.queryOptions({}));
+  void queryClient.prefetchQuery(
+    trpc.discover.getScreensaverPhotos.queryOptions(),
+  );
 
   return (
     <HydrationBoundary state={dehydrate(queryClient)}>

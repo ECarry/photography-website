@@ -9,12 +9,14 @@ import {
   keepPreviousData,
   skipToken,
   useQuery,
+  useQueryClient,
 } from "@tanstack/react-query";
 import { usePhotoClustering } from "@/modules/discover/hooks/use-photo-clustering";
 import { PhotoMarker } from "@/modules/discover/ui/components/photo-marker";
 import { ClusterMarker } from "@/modules/discover/ui/components/cluster-marker";
-import { PhotoPopup } from "@/modules/discover/ui/components/photo-popup";
 import type { PhotoPoint } from "@/modules/discover/lib/clustering";
+import type { DiscoverPhotoDetails } from "@/modules/discover/types";
+import { DISCOVER_DETAILS_PAGE_SIZE } from "@/modules/discover/lib/photo-payload";
 import {
   expandViewportBounds,
   type DiscoverBounds,
@@ -46,15 +48,19 @@ const galleryFrames = {
   landscape: "/gallery-frames/black-matted-landscape.png",
 };
 
-const CLUSTER_PHOTO_PAGE_SIZE = 48;
-
 function DiscoverPhotoGallery({
   photos,
   total,
+  isLoading,
+  hasError,
+  onRetry,
   onLoadMore,
 }: {
-  photos: PhotoPoint[];
+  photos: DiscoverPhotoDetails[];
   total: number;
+  isLoading: boolean;
+  hasError: boolean;
+  onRetry: () => void;
   onLoadMore: () => void;
 }) {
   return (
@@ -121,7 +127,25 @@ function DiscoverPhotoGallery({
           </Link>
         );
       })}
-      {photos.length < total && (
+      {isLoading && (
+        <p
+          role="status"
+          className="col-span-2 py-3 text-center text-xs text-muted-foreground"
+        >
+          Loading photo details...
+        </p>
+      )}
+      {hasError && (
+        <div className="col-span-2 flex flex-col items-center gap-2 py-3">
+          <p role="alert" className="text-xs text-muted-foreground">
+            Could not load photo details.
+          </p>
+          <Button type="button" variant="outline" size="sm" onClick={onRetry}>
+            Retry
+          </Button>
+        </div>
+      )}
+      {!isLoading && !hasError && photos.length < total && (
         <div className="col-span-2 flex flex-col items-center gap-2 py-3">
           <p className="text-xs text-muted-foreground">
             Showing {photos.length} of {total} photos
@@ -159,9 +183,10 @@ export const DiscoverLoading = () => {
 
 export const DiscoverView = () => {
   const trpc = useTRPC();
+  const queryClient = useQueryClient();
   const [viewportBounds, setViewportBounds] =
     useState<DiscoverBounds | null>(null);
-  const { data: photoData = [] } = useQuery(
+  const { data: photoResponse } = useQuery(
     trpc.discover.getManyPhotos.queryOptions(
       viewportBounds ? { bounds: viewportBounds } : skipToken,
       {
@@ -172,9 +197,17 @@ export const DiscoverView = () => {
       },
     ),
   );
+  const photoData = photoResponse?.photos ?? [];
+  const hasMoreMapPhotos = photoResponse?.hasMore ?? false;
 
   const isMobile = useIsMobile();
-  const [selectedPhotos, setSelectedPhotos] = useState<PhotoPoint[]>([]);
+  const [selectedPhotos, setSelectedPhotos] =
+    useState<DiscoverPhotoDetails[]>([]);
+  const [selectedPhotoPoints, setSelectedPhotoPoints] = useState<PhotoPoint[]>(
+    [],
+  );
+  const [isLoadingPhotoDetails, setIsLoadingPhotoDetails] = useState(false);
+  const [photoDetailsError, setPhotoDetailsError] = useState(false);
   const [selectedPhotoTotal, setSelectedPhotoTotal] = useState(0);
   const [selectedClusterId, setSelectedClusterId] = useState<number | null>(
     null,
@@ -185,6 +218,11 @@ export const DiscoverView = () => {
   const selectedClusterPageLoaderRef = useRef<
     ((clusterId: number, limit?: number, offset?: number) => PhotoPoint[]) | null
   >(null);
+  const selectedPhotoRequestRef = useRef(0);
+  const pendingPhotoPageRef = useRef<{
+    points: PhotoPoint[];
+    append: boolean;
+  } | null>(null);
   const [selectionRevision, setSelectionRevision] = useState(0);
 
   const updateViewportBounds = useCallback(() => {
@@ -288,6 +326,54 @@ export const DiscoverView = () => {
     initialZoom: 3,
   });
 
+  const loadPhotoDetails = useCallback(
+    async (
+      points: PhotoPoint[],
+      requestId: number,
+      append: boolean,
+    ) => {
+      if (points.length === 0) return;
+
+      pendingPhotoPageRef.current = { points, append };
+      setIsLoadingPhotoDetails(true);
+      setPhotoDetailsError(false);
+
+      try {
+        const details = await queryClient.fetchQuery(
+          trpc.discover.getPhotosByIds.queryOptions({
+            ids: points.map((point) => point.id),
+          }),
+        );
+        if (requestId !== selectedPhotoRequestRef.current) return;
+
+        const detailsById = new Map(
+          details.map((photo) => [photo.id, photo]),
+        );
+        const loadedPhotos = points.flatMap((point) => {
+          const photo = detailsById.get(point.id);
+          return photo ? [photo] : [];
+        });
+
+        setSelectedPhotoPoints((current) =>
+          append ? [...current, ...points] : points,
+        );
+        setSelectedPhotos((current) =>
+          append ? [...current, ...loadedPhotos] : loadedPhotos,
+        );
+        pendingPhotoPageRef.current = null;
+      } catch {
+        if (requestId === selectedPhotoRequestRef.current) {
+          setPhotoDetailsError(true);
+        }
+      } finally {
+        if (requestId === selectedPhotoRequestRef.current) {
+          setIsLoadingPhotoDetails(false);
+        }
+      }
+    },
+    [queryClient, trpc],
+  );
+
   const handleSelectPhotos = useCallback(
     (
       photos: PhotoPoint[],
@@ -301,21 +387,31 @@ export const DiscoverView = () => {
         ) => PhotoPoint[];
       },
     ) => {
-      setSelectedPhotos(photos);
+      const requestId = ++selectedPhotoRequestRef.current;
+      pendingPhotoPageRef.current = null;
+      setSelectedPhotoPoints([]);
+      setSelectedPhotos([]);
+      setPhotoDetailsError(false);
       mapFocusPhotosRef.current = photos;
       setSelectedClusterId(cluster?.id ?? null);
       setSelectedPhotoTotal(cluster?.count ?? photos.length);
       selectedClusterPageLoaderRef.current = cluster?.getPage ?? null;
       setSelectionRevision((revision) => revision + 1);
+      void loadPhotoDetails(photos, requestId, false);
       if (isMobile) {
         setIsDrawerOpen(true);
       }
     },
-    [isMobile]
+    [isMobile, loadPhotoDetails],
   );
 
   const clearSelection = () => {
+    selectedPhotoRequestRef.current += 1;
+    pendingPhotoPageRef.current = null;
+    setSelectedPhotoPoints([]);
     setSelectedPhotos([]);
+    setIsLoadingPhotoDetails(false);
+    setPhotoDetailsError(false);
     mapFocusPhotosRef.current = [];
     setSelectedClusterId(null);
     setSelectedPhotoTotal(0);
@@ -325,19 +421,44 @@ export const DiscoverView = () => {
   };
 
   const handleLoadMorePhotos = useCallback(() => {
-    if (selectedClusterId === null || !selectedClusterPageLoaderRef.current) {
+    if (
+      selectedClusterId === null ||
+      !selectedClusterPageLoaderRef.current ||
+      isLoadingPhotoDetails ||
+      photoDetailsError
+    ) {
       return;
     }
 
-    const nextPhotos = selectedClusterPageLoaderRef.current(
+    const nextPoints = selectedClusterPageLoaderRef.current(
       selectedClusterId,
-      CLUSTER_PHOTO_PAGE_SIZE,
-      selectedPhotos.length,
+      DISCOVER_DETAILS_PAGE_SIZE,
+      selectedPhotoPoints.length,
     );
-    if (nextPhotos.length === 0) return;
+    if (nextPoints.length === 0) return;
 
-    setSelectedPhotos((current) => [...current, ...nextPhotos]);
-  }, [selectedClusterId, selectedPhotos.length]);
+    void loadPhotoDetails(
+      nextPoints,
+      selectedPhotoRequestRef.current,
+      true,
+    );
+  }, [
+    selectedClusterId,
+    selectedPhotoPoints.length,
+    isLoadingPhotoDetails,
+    photoDetailsError,
+    loadPhotoDetails,
+  ]);
+
+  const handleRetryPhotoDetails = useCallback(() => {
+    const pendingPage = pendingPhotoPageRef.current;
+    if (!pendingPage) return;
+    void loadPhotoDetails(
+      pendingPage.points,
+      selectedPhotoRequestRef.current,
+      pendingPage.append,
+    );
+  }, [loadPhotoDetails]);
 
   // Convert clusters and photos to map markers
   const markers = useMemo(() => {
@@ -345,7 +466,6 @@ export const DiscoverView = () => {
       id: string;
       longitude: number;
       latitude: number;
-      popupContent?: React.ReactNode;
       element: React.ReactNode;
     }> = [];
 
@@ -359,12 +479,12 @@ export const DiscoverView = () => {
           <ClusterMarker
             cluster={cluster}
             onClick={() => {
-              const photos = getClusterPhotos(
+              const points = getClusterPhotos(
                 cluster.clusterId,
-                CLUSTER_PHOTO_PAGE_SIZE,
+                DISCOVER_DETAILS_PAGE_SIZE,
               );
-              if (photos.length > 0) {
-                handleSelectPhotos(photos, {
+              if (points.length > 0) {
+                handleSelectPhotos(points, {
                   id: cluster.clusterId,
                   count: cluster.count,
                   getPage: getClusterPhotos,
@@ -382,10 +502,8 @@ export const DiscoverView = () => {
         id: photo.id,
         longitude: photo.longitude!,
         latitude: photo.latitude!,
-        popupContent: <PhotoPopup photo={photo} />,
         element: (
           <PhotoMarker
-            photo={photo}
             onClick={() => {
               handleSelectPhotos([photo]);
             }}
@@ -410,6 +528,14 @@ export const DiscoverView = () => {
           className="relative h-full rounded-xl overflow-hidden"
           style={{ width: !isMobile && hasSelection ? "50%" : "100%" }}
         >
+          {hasMoreMapPhotos && (
+            <div
+              role="status"
+              className="pointer-events-none absolute left-1/2 top-4 z-10 -translate-x-1/2 rounded-full bg-background/90 px-3 py-1.5 text-center text-xs text-muted-foreground shadow-sm backdrop-blur"
+            >
+              Showing up to 500 photos. Zoom in to narrow the area.
+            </div>
+          )}
           <Mapbox
             ref={mapRef}
             id="discoverMap"
@@ -460,6 +586,9 @@ export const DiscoverView = () => {
               <DiscoverPhotoGallery
                 photos={selectedPhotos}
                 total={selectedPhotoTotal}
+                isLoading={isLoadingPhotoDetails}
+                hasError={photoDetailsError}
+                onRetry={handleRetryPhotoDetails}
                 onLoadMore={handleLoadMorePhotos}
               />
             </div>
@@ -501,6 +630,9 @@ export const DiscoverView = () => {
                 <DiscoverPhotoGallery
                   photos={selectedPhotos}
                   total={selectedPhotoTotal}
+                  isLoading={isLoadingPhotoDetails}
+                  hasError={photoDetailsError}
+                  onRetry={handleRetryPhotoDetails}
                   onLoadMore={handleLoadMorePhotos}
                 />
               </div>
