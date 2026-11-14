@@ -5,9 +5,9 @@ import { createAuthMiddleware, APIError } from "better-auth/api";
 import { db } from "@/db";
 import * as schema from "@/db/schema";
 import { nextCookies } from "better-auth/next-js";
-import { count } from "drizzle-orm";
 import { logger } from "@/lib/logger";
 import { createSecondaryStorage } from "./secondary-storage";
+import { isFirstUserRegistrationAvailable } from "./registration";
 
 const secondaryStorage = createSecondaryStorage();
 
@@ -36,15 +36,14 @@ export const auth = betterAuth({
 
   // Brute-force protection for auth endpoints (enabled in production by
   // default; in-memory fallback when Upstash is not configured).
-  // Single-admin site: sign-up is already blocked outside development by the
-  // hook below, and password reset is not offered — only sign-in needs a
-  // strict rule.
+  // The one-time initial account endpoint is public until the first user exists.
   rateLimit: {
     window: 60,
     max: 60,
     ...(secondaryStorage ? { storage: "secondary-storage" as const } : {}),
     customRules: {
       "/sign-in/email": { window: 60, max: 5 },
+      "/sign-up/email": { window: 60, max: 5 },
     },
   },
 
@@ -54,17 +53,8 @@ export const auth = betterAuth({
     before: createAuthMiddleware(async (ctx) => {
       if (!ctx.path.endsWith("/sign-up/email")) return;
 
-      if (process.env.NODE_ENV !== "development") {
-        throw new APIError("UNAUTHORIZED", {
-          message: "Registration is currently disabled.",
-        });
-      }
-
       try {
-        const result = await db.select({ value: count() }).from(schema.user);
-        const userCount = result[0]?.value ?? 0;
-
-        if (userCount > 0) {
+        if (!(await isFirstUserRegistrationAvailable())) {
           throw new APIError("UNAUTHORIZED", {
             message: "Registration is currently disabled.",
           });

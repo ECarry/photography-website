@@ -45,7 +45,7 @@ _Dashboard_
 
 | Route | Description |
 | --- | --- |
-| `/sign-in` | Dashboard sign-in |
+| `/sign-in` | Create the first account or sign in |
 | `/dashboard` | Dashboard overview and analytics |
 | `/dashboard/photos` | Photo library and bulk management |
 | `/dashboard/photos/[id]` | Edit a photo |
@@ -76,13 +76,7 @@ bun run db:push
 bun run dev
 ```
 
-Open `http://localhost:3000`. To create the initial local account, run this in a second terminal while the development server is running:
-
-```bash
-bun run seed:user
-```
-
-Registration is limited to the first user in development and is disabled in production.
+Open `http://localhost:3000/sign-in` and create the first account. Registration is available in any environment only while the user table is empty, then it is automatically disabled.
 
 ## 🧰 Common Commands
 
@@ -95,7 +89,6 @@ Registration is limited to the first user in development and is disabled in prod
 | `bun run test:unit` | Run unit tests |
 | `bun run db:push` | Push the Drizzle schema to the configured database |
 | `bun run db:studio` | Open Drizzle Studio |
-| `bun run seed:user` | Create the first user in development |
 | `bun run seed:demo-post` | Create or update the demo blog post |
 
 ## 🎨 Customization
@@ -276,15 +269,6 @@ UPSTASH_REDIS_REST_URL=
 UPSTASH_REDIS_REST_TOKEN=
 ```
 
-#### Admin User Configuration
-
-```env
-# Used by the first-user development setup
-SEED_USER_EMAIL=admin@yourdomain.com
-SEED_USER_PASSWORD=your-secure-password
-SEED_USER_NAME=Admin User
-```
-
 ### Step 3: Database Setup
 
 ```bash
@@ -298,13 +282,7 @@ bun run db:push
 bun run dev
 ```
 
-In another terminal, create the first account while the development server is running:
-
-```bash
-bun run seed:user
-```
-
-`seed:user` calls the app's sign-up endpoint. It only works in development, before any user exists; public registration is disabled in production.
+Open `http://localhost:3000/sign-in` and create the first account. The registration form is shown only when the configured database has no users; after the first account is created, only sign-in remains available.
 
 ### Step 5: Build and Test Locally
 
@@ -358,7 +336,7 @@ vercel env pull .env.local
 bun run db:push
 ```
 
-`seed:user` cannot create an account against a production server because registration is disabled there. Bootstrap the initial production account through a controlled, one-time process; do not enable public registration.
+After deploying the app and configuring its database, open `https://your-domain/sign-in` and create the initial account. Registration is available in production only while the user table is empty and locks automatically as soon as the first account is created. Complete this setup promptly: until then, anyone who can reach the sign-in page can attempt to claim the initial account.
 
 #### Upgrade: Photo URL storage change (S3 Key)
 
