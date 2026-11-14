@@ -68,7 +68,9 @@ export const BlogSlugView = ({ slug }: { slug: string }) => {
             src={keyToUrl(data.coverImage) || "/placeholder.svg"}
             alt={data.title}
             fill
+            sizes="(max-width: 1023px) 100vw, 50vw"
             quality={75}
+            preload
             className="object-cover"
           />
 

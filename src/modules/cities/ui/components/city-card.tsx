@@ -32,6 +32,8 @@ export function CityCard({ citySet }: CityCardProps) {
           src={keyToUrl(coverPhotoUrl)}
           alt={`${city}, ${country}`}
           fill
+          sizes="(max-width: 639px) calc(100vw - 32px), (max-width: 1023px) calc(50vw - 32px), (max-width: 1279px) calc(33.333vw - 27px), (max-width: 1399px) calc(25vw - 28px), 322px"
+          quality={75}
           blurhash={coverPhotoBlurData}
           className="object-cover"
         />

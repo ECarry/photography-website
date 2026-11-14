@@ -99,6 +99,7 @@ export function FirstStep({
                   src={keyToUrl(url)}
                   alt="Uploaded photo"
                   fill
+                  sizes="(max-width: 639px) calc(100vw - 32px), 640px"
                   className="h-full w-full object-contain"
                   unoptimized
                 />

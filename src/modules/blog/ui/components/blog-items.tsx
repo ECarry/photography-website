@@ -37,8 +37,8 @@ export const PostsSection = ({ data }: PostsSectionProps) => {
               src={keyToUrl(item.coverImage) || "/placeholder.svg"}
               alt={item.title || "Blog post"}
               fill
-              unoptimized
-              priority
+              sizes="(max-width: 1023px) 100vw, (max-width: 1279px) 50vw, 25vw"
+              quality={75}
               className="object-cover group-hover:blur-xs transition-[filter] duration-300 ease-out"
             />
 

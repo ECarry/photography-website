@@ -381,6 +381,8 @@ export function CityDetailView({ city }: CityDetailViewProps) {
                     alt={coverPhoto.title || `${cityData.city} cover`}
                     blurhash={coverPhoto.blurData}
                     fill
+                    sizes="112px"
+                    quality={75}
                     className="object-cover"
                   />
                 </div>

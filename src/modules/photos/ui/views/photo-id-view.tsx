@@ -638,6 +638,8 @@ export const PhotoIdView = ({ id }: PhotoIdViewProps) => {
                   alt={data.title || "Photo preview"}
                   blurhash={data.blurData}
                   fill
+                  sizes="(max-width: 1279px) calc(100vw - 32px), (max-width: 1535px) 40vw, 560px"
+                  quality={75}
                   className="object-contain"
                 />
               </div>

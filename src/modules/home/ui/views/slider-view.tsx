@@ -49,8 +49,8 @@ export const SliderView = () => {
               alt={photo.title}
               fill
               sizes="(max-width: 1023px) 100vw, 50vw"
-              loading={isFirstSlide ? "eager" : "lazy"}
-              fetchPriority={isFirstSlide ? "high" : undefined}
+              preload={isFirstSlide}
+              quality={75}
               blurhash={photo.blurData}
               className="w-full h-full object-cover"
             />

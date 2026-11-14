@@ -62,6 +62,7 @@ export const BrandsLogo = ({
       alt={brand}
       width={width || config.width}
       height={height || config.height}
+      unoptimized
       className={`object-contain ${className}`}
     />
   );

@@ -172,6 +172,7 @@ export const ProfileForm = () => {
                         src={imagePreview}
                         alt="Profile preview"
                         fill
+                        sizes="80px"
                         className="object-cover"
                       />
                     </div>
@@ -181,6 +182,7 @@ export const ProfileForm = () => {
                         src={data.user.image}
                         alt="Current profile"
                         fill
+                        sizes="80px"
                         className="object-cover"
                       />
                     </div>
