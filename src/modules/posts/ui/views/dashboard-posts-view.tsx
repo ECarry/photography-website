@@ -16,7 +16,7 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import { IconNotebookOff } from "@tabler/icons-react";
+import { BookX } from "lucide-react";
 import {
   Table,
   TableBody,
@@ -93,7 +93,7 @@ const EmptyStatus = ({
     <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <IconNotebookOff />
+          <BookX />
         </EmptyMedia>
         <EmptyTitle>{hasSearch ? "No matching stories" : "No stories yet"}</EmptyTitle>
         <EmptyDescription>

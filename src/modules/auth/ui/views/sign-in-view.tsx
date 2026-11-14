@@ -19,7 +19,6 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { OctagonAlert } from "lucide-react";
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { authClient } from "../../lib/auth-client";
 
@@ -28,7 +27,6 @@ type SignInViewProps = {
 };
 
 export const SignInView = ({ canRegister }: SignInViewProps) => {
-  const router = useRouter();
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const [isRegistering, setIsRegistering] = useState(canRegister);
@@ -66,7 +64,7 @@ export const SignInView = ({ canRegister }: SignInViewProps) => {
             ? "Account created successfully"
             : "Signed in successfully",
         );
-        router.replace("/dashboard");
+        window.setTimeout(() => window.location.replace("/dashboard"), 500);
       },
       onError: ({ error }: { error: { message: string } }) => {
         setPending(false);

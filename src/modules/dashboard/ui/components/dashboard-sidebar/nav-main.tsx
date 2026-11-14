@@ -3,7 +3,7 @@
 import Link from "next/link";
 import type { Route } from "next";
 import { usePathname } from "next/navigation";
-import { IconPhotoUp } from "@tabler/icons-react";
+import { ImageUp } from "lucide-react";
 import {
   SidebarGroup,
   SidebarGroupContent,
@@ -51,7 +51,7 @@ export function NavMain({
                 tooltip="Add photo"
                 className="h-9 rounded-md bg-white px-3 text-[14px] font-medium text-[#0072F5] shadow-[0_0_0_1px_rgba(0,0,0,0.08)] transition-none hover:bg-[#EBEBEB] hover:text-[#005FCC] dark:bg-[#171717] dark:text-[#52AEFF] dark:hover:bg-[#262626]"
               >
-                <IconPhotoUp />
+                <ImageUp />
                 <span>Add photo</span>
               </SidebarMenuButton>
             </SidebarMenuItem>

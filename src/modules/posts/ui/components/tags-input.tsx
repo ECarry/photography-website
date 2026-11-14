@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Badge } from "@/components/ui/badge";
-import { IconX } from "@tabler/icons-react";
+import { X } from "lucide-react";
 
 interface TagsInputProps {
   value: string[];
@@ -54,7 +54,7 @@ export const TagsInput = ({ value, onChange }: TagsInputProps) => {
             onClick={() => removeTag(tag)}
             className="inline-flex rounded-full p-0.5 hover:bg-muted/80"
           >
-            <IconX className="h-3 w-3" />
+            <X className="h-3 w-3" />
           </button>
         </Badge>
       ))}

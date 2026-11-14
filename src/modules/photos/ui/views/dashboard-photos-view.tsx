@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/empty";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import { IconAlertTriangle, IconPhotoOff } from "@tabler/icons-react";
+import { ImageOff, TriangleAlert } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useErrorBoundary } from "react-error-boundary";
 import { useModal } from "@/hooks/use-modal";
@@ -308,7 +308,7 @@ const EmptyStatus = ({
     <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
       <EmptyHeader>
         <EmptyMedia variant="icon">
-          <IconPhotoOff />
+          <ImageOff />
         </EmptyMedia>
         <EmptyTitle>
           {showUpload ? "No photos yet" : "No matching photos"}
@@ -351,7 +351,7 @@ export const ErrorStatus = () => {
       <Empty className="min-h-[280px] rounded-xl border-0 bg-white shadow-[0_0_0_1px_rgba(0,0,0,0.08)] dark:bg-[#171717]">
         <EmptyHeader>
           <EmptyMedia variant="icon">
-            <IconAlertTriangle />
+            <TriangleAlert />
           </EmptyMedia>
           <EmptyTitle>Something went wrong</EmptyTitle>
           <EmptyDescription>Please try again later.</EmptyDescription>

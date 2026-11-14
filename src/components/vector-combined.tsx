@@ -1,6 +1,6 @@
 import Graphic from "@/components/graphic";
 import Link from "next/link";
-import { PiArrowLeft } from "react-icons/pi";
+import { ArrowLeft } from "lucide-react";
 
 interface Props {
   title: string;
@@ -20,7 +20,7 @@ const VectorCombined = ({ title, position, link }: Props) => {
       <div className={`pt-3 px-4 pb-2 ${isTopLeft ? "pb-3" : "pt-2"}`}>
         {link ? (
           <Link href="/" className="text-sm font-light flex items-center gap-2">
-            <PiArrowLeft size={14} />
+            <ArrowLeft size={14} />
             <p>{title}</p>
           </Link>
         ) : (

@@ -1,12 +1,12 @@
 import Link from "next/link";
-import { PiArrowDown } from "react-icons/pi";
+import { ArrowDown } from "lucide-react";
 
 const LatestTravelCard = () => {
   return (
     <div className="p-4 lg:p-5 bg-muted rounded-xl w-full flex justify-between items-center">
       <div className="flex items-center gap-2">
         <p className="text-sm font-light">Latest Travel</p>
-        <PiArrowDown size={14} />
+        <ArrowDown size={14} />
       </div>
 
       <div>

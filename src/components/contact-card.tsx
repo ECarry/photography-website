@@ -1,8 +1,7 @@
 import { cn } from "@/lib/utils";
 import Link from "next/link";
-import { MdEmail } from "react-icons/md";
+import { ArrowUpRight, Mail } from "lucide-react";
 import {
-  PiArrowUpRight,
   PiInstagramLogo,
   PiGithubLogo,
   PiXLogo,
@@ -15,7 +14,7 @@ const iconMap = {
   GitHub: <PiGithubLogo size={18} />,
   X: <PiXLogo size={18} />,
   Xiaohongshu: <SiXiaohongshu size={18} />,
-  "Contact me": <MdEmail size={18} />,
+  "Contact me": <Mail size={18} />,
 };
 
 export type ContactCardTitle = keyof typeof iconMap;
@@ -47,7 +46,7 @@ const ContactCard = ({ title, href, className }: Props) => {
 
           {/* Hover Text (hidden initially, moves up on hover) */}
           <span className="absolute inset-0 transform translate-y-full transition-transform duration-200 ease-in-out group-hover:translate-y-0">
-            <PiArrowUpRight size={18} />
+            <ArrowUpRight size={18} />
           </span>
         </div>
       </div>

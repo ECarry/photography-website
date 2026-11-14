@@ -1,5 +1,5 @@
 import Graphic from "@/components/graphic";
-import { PiArrowRight } from "react-icons/pi";
+import { ArrowRight } from "lucide-react";
 
 interface Props {
   title: string;
@@ -12,7 +12,7 @@ const VectorTopLeftAnimation = ({ title }: Props) => {
         <div className="text-sm font-light flex items-center">
           <p>{title}</p>
           <div className="w-0 group-hover:w-[24px] transition-[width] duration-300 ease-out overflow-hidden">
-            <PiArrowRight size={14} className="ml-2 shrink-0" />
+            <ArrowRight size={14} className="ml-2 shrink-0" />
           </div>
         </div>
       </div>

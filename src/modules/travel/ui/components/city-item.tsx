@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PiArrowRight } from "react-icons/pi";
+import { ArrowRight } from "lucide-react";
 import TextScroll from "./text-scroll";
 import type { PublicCitySet } from "../../types";
 import { getTravelCityPath } from "../../city-url";
@@ -28,7 +28,7 @@ export const CityItem = ({ city, onMouseEnter }: CityItemProps) => {
             </span>
           </div>
           <div className="absolute right-0 transform translate-x-full transition-transform duration-200 ease-in-out group-hover:translate-x-0 flex items-center">
-            <PiArrowRight size={18} />
+            <ArrowRight size={18} />
           </div>
         </div>
       </div>
