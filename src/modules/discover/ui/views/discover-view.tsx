@@ -504,6 +504,7 @@ export const DiscoverView = () => {
         latitude: photo.latitude!,
         element: (
           <PhotoMarker
+            photo={photo}
             onClick={() => {
               handleSelectPhotos([photo]);
             }}

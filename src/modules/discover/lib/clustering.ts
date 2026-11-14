@@ -9,6 +9,7 @@ export interface Cluster {
   latitude: number;
   longitude: number;
   count: number;
+  thumbnail: PhotoPoint;
 }
 
 /**
@@ -60,12 +61,18 @@ export function getClustersFromIndex(
       const clusterId = props.cluster_id as number;
       const pointCount = props.point_count as number;
 
+      const thumbnail = index.getLeaves(clusterId, 1)[0]?.properties as
+        | PhotoPoint
+        | undefined;
+      if (!thumbnail) return;
+
       clusters.push({
         id: `cluster-${clusterId}`,
         clusterId,
         latitude,
         longitude,
         count: pointCount,
+        thumbnail,
       });
     } else {
       // This is a single point

@@ -50,8 +50,11 @@ export const discoverRouter = createTRPCRouter({
       const rows = await ctx.db
         .select({
           id: photos.id,
+          url: photos.url,
+          title: photos.title,
           latitude: photos.latitude,
           longitude: photos.longitude,
+          blurData: photos.blurData,
         })
         .from(photos)
         .where(
